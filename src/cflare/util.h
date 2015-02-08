@@ -1,5 +1,5 @@
-#ifndef LUAFLARE_UTL_H
-#define LUAFLARE_UTL_H
+#ifndef CFLARE_UTIL_H
+#define CFLARE_UTIL_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,6 +16,9 @@ void cflare_info_c(const char* str);
 void cflare_log_c(const char* str);
 void cflare_warn_c(const char* str);
 void cflare_fatal_c(const char* str);
+
+#define cflare_notimp() \
+	cflare_fatal("%s(): not implemented", __func__)
 
 #define cflare_debug(...) \
 	do \
@@ -67,5 +70,5 @@ void cflare_fatal_c(const char* str);
 		free(__fmt_string); \
 	} while(0)
 
-#endif /* LUAFLARE_UTL_H */
+#endif /* CFLARE_UTIL_H */
 
