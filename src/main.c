@@ -1,7 +1,7 @@
 #include "cflare/handle.h"
 #include "cflare/util.h"
 
-#include "cflare/linkedlist2.h"
+#include "cflare/linkedlist.h"
 #include "cflare/hashmap.h"
 
 int main(int argc, char** argv)

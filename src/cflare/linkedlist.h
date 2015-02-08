@@ -1,81 +1,50 @@
-#ifndef LINKEDLIST_H
-#define LINKEDLIST_H
+#ifndef CFLARE_LINKEDLIST2_H
+#define CFLARE_LINKEDLIST2_H
 
-#include <stdint.h>
+
+#include "cflare/util.h"
+
+struct cflare_linkedlist;
 
 typedef struct cflare_linkedlist_node
 {
-	size_t size;
-
-	void* p_data;
-	size_t data_size;
-
-	struct cflare_linkedlist_node* p_next;
+	void* data;
+	struct cflare_linkedlist_node*  next;
+	struct cflare_linkedlist_node*  prev;
 } cflare_linkedlist_node;
 
 typedef struct cflare_linkedlist
 {
-	size_t size;
-
-	struct cflare_linkedlist_node* p_head;
-	uint32_t count;
+	uint64_t count;
+	size_t element_size;
+	struct cflare_linkedlist_node* first;
+	struct cflare_linkedlist_node* last;
+	
 } cflare_linkedlist;
 
-static void cflare_linkedlist_initialize(cflare_linkedlist* p_linkedlist);
+typedef struct cflare_linkedlist_iter
+{
+	uint8_t started;
+	struct cflare_linkedlist* list;
+	struct cflare_linkedlist_node* prev;
+	struct cflare_linkedlist_node* value;
+	struct cflare_linkedlist_node* next;
+} cflare_linkedlist_iter;
 
-/*
-Gets
-*/
+cflare_linkedlist* cflare_linkedlist_new(size_t element_size);
+void cflare_linkedlist_delete(cflare_linkedlist* list);
 
-//Get the firts element, for internal use only
-//\param[out] p_curnode current node pointer
-static void cflare_linkedlist_internal_get_first(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_curnode);
-//Get the last and current node of the last element, for internal use only
-//\param[out] p_lastnode last node pointer
-//\param[out] p_curnode current node pointer
-static void cflare_linkedlist_internal_get_last(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode);
-//Get the last and current node at the location, for internal use only
-//\param location The location of the element, 0 is the first element in the list
-//\param[out] p_lastnode last node pointer
-//\param[out] p_curnode current node pointer
-static void cflare_linkedlist_internal_get(cflare_linkedlist* p_linkedlist, int location, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode);
-//Get the last and current node that first cotains this data, for internal use only
-//\param[out] p_lastnode last node pointer
-//\param[out] p_curnode current node pointer
-static void cflare_linkedlist_internal_get(cflare_linkedlist* p_linkedlist, void* p_data, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode);
+void cflare_linkedlist_insert_before(cflare_linkedlist* list, cflare_linkedlist_node* node, void** output);
+void cflare_linkedlist_insert_after(cflare_linkedlist* list, cflare_linkedlist_node* node, void** output);
+void cflare_linkedlist_remove(cflare_linkedlist* list, cflare_linkedlist_node* node);
 
-/*
-Adds
-*/
+cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list);
+cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* iter);
+cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* iter);
 
-//Add an element between the nodes, for internal use only
-//\param[in] p_lastnode last node pointer
-//\param[in] p_curnode current node pointer
-static int32_t cflare_linkedlist_internal_add(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode, void* p_data, size_t data_size);
-//Add before the first element of the list
-int32_t cflare_linkedlist_add_first(cflare_linkedlist* p_linkedlist, void* p_data, size_t data_size);
-//Add after the last element of the list
-int32_t cflare_linkedlist_add_last(cflare_linkedlist* p_linkedlist, void* p_data, size_t data_size);
-//Add one element ahead of the location
-//\param location The location of the element, 0 is the first element in the list
-int32_t cflare_linkedlist_add(cflare_linkedlist* p_linkedlist, int location, void* p_data, size_t data_size);
+// short cuts, but not neccessary required for implimentation
+void cflare_linkedlist_insert_first(cflare_linkedlist* list, void** output);
+void cflare_linkedlist_insert_last(cflare_linkedlist* list, void** output);
 
-/*
-Removes
-*/
+#endif /* CFLARE_LINKEDLIST2_H */
 
-//Remove the element p_curnode, for internal use only
-//\param[out] p_lastnode last node pointer
-//\param[out] p_curnode current node pointer
-static int32_t cflare_linkedlist_internal_remove(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode);
-//Remove the first element
-int32_t cflare_linkedlist_remove_first(cflare_linkedlist* p_linkedlist);
-//Remove the last element
-int32_t cflare_linkedlist_remove_last(cflare_linkedlist* p_linkedlist);
-//Remove the element at the location
-//\param location The location of the element, 0 is the first element in the list
-int32_t cflare_linkedlist_remove(cflare_linkedlist* p_linkedlist, int location);
-//Remove the element that first cotains this data, for internal use only
-int32_t cflare_linkedlist_remove(cflare_linkedlist* p_linkedlist, void* p_data);
-
-#endif

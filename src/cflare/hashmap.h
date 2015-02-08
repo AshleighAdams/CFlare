@@ -1,7 +1,7 @@
 #ifndef CFLARE_HASHMAP_H
 #define CFLARE_HASHMAP_H
 
-#include "cflare/linkedlist2.h"
+#include "cflare/linkedlist.h"
 #include "cflare/hash.h"
 
 #include <pthread.h>

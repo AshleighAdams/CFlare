@@ -1,229 +1,148 @@
-#include "linkedlist.h"
 
-#include <stdint.h>
+#include "cflare/linkedlist.h"
 
-static void cflare_linkedlist_internal_get_first(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_curnode)
+cflare_linkedlist* cflare_linkedlist_new(size_t element_size)
 {
-	assert(p_linkedlist);
-
-	p_curnode = p_linkedlist->p_head;
-}
-
-static void cflare_linkedlist_internal_get_last(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode)
-{
-	assert(p_linkedlist);
-
-	p_curnode = p_linkedlist->p_head;
-	while (1)
-	{
-		if (p_curnode->p_next == 0x0)
-			break;
-
-		p_lastnode = p_curnode;
-		p_curnode = p_curnode->p_next;
-	}
-}
-
-static void cflare_linkedlist_internal_get(cflare_linkedlist* p_linkedlist, int location, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode)
-{
-	assert(p_linkedlist);
-
-	int curlocation = 0;
-	p_curnode = p_linkedlist->p_head;
-
-	while (1)
-	{
-		if (curlocation == location || p_curnode == 0x0)
-			break;
-
-		p_lastnode = p_curnode;
-		p_curnode = p_curnode->p_next;
-		curlocation++;
-	}
-
-	//out of range
-	assert(p_curnode);
-}
-
-static void cflare_linkedlist_internal_get(cflare_linkedlist* p_linkedlist, void* p_data, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode)
-{
-	assert(p_linkedlist);
-
-	p_curnode = p_linkedlist->p_head;
-
-	while (1)
-	{
-		if (p_curnode == 0x0)
-			break;
-
-		p_lastnode = p_curnode;
-		p_curnode = p_curnode->p_next;
-	}
-
-	//not found
-	assert(p_curnode);
-}
-
-
-
-static int32_t cflare_linkedlist_internal_add(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode, void* p_data, size_t data_size)
-{
-	cflare_linkedlist_node* p_newnode = 0x0;
-
-	assert(p_linkedlist);
+	cflare_linkedlist* ret = malloc(sizeof(cflare_linkedlist));
+	ret->count = 0;
+	ret->element_size = element_size;
+	ret->first = 0;
+	ret->last = 0;
 	
-	p_newnode = (cflare_linkedlist_node*)malloc(sizeof(cflare_linkedlist_node));
-	assert(p_newnode);
+	return ret;
+}
 
-	p_newnode->size = 1;//fixme
-	p_newnode->p_data = p_data;
-	p_newnode->data_size = data_size;
-	p_newnode->p_next = 0x0;
+void cflare_linkedlist_delete(cflare_linkedlist* list)
+{
+	while(list->count)
+		cflare_linkedlist_remove(list, list->first);
+	
+	free(list);
+}
 
-	//first node
-	if (p_lastnode == 0x0 && p_curnode == 0x0)
+static void insert_between(cflare_linkedlist* list, cflare_linkedlist_node* pre,
+	cflare_linkedlist_node* post, void** output)
+{
+	cflare_linkedlist_node* node = malloc(sizeof(cflare_linkedlist_node));
+	node->data = malloc(list->element_size);
+	memset(node->data, 0, list->element_size);
+	node->prev = pre;
+	node->next = post;
+	
+	if(pre)
+		pre->next = node;
+	else
+		list->first = node;
+	
+	if(post)
+		post->prev = node;
+	else
+		list->last = node;
+	
+	list->count += 1;
+	*output = node->data;
+}
+
+void cflare_linkedlist_insert_before(cflare_linkedlist* list,
+	cflare_linkedlist_node* node, void** output)
+{
+	assert(list);
+	assert(output);
+	insert_between(list, node ? node->prev : 0, node, output);
+}
+
+void cflare_linkedlist_insert_after(cflare_linkedlist* list,
+	cflare_linkedlist_node* node, void** output)
+{
+	assert(list);
+	assert(output);
+	insert_between(list, node, node ? node->next : 0, output);
+}
+
+void cflare_linkedlist_remove(cflare_linkedlist* list,
+	cflare_linkedlist_node* node)
+{
+	assert(list);
+	assert(node);
+	
+	cflare_linkedlist_node* pre = node->prev;
+	cflare_linkedlist_node* post = node->next;
+	
+	if(pre)
+		pre->next = post;
+	else // removing first elm
+		list->first = post;
+	
+	if(post)
+		post->prev = pre;
+	else // removing last elm
+		list->last = pre;
+	
+	free(node->data);
+	free(node);
+	list->count -= 1;
+}
+
+cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list)
+{
+	cflare_linkedlist_iter ret;
+	ret.started = 0;
+	ret.list = list;
+	ret.prev = 0;
+	ret.next = 0;
+	
+	return ret;
+}
+
+cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* iter)
+{
+	if(!iter->started)
 	{
-		p_linkedlist->p_head = p_newnode;
-		p_linkedlist->count++;
-		
-		return 1;
+		iter->next = iter->list->first;
+		iter->prev = 0;
+		iter->started = 1;
+		iter->value = 0;
 	}
+	
+	if(!iter->next)
+		return 0;
+	
+	cflare_linkedlist_node* ret = iter->next;
+	iter->next = ret->next;
+	iter->prev = iter->value;
+	iter->value = ret;
+	return ret;
+}
 
-	//last node
-	if (p_curnode->p_next == 0x0)
+cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* iter)
+{
+	if(!iter->started)
 	{
-		p_curnode->p_next = p_newnode;
-		p_linkedlist->count++;
-
-		return 1;
+		iter->prev = iter->list->last;
+		iter->next = 0;
+		iter->started = 1;
+		iter->value = 0;
 	}
-
-	//somewhere in the middle node
-	p_newnode->p_next = p_curnode;
-	p_lastnode->p_next = p_newnode;
-	p_linkedlist->count++;
-
-	return 1;
-}
-
-int32_t cflare_linkedlist_add_first(cflare_linkedlist* p_linkedlist, void* p_data, size_t data_size)
-{
-	cflare_linkedlist_node* p_curnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get_first(p_linkedlist, p_curnode);
-
-	return cflare_linkedlist_internal_add(p_linkedlist, 0x0, p_curnode, p_data, data_size);
-}
-
-int32_t cflare_linkedlist_add_last(cflare_linkedlist* p_linkedlist, void* p_data, size_t data_size)
-{
-	cflare_linkedlist_node* p_curnode = 0x0;
-	cflare_linkedlist_node* p_lastnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get_last(p_linkedlist, p_lastnode, p_curnode);
-
-	return cflare_linkedlist_internal_add(p_linkedlist, p_lastnode, p_curnode, p_data, data_size);
-}
-
-int32_t cflare_linkedlist_add(cflare_linkedlist* p_linkedlist, int location, void* p_data, size_t data_size)
-{
-	cflare_linkedlist_node* p_curnode = 0x0;
-	cflare_linkedlist_node* p_lastnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get(p_linkedlist, location, p_lastnode, p_curnode);
-
-	return cflare_linkedlist_internal_add(p_linkedlist, p_lastnode, p_curnode, p_data, data_size);
+	
+	if(!iter->prev)
+		return 0;
+	
+	cflare_linkedlist_node* ret = iter->prev;
+	iter->prev = ret->prev;
+	iter->next = iter->value;
+	iter->value = ret;
+	return ret;
 }
 
 
-static int32_t cflare_linkedlist_internal_remove(cflare_linkedlist* p_linkedlist, cflare_linkedlist_node* p_lastnode, cflare_linkedlist_node* p_curnode)
+/// Shortcuts
+
+void cflare_linkedlist_insert_first(cflare_linkedlist* list, void** output)
 {
-	assert(p_linkedlist);
-	assert(p_curnode);
-
-	//first node
-	if (p_lastnode == 0x0)
-	{
-		p_linkedlist->p_head = p_curnode->p_next;
-
-		//fix me - free the data in the node? if not just free the node
-		free(p_curnode->p_data);
-		free(p_curnode);
-		p_linkedlist->count--;
-
-		return 1;
-	}
-
-	//last node
-	if (p_curnode->p_next == 0x0)
-	{
-		p_lastnode->p_next = 0x0;
-
-		free(p_curnode->p_data);
-		free(p_curnode);
-		p_linkedlist->count--;
-
-		return 1;
-	}
-
-	//somewhere in the middle node
-	p_lastnode->p_next = p_curnode->p_next;
-	free(p_curnode->p_data);
-	free(p_curnode);
-	p_linkedlist->count--;
-
-	return 1;
+	cflare_linkedlist_insert_before(list, list->first, output);
 }
 
-int32_t cflare_linkedlist_remove_first(cflare_linkedlist* p_linkedlist)
+void cflare_linkedlist_insert_last(cflare_linkedlist* list, void** output)
 {
-	cflare_linkedlist_node* p_curnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get_first(p_linkedlist, p_curnode);
-
-	return cflare_linkedlist_remove(p_linkedlist, 0x0, p_curnode);
-}
-
-int32_t cflare_linkedlist_remove_last(cflare_linkedlist* p_linkedlist)
-{
-	cflare_linkedlist_node* p_curnode = 0x0;
-	cflare_linkedlist_node* p_lastnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get_last(p_linkedlist, p_lastnode, p_curnode);
-
-	return cflare_linkedlist_remove(p_linkedlist, p_lastnode, p_curnode);
-}
-
-int32_t cflare_linkedlist_remove(cflare_linkedlist* p_linkedlist, int location)
-{
-	cflare_linkedlist_node* p_curnode = 0x0;
-	cflare_linkedlist_node* p_lastnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get(p_linkedlist, location, p_lastnode, p_curnode);
-
-	return cflare_linkedlist_remove(p_linkedlist, p_lastnode, p_curnode);
-}
-
-int32_t cflare_linkedlist_remove(cflare_linkedlist* p_linkedlist, void* p_data)
-{
-	cflare_linkedlist_node* p_curnode = 0x0;
-	cflare_linkedlist_node* p_lastnode = 0x0;
-
-	assert(p_linkedlist);
-
-	cflare_linkedlist_internal_get(p_linkedlist, p_data, p_lastnode, p_curnode);
-
-	return cflare_linkedlist_remove(p_linkedlist, p_lastnode, p_curnode);
+	cflare_linkedlist_insert_after(list, list->last, output);
 }
