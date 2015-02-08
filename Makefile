@@ -1,9 +1,19 @@
 
 TARGET=cflare
 CC ?= gcc
-CFLAGS = -g -Wall -Isrc/ -std=c11 -D_GNU_SOURCE
-LFLAGS = -Wall -std=c11
-LIBS = -lm -lpthread
+CFLAGS += -Wall -Isrc/ -std=c11 -D_GNU_SOURCE
+LFLAGS += -Wall -std=c11
+LIBS += -lm -lpthread
+LDFLAGS += -L.
+
+DEBUG=1
+
+ifeq ($(DEBUG), 1)
+	LDFLAGS += -Wl,-R -Wl,`pwd`
+	CFLAGS += -g
+else
+	CFLAGS += -O3
+endif
 
 .PHONY: default all clean run
 
@@ -25,11 +35,9 @@ lib$(TARGET): $(LIB_OBJECTS)
 	$(CC) -shared $(LIB_OBJECTS) $(LFLAGS) $(LIBS) -o "$@.so"
 
 $(TARGET): lib$(TARGET) $(EXE_HEADERS) $(EXE_SOURCES)
-	$(CC) -L. -l$(TARGET) $(CFLAGS) $(LFLAGS) $(LIBS) -o "$@" $(EXE_SOURCES)
+	$(CC) $(LDFLAGS) -l$(TARGET) $(CFLAGS) $(LFLAGS) $(LIBS) -o "$@" $(EXE_SOURCES)
 
 clean:
 	@echo $(LIB_OBJECTS)
-	-$(RM) "lib$(TARGET).so" $(wildcard src/**.o) $(wildcard src/**/*.o)
+	-$(RM) "lib$(TARGET).so" "$(TARGET)" $(wildcard src/**.o) $(wildcard src/**/*.o)
 
-run:
-	LD_LIBRARY_PATH=".:$LD_LIBRARY_PATH" ./cflare
