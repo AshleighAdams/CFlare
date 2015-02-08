@@ -1,11 +1,11 @@
 
-#include "cflare/hashmap.h"
+#include "cflare/hashtable.h"
 
 const size_t start_size = 32;
 
-cflare_hashmap* cflare_hashmap_new()
+cflare_hashtable* cflare_hashtable_new()
 {
-	cflare_hashmap* ret = malloc(sizeof(cflare_hashmap));
+	cflare_hashtable* ret = malloc(sizeof(cflare_hashtable));
 	ret->buckets_count = 0;
 	ret->buckets = 0;
 	
@@ -17,13 +17,13 @@ cflare_hashmap* cflare_hashmap_new()
 	return ret;
 }
 
-void cflare_hashmap_delete(cflare_hashmap* map)
+void cflare_hashtable_delete(cflare_hashtable* map)
 {
 	if(map->buckets)
 	{
 		for(size_t i = 0; i < map->buckets_count; i++)
 		{
-			cflare_hashmap_bucket* b = map->buckets + i;
+			cflare_hashtable_bucket* b = map->buckets + i;
 			
 			if(!b->list)
 				continue;
@@ -44,13 +44,13 @@ void cflare_hashmap_delete(cflare_hashmap* map)
 	pthread_rwlock_destroy(&map->mutex);
 }
 
-void cflare_hashmap_rebuild(cflare_hashmap* map, size_t count)
+void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 {
 	pthread_rwlock_wrlock(&map->mutex);
 	
-	size_t size = sizeof(cflare_hashmap_bucket) * count;
+	size_t size = sizeof(cflare_hashtable_bucket) * count;
 	
-	cflare_hashmap_bucket* old_buckets = map->buckets;
+	cflare_hashtable_bucket* old_buckets = map->buckets;
 	size_t           old_buckets_count = map->buckets_count;
 	
 	map->buckets = malloc(size);
@@ -62,7 +62,7 @@ void cflare_hashmap_rebuild(cflare_hashmap* map, size_t count)
 	{
 		for(size_t i = 0; i < old_buckets_count; i++)
 		{
-			cflare_hashmap_bucket* b = old_buckets + i;
+			cflare_hashtable_bucket* b = old_buckets + i;
 			
 			if(!b->list)
 				continue;
@@ -71,13 +71,13 @@ void cflare_hashmap_rebuild(cflare_hashmap* map, size_t count)
 			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(b->list);
 			while(cflare_linkedlist_iterator_next(&iter))
 			{
-				cflare_hashmap_container* cont = (cflare_hashmap_container*)iter.value->data;
+				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
 				cflare_hash hash;
 				hash.hash = cont->hash;
 				hash.pointer = cont->key;
 				hash.pointer_size = cont->key_size;
 				
-				cflare_hashmap_set(map, hash, cont->data, cont->data_size);
+				cflare_hashtable_set(map, hash, cont->data, cont->data_size);
 			}
 			
 			cflare_linkedlist_delete(b->list);
@@ -106,22 +106,22 @@ uint8_t memory_equals(size_t len, const void* a, const void* b)
 	return 1;
 }
 
-void cflare_hashmap_set(cflare_hashmap* map, cflare_hash hash, const void* value, size_t len)
+void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* value, size_t len)
 {
 	if(!map->buckets)
-		cflare_hashmap_rebuild(map, start_size);
+		cflare_hashtable_rebuild(map, start_size);
 	
 	pthread_rwlock_wrlock(&map->mutex);
 	
 	assert(map->buckets && map->buckets_count > 0);
 	
 	uint32_t pos = hash.hash % map->buckets_count;
-	cflare_hashmap_bucket* bucket = map->buckets + pos;
+	cflare_hashtable_bucket* bucket = map->buckets + pos;
 	
 	// the bucket has not yet been setup
 	if(!bucket->list)
 	{
-		bucket->list = cflare_linkedlist_new(sizeof(cflare_hashmap_container));
+		bucket->list = cflare_linkedlist_new(sizeof(cflare_hashtable_container));
 		pthread_rwlockattr_t attr;
 		pthread_rwlockattr_init(&attr);
 		assert(pthread_rwlock_init(&bucket->mutex, &attr) == 0);
@@ -135,7 +135,7 @@ void cflare_hashmap_set(cflare_hashmap* map, cflare_hash hash, const void* value
 		cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
 		while(cflare_linkedlist_iterator_next(&iter))
 		{
-			cflare_hashmap_container* cont = (cflare_hashmap_container*)iter.value->data;
+			cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
 			if(hash.pointer_size != cont->key_size || hash.hash != cont->hash)
 				continue;
 			
@@ -143,7 +143,7 @@ void cflare_hashmap_set(cflare_hashmap* map, cflare_hash hash, const void* value
 				break;
 		}
 		
-		cflare_hashmap_container* container;
+		cflare_hashtable_container* container;
 		if(iter.value)
 			free(container->data);
 		else
@@ -164,7 +164,7 @@ void cflare_hashmap_set(cflare_hashmap* map, cflare_hash hash, const void* value
 	pthread_rwlock_unlock(&map->mutex);
 }
 
-uint8_t cflare_hashmap_get(cflare_hashmap* map, cflare_hash hash,
+uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 	void** out, size_t* len)
 {
 	uint8_t status = 0;
@@ -173,7 +173,7 @@ uint8_t cflare_hashmap_get(cflare_hashmap* map, cflare_hash hash,
 	if(map->buckets_count > 0)
 	{
 		uint32_t pos = hash.hash % map->buckets_count;
-		cflare_hashmap_bucket* bucket = map->buckets + pos;
+		cflare_hashtable_bucket* bucket = map->buckets + pos;
 		
 		if(bucket->list && bucket->list->count > 0)
 		{
@@ -184,7 +184,7 @@ uint8_t cflare_hashmap_get(cflare_hashmap* map, cflare_hash hash,
 			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
 			while(cflare_linkedlist_iterator_next(&iter))
 			{
-				cflare_hashmap_container* cont = (cflare_hashmap_container*)iter.value->data;
+				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
 				if(hash.pointer_size != cont->key_size || hash.hash != cont->hash)
 					continue;
 				

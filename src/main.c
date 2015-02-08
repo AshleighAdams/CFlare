@@ -1,8 +1,9 @@
 #include "cflare/handle.h"
 #include "cflare/util.h"
+#include "cflare/hook.h"
 
 #include "cflare/linkedlist.h"
-#include "cflare/hashmap.h"
+#include "cflare/hashtable.h"
 
 int main(int argc, char** argv)
 {
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
 		cflare_linkedlist_delete(list);
 	}
 	
-	// hashmap test
+	// hashtable test
 	{
 		const char* test = "Hello, world!";
 		size_t len = strlen(test);
@@ -45,33 +46,33 @@ int main(int argc, char** argv)
 		cflare_hash hash = cflare_hash_compute(test, len);
 		printf("hash(\"%s\") = %u\n", test, hash.hash);
 		
-		cflare_hashmap* map = cflare_hashmap_new();
+		cflare_hashtable* map = cflare_hashtable_new();
 		{
 			const char* key = "Content-Length";
 			size_t key_len = strlen(key);
 			const char* value = "1337";
 			size_t value_len = strlen(key);
 			
-			cflare_debug("hashmap test: pre-set: %lu buckets", map->buckets_count);
-			cflare_hashmap_set(map, cflare_hash_compute(key, key_len), value, value_len);
-			cflare_debug("hashmap test: post-set: %lu buckets", map->buckets_count);
+			cflare_debug("hashtable test: pre-set: %lu buckets", map->buckets_count);
+			cflare_hashtable_set(map, cflare_hash_compute(key, key_len), value, value_len);
+			cflare_debug("hashtable test: post-set: %lu buckets", map->buckets_count);
 			
 			char* get_value;
 			size_t get_value_len;
-			if(!cflare_hashmap_get(map, cflare_hash_compute(key, key_len), (void**)&get_value, &get_value_len))
-				cflare_debug("hashmap test [fail]: %s not located", key);
+			if(!cflare_hashtable_get(map, cflare_hash_compute(key, key_len), (void**)&get_value, &get_value_len))
+				cflare_debug("hashtable test [fail]: %s not located", key);
 			else
-				cflare_debug("hashmap test [okay]: %s = %s", key, get_value);
+				cflare_debug("hashtable test [okay]: %s = %s", key, get_value);
 			
-			cflare_hashmap_rebuild(map, 16);
-			cflare_debug("hashmap test: post-rebuild: %lu buckets", map->buckets_count);
+			cflare_hashtable_rebuild(map, 16);
+			cflare_debug("hashtable test: post-rebuild: %lu buckets", map->buckets_count);
 			
-			if(!cflare_hashmap_get(map, cflare_hash_compute(key, key_len), (void**)&get_value, &get_value_len))
-				cflare_debug("hashmap test rebuild [fail]: %s not located", key);
+			if(!cflare_hashtable_get(map, cflare_hash_compute(key, key_len), (void**)&get_value, &get_value_len))
+				cflare_debug("hashtable test rebuild [fail]: %s not located", key);
 			else
-				cflare_debug("hashmap test rebuild [okay]: %s = %s", key, get_value);
+				cflare_debug("hashtable test rebuild [okay]: %s = %s", key, get_value);
 		}
-		cflare_hashmap_delete(map);
+		cflare_hashtable_delete(map);
 	}
 	
 	cflare_handle_load();
