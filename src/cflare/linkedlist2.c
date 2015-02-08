@@ -25,6 +25,7 @@ static void insert_between(cflare_linkedlist* list, cflare_linkedlist_node* pre,
 {
 	cflare_linkedlist_node* node = malloc(sizeof(cflare_linkedlist_node));
 	node->data = malloc(list->element_size);
+	memset(node->data, 0, list->element_size);
 	node->prev = pre;
 	node->next = post;
 	
