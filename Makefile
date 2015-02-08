@@ -5,12 +5,7 @@ CFLAGS = -g -Wall -Isrc/ -std=c11 -D_GNU_SOURCE
 LFLAGS = -Wall -std=c11
 LIBS = -lm
 
-OS_NAME = none
-
-ifeq ($(OS),Windows_NT)
-else
-	LFLAGS += -lpthread
-endif
+LFLAGS += -lpthread
 
 .PHONY: default all clean
 
