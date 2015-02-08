@@ -131,3 +131,15 @@ cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* 
 	return ret;
 }
 
+
+/// Shortcuts
+
+void cflare_linkedlist_insert_first(cflare_linkedlist* list, void** output)
+{
+	cflare_linkedlist_insert_before(list, list->first, output);
+}
+
+void cflare_linkedlist_insert_last(cflare_linkedlist* list, void** output)
+{
+	cflare_linkedlist_insert_after(list, list->last, output);
+}

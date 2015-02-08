@@ -42,5 +42,9 @@ cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list);
 cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* iter);
 cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* iter);
 
+// short cuts, but not neccessary required for implimentation
+void cflare_linkedlist_insert_first(cflare_linkedlist* list, void** output);
+void cflare_linkedlist_insert_last(cflare_linkedlist* list, void** output);
+
 #endif /* CFLARE_LINKEDLIST2_H */
 
