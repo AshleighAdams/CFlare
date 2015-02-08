@@ -100,6 +100,7 @@ cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* 
 		iter->next = iter->list->first;
 		iter->prev = 0;
 		iter->started = 1;
+		iter->value = 0;
 	}
 	
 	if(!iter->next)
@@ -119,6 +120,7 @@ cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* 
 		iter->prev = iter->list->last;
 		iter->next = 0;
 		iter->started = 1;
+		iter->value = 0;
 	}
 	
 	if(!iter->prev)
