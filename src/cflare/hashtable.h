@@ -6,8 +6,6 @@
 
 #include <pthread.h>
 
-typedef void(cflare_hashtable_deleter)(void* data, void* context);
-
 typedef struct cflare_hashtable_container
 {
 	uint32_t hash;
@@ -28,15 +26,16 @@ typedef struct cflare_hashtable
 	cflare_hashtable_bucket* buckets;
 	size_t buckets_count;
 	pthread_rwlock_t mutex;
-	cflare_hashtable_deleter* deleter;
+	cflare_deleter* deleter;
 	void* deleter_context;
 } cflare_hashtable;
 
+// TODO: maybe add _key_ondelete and _key_setcompare
 
 cflare_hashtable* cflare_hashtable_new();
 void cflare_hashtable_delete(cflare_hashtable* map);
 
-void cflare_hashtable_ondelete(cflare_hashtable* list, cflare_hashtable_deleter* func, void* context);
+void cflare_hashtable_ondelete(cflare_hashtable* list, cflare_deleter* func, void* context);
 
 void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count);
 

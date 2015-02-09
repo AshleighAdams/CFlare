@@ -22,7 +22,7 @@ void cflare_linkedlist_delete(cflare_linkedlist* list)
 	free(list);
 }
 
-void cflare_linkedlist_ondelete(cflare_linkedlist* list, cflare_linkedlist_deleter* func, void* context)
+void cflare_linkedlist_ondelete(cflare_linkedlist* list, cflare_deleter* func, void* context)
 {
 	list->deleter = func;
 	list->deleter_context = context;

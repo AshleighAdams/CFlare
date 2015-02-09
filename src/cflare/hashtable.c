@@ -58,7 +58,7 @@ void cflare_hashtable_delete(cflare_hashtable* map)
 	pthread_rwlock_destroy(&map->mutex);
 }
 
-void cflare_hashtable_ondelete(cflare_hashtable* map, cflare_hashtable_deleter* func, void* context)
+void cflare_hashtable_ondelete(cflare_hashtable* map, cflare_deleter* func, void* context)
 {
 	map->deleter = func;
 	map->deleter_context = context;

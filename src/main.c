@@ -5,7 +5,7 @@
 #include "cflare/linkedlist.h"
 #include "cflare/hashtable.h"
 
-uint32_t unload_test(const cflare_hook_stack* args, cflare_hook_stack* rets, void* context)
+uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	cflare_debug("Unload hook called!");
 	return 0;

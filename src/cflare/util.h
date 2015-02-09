@@ -11,6 +11,8 @@ typedef float double32_t;
 typedef double double64_t;
 typedef long double double128_t;
 
+typedef void(cflare_deleter)(void* data, void* context);
+
 void cflare_debug_c(const char* str);
 void cflare_info_c(const char* str);
 void cflare_log_c(const char* str);
