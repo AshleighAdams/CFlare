@@ -63,10 +63,16 @@ int main(int argc, char** argv)
 			cflare_hashtable_set(map, cflare_hash_compute(key, key_len), value, value_len);
 			cflare_debug("hashtable test: post-set: %lu buckets", map->buckets_count);
 			
+			cflare_hashtable_set(map, cflare_hash_compute(key, key_len), value, value_len);
+			if(map->count == 1)
+				cflare_debug("hashtable test: replace: double-set replaced old.");
+			else
+				cflare_warn("hashtable test: replace: double-set did not replace old.");
+			
 			char* get_value;
 			size_t get_value_len;
 			if(!cflare_hashtable_get(map, cflare_hash_compute(key, key_len), (void**)&get_value, &get_value_len))
-				cflare_debug("hashtable test [fail]: %s not located", key);
+				cflare_warn("hashtable test [fail]: %s not located", key);
 			else
 				cflare_debug("hashtable test [okay]: %s = %s", key, get_value);
 			

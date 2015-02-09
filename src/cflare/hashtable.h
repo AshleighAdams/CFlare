@@ -25,6 +25,7 @@ typedef struct cflare_hashtable
 {
 	cflare_hashtable_bucket* buckets;
 	size_t buckets_count;
+	size_t count;
 	pthread_rwlock_t mutex;
 	cflare_deleter* deleter;
 	void* deleter_context;
