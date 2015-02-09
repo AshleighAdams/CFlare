@@ -6,7 +6,7 @@ LFLAGS += -Wall -std=c11
 LIBS += -lm -lpthread
 LDFLAGS += -L.
 
-DEBUG=1
+DEBUG ?= 1
 
 ifeq ($(DEBUG), 1)
 	LDFLAGS += -Wl,-R -Wl,`pwd`

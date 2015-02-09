@@ -3,11 +3,15 @@
 
 const size_t start_size = 32;
 
-void free_container(void* data, void* unused)
+void free_container(void* data, void* hashtable)
 {
 	cflare_hashtable_container* cont = (cflare_hashtable_container*)data;
-	free(cont->data);
+	cflare_hashtable* self = (cflare_hashtable*)hashtable;
 	free(cont->key);
+	
+	if(self->deleter && cont->data)
+		self->deleter(cont->data, self->deleter_context);
+	free(cont->data);
 }
 
 cflare_hashtable* cflare_hashtable_new()
@@ -16,6 +20,8 @@ cflare_hashtable* cflare_hashtable_new()
 	
 	ret->buckets_count = 0;
 	ret->buckets = 0;
+	ret->deleter = 0;
+	ret->deleter_context = 0;
 	
 	// setup the RW mutex
 	pthread_rwlockattr_t attr;
@@ -52,6 +58,12 @@ void cflare_hashtable_delete(cflare_hashtable* map)
 	pthread_rwlock_destroy(&map->mutex);
 }
 
+void cflare_hashtable_ondelete(cflare_hashtable* map, cflare_hashtable_deleter* func, void* context)
+{
+	map->deleter = func;
+	map->deleter_context = context;
+}
+
 void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 {
 	pthread_rwlock_wrlock(&map->mutex);
@@ -86,6 +98,10 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 				hash.pointer_size = cont->key_size;
 				
 				cflare_hashtable_set(map, hash, cont->data, cont->data_size);
+				
+				// this data is being moved, not removed, so make sure the deleter isn't called.
+				free(cont->data);
+				cont->data = 0;
 			}
 			
 			cflare_linkedlist_delete(b->list);
@@ -135,7 +151,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 		assert(pthread_rwlock_init(&bucket->mutex, &attr) == 0);
 		pthread_rwlockattr_destroy(&attr);
 		
-		cflare_linkedlist_ondelete(bucket->list, &free_container, 0);
+		cflare_linkedlist_ondelete(bucket->list, &free_container, map);
 	}
 	
 	// lock the bucket for writing
