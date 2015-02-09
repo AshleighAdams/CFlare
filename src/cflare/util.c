@@ -24,6 +24,5 @@ void cflare_warn_c(const char* str)
 void cflare_fatal_c(const char* str)
 {
 	fprintf(stderr, "fatal: %s\n", str);
-	*(int*)0 = 0; // raise a segfault
-	exit(1);
+	abort();
 }
