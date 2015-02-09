@@ -8,6 +8,8 @@ cflare_linkedlist* cflare_linkedlist_new(size_t element_size)
 	ret->element_size = element_size;
 	ret->first = 0;
 	ret->last = 0;
+	ret->deleter = 0;
+	ret->deleter_context = 0;
 	
 	return ret;
 }
@@ -18,6 +20,12 @@ void cflare_linkedlist_delete(cflare_linkedlist* list)
 		cflare_linkedlist_remove(list, list->first);
 	
 	free(list);
+}
+
+void cflare_linkedlist_ondelete(cflare_linkedlist* list, cflare_linkedlist_deleter* func, void* context)
+{
+	list->deleter = func;
+	list->deleter_context = context;
 }
 
 static void insert_between(cflare_linkedlist* list, cflare_linkedlist_node* pre,
@@ -78,6 +86,8 @@ void cflare_linkedlist_remove(cflare_linkedlist* list,
 	else // removing last elm
 		list->last = pre;
 	
+	if(list->deleter && node->data)
+		list->deleter(node->data, list->deleter_context);
 	free(node->data);
 	free(node);
 	list->count -= 1;

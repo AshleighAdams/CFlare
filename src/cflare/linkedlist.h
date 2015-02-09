@@ -4,6 +4,8 @@
 
 #include "cflare/util.h"
 
+typedef void(cflare_linkedlist_deleter)(void* node, void* context);
+
 struct cflare_linkedlist;
 
 typedef struct cflare_linkedlist_node
@@ -17,6 +19,8 @@ typedef struct cflare_linkedlist
 {
 	uint64_t count;
 	size_t element_size;
+	cflare_linkedlist_deleter* deleter;
+	void* deleter_context;
 	struct cflare_linkedlist_node* first;
 	struct cflare_linkedlist_node* last;
 	
@@ -33,6 +37,8 @@ typedef struct cflare_linkedlist_iter
 
 cflare_linkedlist* cflare_linkedlist_new(size_t element_size);
 void cflare_linkedlist_delete(cflare_linkedlist* list);
+
+void cflare_linkedlist_ondelete(cflare_linkedlist* list, cflare_linkedlist_deleter* func, void* context);
 
 void cflare_linkedlist_insert_before(cflare_linkedlist* list, cflare_linkedlist_node* node, void** output);
 void cflare_linkedlist_insert_after(cflare_linkedlist* list, cflare_linkedlist_node* node, void** output);
