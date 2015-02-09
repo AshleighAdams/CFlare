@@ -7,7 +7,9 @@
 
 uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
-	cflare_debug("Unload hook called!");
+	cflare_debug("Inside Unload hook! args: %p; rets: %p", args, rets);
+	//cflare_hookstack_push_integer(rets, 1337);
+	cflare_hookstack_push_number(rets, 1337);
 	return 0;
 }
 
@@ -97,7 +99,19 @@ int main(int argc, char** argv)
 	printf("hd = %lu\n", hd);
 	cflare_handle_unreference(hd);
 	
-	cflare_hook_call("Unload", 0, 0);
+	{
+		cflare_hookstack* args = cflare_hookstack_new();
+		cflare_hookstack* rets = cflare_hookstack_new();
+			cflare_hook_call("Unload", args, rets);
+			int64_t val;
+			if(cflare_hookstack_get_integer(rets, 0, &val))
+				cflare_debug("Unload: return 0: %li", val);
+			else
+				cflare_debug("Unload: return 0: (nil)");
+		cflare_hookstack_delete(args);
+		cflare_hookstack_delete(rets);
+	}
+	
 	cflare_hook_unload();
 	cflare_handle_unload();
 	return 0;
