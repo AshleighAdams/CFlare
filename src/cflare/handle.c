@@ -11,7 +11,8 @@ struct reference
 	cflare_handle id;
 	void* data;
 	size_t count;
-	cflare_handle_deleter deleter;
+	cflare_deleter* deleter;
+	void* deleter_context;
 };
 
 #define MAX_REFS 255
@@ -66,6 +67,7 @@ void cflare_handle_load()
 		ref->data = 0;
 		ref->count = 0;
 		ref->deleter = 0;
+		ref->deleter_context = 0;
 	}
 	
 	if(mtx_init(&mutex, mtx_plain) != thrd_success)
@@ -82,7 +84,8 @@ void cflare_handle_unload()
 		struct reference* ref = refs + i;
 		if(ref->id)
 		{
-			cflare_warn("handle: %s (hd %lu) still has %lu references!", ref->type, ref->id, ref->count);
+			cflare_warn("handle: %s (hd %lu) still has %lu references!",
+				ref->type, ref->id, ref->count);
 		}
 	}
 	
@@ -91,7 +94,8 @@ void cflare_handle_unload()
 	loaded = 0;
 }
 
-cflare_handle cflare_handle_new(const char* type, void* data, cflare_handle_deleter deleter)
+cflare_handle cflare_handle_new(const char* type, void* data,
+	cflare_deleter* deleter, void* context)
 {
 	assert(loaded);
 	struct reference* ref;
@@ -107,6 +111,7 @@ cflare_handle cflare_handle_new(const char* type, void* data, cflare_handle_dele
 		strcpy(ref->type, type);
 		ref->data = data;
 		ref->deleter = deleter;
+		ref->deleter_context = context;
 		ref->count = 1;
 	
 		cflare_debug("handle: created %lu (%s)", ref->id, ref->type);
@@ -158,7 +163,7 @@ void cflare_handle_unreference(cflare_handle hd)
 			cflare_log("handle: destroyed %lu (%s)", ref->id, ref->type);
 			ref->id = 0;
 			if(ref->deleter)
-				ref->deleter(ref->data);
+				ref->deleter(ref->data, ref->deleter_context);
 		}
 	}
 	mtx_unlock(&mutex);

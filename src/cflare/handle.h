@@ -4,13 +4,15 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "cflare/util.h"
+
 typedef size_t cflare_handle;
-typedef void(*cflare_handle_deleter)(void* ptr);
 
 void cflare_handle_load();
 void cflare_handle_unload();
 
-cflare_handle cflare_handle_new(const char* type, void* data, cflare_handle_deleter deleter);
+cflare_handle cflare_handle_new(const char* type, void* data,
+	cflare_deleter* deleter, void* context);
 void cflare_handle_reference(cflare_handle hd);
 void cflare_handle_unreference(cflare_handle hd);
 

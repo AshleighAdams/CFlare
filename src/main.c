@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 	
 	cflare_hook_add("Unload", "unload test", 0, &unload_test, 0);
 	
-	cflare_handle hd = cflare_handle_new("test", 0, 0);
+	cflare_handle hd = cflare_handle_new("test", 0, 0, 0);
 	printf("hd = %lu\n", hd);
 	cflare_handle_unreference(hd);
 	
