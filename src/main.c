@@ -5,6 +5,12 @@
 #include "cflare/linkedlist.h"
 #include "cflare/hashtable.h"
 
+uint32_t unload_test(const cflare_hook_stack* args, cflare_hook_stack* rets, void* context)
+{
+	cflare_debug("Unload hook called!");
+	return 0;
+}
+
 int main(int argc, char** argv)
 {
 	// linked list test
@@ -76,11 +82,17 @@ int main(int argc, char** argv)
 	}
 	
 	cflare_handle_load();
+	cflare_hook_load();
+	cflare_hook_call("Load", 0, 0);
+	
+	cflare_hook_add("Unload", "unload test", 0, &unload_test, 0);
 	
 	cflare_handle hd = cflare_handle_new("test", 0, 0);
 	printf("hd = %lu\n", hd);
 	cflare_handle_unreference(hd);
 	
+	cflare_hook_call("Unload", 0, 0);
+	cflare_hook_unload();
 	cflare_handle_unload();
 	return 0;
 }
