@@ -28,6 +28,14 @@ void cflare_hashtable_delete(cflare_hashtable* map)
 			if(!b->list)
 				continue;
 			
+			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(b->list);
+			while(cflare_linkedlist_iterator_next(&iter))
+			{
+				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
+				free(cont->data);
+				free(cont->key);
+			}
+			
 			cflare_linkedlist_delete(b->list);
 			pthread_rwlock_destroy(&b->mutex);
 		}
@@ -78,6 +86,10 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 				hash.pointer_size = cont->key_size;
 				
 				cflare_hashtable_set(map, hash, cont->data, cont->data_size);
+				
+				// now free the data
+				free(cont->data);
+				free(cont->key);
 			}
 			
 			cflare_linkedlist_delete(b->list);
