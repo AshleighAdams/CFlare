@@ -78,13 +78,20 @@ int main(int argc, char** argv)
 			else
 				cflare_debug("hashtable test [okay]: %s = %s", key, get_value);
 			
-			cflare_hashtable_rebuild(map, 16);
+			cflare_hashtable_rebuild(map, 64);
 			cflare_debug("hashtable test: post-rebuild: %lu buckets", map->buckets_count);
 			
 			if(!cflare_hashtable_get(map, cflare_hash_compute(key, key_len), (void**)&get_value, &get_value_len))
 				cflare_debug("hashtable test rebuild [fail]: %s not located", key);
 			else
 				cflare_debug("hashtable test rebuild [okay]: %s = %s", key, get_value);
+			
+			cflare_hashtable_set(map, cflare_hash_compute(key, key_len), 0, 0);
+			if(map->count == 1)
+				cflare_warn("hashtable test: remove: set null did not remove.");
+			else
+				cflare_debug("hashtable test: remove: set null removed.");
+			
 		}
 		cflare_hashtable_delete(map);
 	}

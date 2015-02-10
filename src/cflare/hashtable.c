@@ -72,7 +72,7 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 	size_t size = sizeof(cflare_hashtable_bucket) * count;
 	
 	cflare_hashtable_bucket* old_buckets = map->buckets;
-	size_t           old_buckets_count = map->buckets_count;
+	size_t             old_buckets_count = map->buckets_count;
 	
 	map->buckets = malloc(size);
 	memset(map->buckets, 0, size);
@@ -88,21 +88,36 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 			if(!b->list)
 				continue;
 			
+			// disable the delete hook
+			cflare_linkedlist_ondelete(b->list, 0, 0);
+			
 			// copy to the new one
 			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(b->list);
 			while(cflare_linkedlist_iterator_next(&iter))
 			{
 				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
-				cflare_hash hash;
-				hash.hash = cont->hash;
-				hash.pointer = cont->key;
-				hash.pointer_size = cont->key_size;
 				
-				cflare_hashtable_set(map, hash, cont->data, cont->data_size);
+				size_t pos = cont->hash % map->buckets_count;
+				cflare_hashtable_bucket* nb = map->buckets + pos;
 				
-				// this data is being moved, not removed, so make sure the deleter isn't called.
-				free(cont->data);
-				cont->data = 0;
+				if(!nb->list)
+				{
+					nb->list = cflare_linkedlist_new(sizeof(cflare_hashtable_container));
+					assert(nb->list);
+					
+					pthread_rwlockattr_t attr;
+					pthread_rwlockattr_init(&attr);
+					assert(pthread_rwlock_init(&nb->mutex, &attr) == 0);
+					pthread_rwlockattr_destroy(&attr);
+		
+					cflare_linkedlist_ondelete(nb->list, &free_container, map);
+				}
+				
+				cflare_hashtable_container* newcont;
+				cflare_linkedlist_insert_last(nb->list, (void**)&newcont);
+				
+				memcpy(newcont, cont, sizeof(cflare_hashtable_container));
+				cflare_linkedlist_remove(b->list, iter.value);
 			}
 			
 			cflare_linkedlist_delete(b->list);
@@ -133,19 +148,42 @@ uint8_t memory_equals(size_t len, const void* a, const void* b)
 
 void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* value, size_t len)
 {
-	if(map->count >= map->buckets_count * 2)
+	if(value)
 	{
-		size_t newsize = map->buckets_count * 2 * 2;
-		if(newsize < start_size)
-			newsize = start_size;
+		//   32 buckets = resizes at   64 elements to  128 buckets
+		//  128 buckets = resizes at  256 elements to  512 buckets
+		//  512 buckets = resizes at 1024 elements to 2048 buckets
+		// 2048 buckets = resizes at 4096 elements to 8192 buckets
+		if(map->count + 1 > map->buckets_count * 2)
+		{
+			size_t newsize = map->buckets_count * 4;
+			if(newsize < start_size)
+				newsize = start_size;
 		
-		cflare_debug("automatically resizing a hashtable to %lu buckets", newsize);
-		cflare_hashtable_rebuild(map, newsize);
+			cflare_debug("automatically growing a hashtable to %lu buckets", newsize);
+			cflare_hashtable_rebuild(map, newsize);
+		}
+	}
+	else
+	{
+		// 8192 buckets = resizes at 1024 elements to 2048 buckets
+		// 2048 buckets = resizes at  256 elements to  512 buckets
+		//  512 buckets = resizes at   64 elements to  128 buckets
+		//  128 buckets = resizes at   16 elements to   32 buckets
+		if(map->count - 1 < map->buckets_count / 8)
+		{
+			size_t newsize = map->buckets_count / 4;
+			if(newsize > start_size)
+			{
+				cflare_debug("automatically shrinking a hashtable to %lu buckets", newsize);
+				cflare_hashtable_rebuild(map, newsize);
+			}
+		}
 	}
 	
-	pthread_rwlock_wrlock(&map->mutex);
-	
 	assert(map->buckets && map->buckets_count > 0);
+	
+	pthread_rwlock_wrlock(&map->mutex);
 	
 	uint32_t pos = hash.hash % map->buckets_count;
 	cflare_hashtable_bucket* bucket = map->buckets + pos;
