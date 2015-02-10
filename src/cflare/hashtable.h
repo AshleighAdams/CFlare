@@ -3,8 +3,7 @@
 
 #include "cflare/linkedlist.h"
 #include "cflare/hash.h"
-
-#include <pthread.h>
+#include "cflare/mutex.h"
 
 typedef struct cflare_hashtable_container
 {
@@ -18,7 +17,7 @@ typedef struct cflare_hashtable_container
 typedef struct cflare_hashtable_bucket
 {
 	cflare_linkedlist* list;
-	pthread_rwlock_t mutex;
+	cflare_rwmutex* mutex;
 } cflare_hashtable_bucket;
 
 typedef struct cflare_hashtable
@@ -26,7 +25,7 @@ typedef struct cflare_hashtable
 	cflare_hashtable_bucket* buckets;
 	size_t buckets_count;
 	size_t count;
-	pthread_rwlock_t mutex;
+	cflare_rwmutex* mutex;
 	cflare_deleter* deleter;
 	void* deleter_context;
 } cflare_hashtable;

@@ -25,10 +25,7 @@ cflare_hashtable* cflare_hashtable_new()
 	ret->deleter_context = 0;
 	
 	// setup the RW mutex
-	pthread_rwlockattr_t attr;
-	pthread_rwlockattr_init(&attr);
-	assert(pthread_rwlock_init(&ret->mutex, &attr) == 0);
-	pthread_rwlockattr_destroy(&attr);
+	ret->mutex = cflare_rwmutex_new(CFLARE_MUTEX_PLAIN);
 	return ret;
 }
 
@@ -44,7 +41,7 @@ void cflare_hashtable_delete(cflare_hashtable* map)
 				continue;
 			
 			cflare_linkedlist_delete(b->list);
-			pthread_rwlock_destroy(&b->mutex);
+			cflare_rwmutex_delete(b->mutex);
 		}
 	}
 	
@@ -56,7 +53,7 @@ void cflare_hashtable_delete(cflare_hashtable* map)
 	
 	free(map);
 	
-	pthread_rwlock_destroy(&map->mutex);
+	cflare_rwmutex_delete(map->mutex);
 }
 
 void cflare_hashtable_ondelete(cflare_hashtable* map, cflare_deleter* func, void* context)
@@ -67,7 +64,7 @@ void cflare_hashtable_ondelete(cflare_hashtable* map, cflare_deleter* func, void
 
 void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 {
-	pthread_rwlock_wrlock(&map->mutex);
+	cflare_rwmutex_write_lock(map->mutex);
 	
 	size_t size = sizeof(cflare_hashtable_bucket) * count;
 	
@@ -104,11 +101,7 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 				{
 					nb->list = cflare_linkedlist_new(sizeof(cflare_hashtable_container));
 					assert(nb->list);
-					
-					pthread_rwlockattr_t attr;
-					pthread_rwlockattr_init(&attr);
-					assert(pthread_rwlock_init(&nb->mutex, &attr) == 0);
-					pthread_rwlockattr_destroy(&attr);
+					nb->mutex = cflare_rwmutex_new(CFLARE_MUTEX_PLAIN);
 		
 					cflare_linkedlist_ondelete(nb->list, &free_container, map);
 				}
@@ -121,12 +114,12 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 			}
 			
 			cflare_linkedlist_delete(b->list);
-			pthread_rwlock_destroy(&b->mutex);
+			cflare_rwmutex_delete(b->mutex);
 		}
 		free(old_buckets);
 	}
 	
-	pthread_rwlock_unlock(&map->mutex);
+	cflare_rwmutex_write_unlock(map->mutex);
 }
 
 uint8_t memory_equals(size_t len, const void* a, const void* b)
@@ -183,7 +176,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 	
 	assert(map->buckets && map->buckets_count > 0);
 	
-	pthread_rwlock_wrlock(&map->mutex);
+	cflare_rwmutex_write_lock(map->mutex);
 	
 	uint32_t pos = hash.hash % map->buckets_count;
 	cflare_hashtable_bucket* bucket = map->buckets + pos;
@@ -195,10 +188,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 		if(value)
 		{
 			bucket->list = cflare_linkedlist_new(sizeof(cflare_hashtable_container));
-			pthread_rwlockattr_t attr;
-			pthread_rwlockattr_init(&attr);
-			assert(pthread_rwlock_init(&bucket->mutex, &attr) == 0);
-			pthread_rwlockattr_destroy(&attr);
+			bucket->mutex = cflare_rwmutex_new(CFLARE_MUTEX_PLAIN);
 		
 			cflare_linkedlist_ondelete(bucket->list, &free_container, map);
 		}
@@ -209,7 +199,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 	
 	if(list)
 	{
-		pthread_rwlock_wrlock(&bucket->mutex);
+		cflare_rwmutex_write_lock(bucket->mutex);
 		{
 			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
 			while(cflare_linkedlist_iterator_next(&iter))
@@ -256,17 +246,17 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 				memcpy(container->data, value, len);
 			}
 		}
-		pthread_rwlock_unlock(&bucket->mutex);
+		cflare_rwmutex_write_unlock(bucket->mutex);
 	}
 	
-	pthread_rwlock_unlock(&map->mutex);
+	cflare_rwmutex_write_unlock(map->mutex);
 }
 
 uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 	void** out, size_t* len)
 {
 	uint8_t status = 0;
-	pthread_rwlock_rdlock(&map->mutex);
+	cflare_rwmutex_read_lock(map->mutex);
 	
 	if(map->buckets_count > 0)
 	{
@@ -277,7 +267,7 @@ uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 		{
 			cflare_linkedlist* list = bucket->list;
 			
-			pthread_rwlock_rdlock(&bucket->mutex);
+			cflare_rwmutex_read_lock(bucket->mutex);
 			
 			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
 			while(cflare_linkedlist_iterator_next(&iter))
@@ -295,10 +285,10 @@ uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 				}
 			}
 			
-			pthread_rwlock_unlock(&bucket->mutex);
+			cflare_rwmutex_read_unlock(bucket->mutex);
 		}
 	}
 	
-	pthread_rwlock_unlock(&map->mutex);
+	cflare_rwmutex_read_unlock(map->mutex);
 	return status;
 }
