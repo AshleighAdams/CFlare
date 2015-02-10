@@ -26,10 +26,13 @@ LIB_HEADERS = $(wildcard src/cflare/**/*.h) $(wildcard src/cflare/*.h)
 EXE_SOURCES = $(wildcard src/*.c)
 EXE_HEADERS = $(wildcard src/*.h)
 
-# if POSIX then
+ifeq ($(OS),Windows_NT)
+	LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-windows/**/*.c) $(wildcard src/cflare-windows/*.c))
+	LIB_HEADERS += $(wildcard src/cflare-windows/**/*.h) $(wildcard src/cflare-windows/*.h)
+else
 	LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-posix/**/*.c) $(wildcard src/cflare-posix/*.c))
 	LIB_HEADERS += $(wildcard src/cflare-posix/**/*.h) $(wildcard src/cflare-posix/*.h)
-# end
+endif
 
 %.o: %.c $(LIB_HEADERS)
 	$(CC) -fPIC $(CFLAGS) -c $< -o $@
