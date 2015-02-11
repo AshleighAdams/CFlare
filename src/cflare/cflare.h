@@ -3,7 +3,7 @@
 
 #ifndef CFLARE_API
 	#ifdef _MSC_VER
-		#define CFLARE_API __dllspec(dllexport)
+		#define CFLARE_API __declspec(dllexport)
 	#else
 		#define CFLARE_API // not needed
 	#endif

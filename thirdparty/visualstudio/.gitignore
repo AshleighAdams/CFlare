@@ -1,0 +1,9 @@
+cflare/*/Debug/
+cflare/*/Release/
+
+libcflare/*/Debug/
+libcflare/*/Release/
+
+*.opensdf
+*.sdf
+*.suo
