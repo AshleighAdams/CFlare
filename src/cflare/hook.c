@@ -178,7 +178,7 @@ const char* cflare_hookstack_type_tostring(cflare_hookstack_type input)
 
 // push
 
-cflare_hookstack_elm* get_elm(cflare_hookstack* stack, int32_t index, cflare_hookstack_type type)
+cflare_hookstack_elm* get_elm(const cflare_hookstack* stack, int32_t index, cflare_hookstack_type type)
 {
 	if(!stack)
 		return 0;
@@ -226,7 +226,7 @@ void cflare_hookstack_push_integer(cflare_hookstack* stack, int64_t value)
 	
 	*(int64_t*)elm->data = value;
 }
-int32_t cflare_hookstack_get_integer(cflare_hookstack* stack, int32_t index,
+int32_t cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t index,
 	int64_t* out)
 {
 	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_INTEGER);
@@ -253,7 +253,7 @@ void cflare_hookstack_push_number(cflare_hookstack* stack, double64_t value)
 	
 	*(double64_t*)elm->data = value;
 }
-int32_t cflare_hookstack_get_number(cflare_hookstack* stack, int32_t index,
+int32_t cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index,
 	double64_t* out)
 {
 	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_NUMBER);
