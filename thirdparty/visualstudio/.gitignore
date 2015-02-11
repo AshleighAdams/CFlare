@@ -7,3 +7,5 @@ libcflare/*/Release/
 *.opensdf
 *.sdf
 *.suo
+
+*.vcxproj.user
