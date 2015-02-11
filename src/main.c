@@ -1,9 +1,11 @@
-#include "cflare/handle.h"
-#include "cflare/util.h"
-#include "cflare/hook.h"
 
-#include "cflare/linkedlist.h"
-#include "cflare/hashtable.h"
+#include <cflare/handle.h>
+#include <cflare/util.h>
+#include <cflare/hook.h>
+
+#include <cflare/linkedlist.h>
+#include <cflare/hashtable.h>
+#include <cflare/buffer.h>
 
 uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
@@ -13,8 +15,30 @@ uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void*
 	return 0;
 }
 
+void test_buffer()
+{
+	cflare_buffer* buff = cflare_buffer_new(CFLARE_BUFFER_NOCOPY | CFLARE_BUFFER_NULLCHAR);
+	
+	const char* a = "First";
+	const char* b = "Second";
+	const char* c = "Third";
+	
+	cflare_buffer_append(buff, (uint8_t*)a, strlen(a));
+	cflare_buffer_append(buff, (uint8_t*)b, strlen(b));
+	cflare_buffer_append(buff, (uint8_t*)c, strlen(c));
+	
+	char* result = (char*)cflare_buffer_build(buff);
+	
+	cflare_debug("buffer: %s", result);
+	
+	free(result);
+	cflare_buffer_delete(buff);
+}
+
 int main(int argc, char** argv)
 {
+	test_buffer();
+	
 	// linked list test
 	{
 		cflare_linkedlist* list = cflare_linkedlist_new(32);
