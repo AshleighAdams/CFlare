@@ -2,6 +2,7 @@
 #include <cflare/handle.h>
 #include <cflare/util.h>
 #include <cflare/hook.h>
+#include <cflare/options.h>
 
 #include <cflare/linkedlist.h>
 #include <cflare/hashtable.h>
@@ -120,6 +121,7 @@ int main(int argc, char** argv)
 		cflare_hashtable_delete(map);
 	}
 	
+	cflare_options_load(argc, argv);
 	cflare_handle_load();
 	cflare_hook_load();
 	cflare_hook_call("Load", 0, 0);
@@ -145,5 +147,6 @@ int main(int argc, char** argv)
 	
 	cflare_hook_unload();
 	cflare_handle_unload();
+	clfare_options_unload();
 	return 0;
 }
