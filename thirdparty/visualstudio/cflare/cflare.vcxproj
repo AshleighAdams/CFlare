@@ -19,7 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\main.c" />
+    <ClCompile Include="..\..\..\src\*.c">
+      <Filter>%{FileName}</Filter>
+	</ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\*.h">
+      <Filter>%{FileName}</Filter>
+	</ClInclude>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7DCB9C92-54AD-4421-B3A5-1EAA94F20C14}</ProjectGuid>

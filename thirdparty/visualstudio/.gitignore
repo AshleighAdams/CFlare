@@ -9,3 +9,4 @@ libcflare/*/Release/
 *.suo
 
 *.vcxproj.user
+*.vcxproj.filters

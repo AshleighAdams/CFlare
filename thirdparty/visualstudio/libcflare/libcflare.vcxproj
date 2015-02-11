@@ -143,24 +143,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\cflare-windows\asprintf.c" />
-    <ClCompile Include="..\..\..\src\cflare-windows\mutex.c" />
-    <ClCompile Include="..\..\..\src\cflare\handle.c" />
-    <ClCompile Include="..\..\..\src\cflare\hash.c" />
-    <ClCompile Include="..\..\..\src\cflare\hashtable.c" />
-    <ClCompile Include="..\..\..\src\cflare\hook.c" />
-    <ClCompile Include="..\..\..\src\cflare\linkedlist.c" />
-    <ClCompile Include="..\..\..\src\cflare\util.c" />
+    <ClCompile Include="..\..\..\src\cflare\*.c">
+      <Filter>cflare\%{FileName}</Filter>
+	</ClCompile>
+	<ClCompile Include="..\..\..\src\cflare-windows\*.c">
+      <Filter>cflare-windows\%{FileName}</Filter>
+	</ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\cflare\cflare.h" />
-    <ClInclude Include="..\..\..\src\cflare\handle.h" />
-    <ClInclude Include="..\..\..\src\cflare\hash.h" />
-    <ClInclude Include="..\..\..\src\cflare\hashtable.h" />
-    <ClInclude Include="..\..\..\src\cflare\hook.h" />
-    <ClInclude Include="..\..\..\src\cflare\linkedlist.h" />
-    <ClInclude Include="..\..\..\src\cflare\mutex.h" />
-    <ClInclude Include="..\..\..\src\cflare\util.h" />
+    <ClInclude Include="..\..\..\src\cflare\*.h">
+      <Filter>cflare\%{FileName}</Filter>
+	</ClInclude>
+	<ClInclude Include="..\..\..\src\cflare-windows\*.h">
+      <Filter>cflare-windows\%{FileName}</Filter>
+	</ClInclude>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
