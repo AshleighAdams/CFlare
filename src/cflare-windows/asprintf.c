@@ -11,7 +11,8 @@ int vasprintf(char** strp, const char* format, va_list ap)
 	count = _vscprintf(format, ap);
 	if (count == 0)
 	{
-		return strdup("");
+		*strp = _strdup("");
+		return 0;
 	}
 	else if (count < 0)
 	{
@@ -29,7 +30,7 @@ int vasprintf(char** strp, const char* format, va_list ap)
 		return -1;
 	}
 	// Do the actual printing into our newly created string
-	return vsprintf(*strp, format, ap);
+	return vsprintf_s(*strp, count + 1, format, ap);
 }
 
 int asprintf(char** strp, const char* format, ...)

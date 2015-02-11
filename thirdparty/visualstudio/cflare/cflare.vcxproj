@@ -19,24 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\cflare-windows\asprintf.c" />
-    <ClCompile Include="..\..\..\src\cflare-windows\mutex.c" />
-    <ClCompile Include="..\..\..\src\cflare\handle.c" />
-    <ClCompile Include="..\..\..\src\cflare\hash.c" />
-    <ClCompile Include="..\..\..\src\cflare\hashtable.c" />
-    <ClCompile Include="..\..\..\src\cflare\hook.c" />
-    <ClCompile Include="..\..\..\src\cflare\linkedlist.c" />
-    <ClCompile Include="..\..\..\src\cflare\util.c" />
     <ClCompile Include="..\..\..\src\main.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\src\cflare\handle.h" />
-    <ClInclude Include="..\..\..\src\cflare\hash.h" />
-    <ClInclude Include="..\..\..\src\cflare\hashtable.h" />
-    <ClInclude Include="..\..\..\src\cflare\hook.h" />
-    <ClInclude Include="..\..\..\src\cflare\linkedlist.h" />
-    <ClInclude Include="..\..\..\src\cflare\mutex.h" />
-    <ClInclude Include="..\..\..\src\cflare\util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7DCB9C92-54AD-4421-B3A5-1EAA94F20C14}</ProjectGuid>
@@ -98,6 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(MSBuildProjectDirectory)/../../../src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
