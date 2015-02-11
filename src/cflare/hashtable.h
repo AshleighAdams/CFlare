@@ -1,9 +1,10 @@
 #ifndef CFLARE_HASHMAP_H
 #define CFLARE_HASHMAP_H
 
-#include "cflare/linkedlist.h"
-#include "cflare/hash.h"
-#include "cflare/mutex.h"
+#include <cflare/cflare.h>
+#include <cflare/linkedlist.h>
+#include <cflare/hash.h>
+#include <cflare/mutex.h>
 
 typedef struct cflare_hashtable_container
 {
@@ -32,15 +33,15 @@ typedef struct cflare_hashtable
 
 // TODO: maybe add _key_ondelete and _key_setcompare
 
-cflare_hashtable* cflare_hashtable_new();
-void cflare_hashtable_delete(cflare_hashtable* map);
+CFLARE_API cflare_hashtable* cflare_hashtable_new();
+CFLARE_API void cflare_hashtable_delete(cflare_hashtable* map);
 
-void cflare_hashtable_ondelete(cflare_hashtable* list, cflare_deleter* func, void* context);
+CFLARE_API void cflare_hashtable_ondelete(cflare_hashtable* list, cflare_deleter* func, void* context);
 
-void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count);
+CFLARE_API void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count);
 
-void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* value, size_t len);
-uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash, void** out, size_t* len);
+CFLARE_API void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* value, size_t len);
+CFLARE_API uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash, void** out, size_t* len);
 
 #endif /* CFLARE_HASHMAP_H */
 

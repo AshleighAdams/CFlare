@@ -1,6 +1,8 @@
 #ifndef CFLARE_UTIL_H
 #define CFLARE_UTIL_H
 
+#include <cflare/cflare.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -13,15 +15,15 @@ typedef long double double128_t;
 
 typedef void(cflare_deleter)(void* data, void* context);
 
-void cflare_debug_c(const char* str);
-void cflare_info_c(const char* str);
-void cflare_log_c(const char* str);
-void cflare_warn_c(const char* str);
-void cflare_fatal_c(const char* str);
+CFLARE_API void cflare_debug_c(const char* str);
+CFLARE_API void cflare_info_c(const char* str);
+CFLARE_API void cflare_log_c(const char* str);
+CFLARE_API void cflare_warn_c(const char* str);
+CFLARE_API CFLARE_API_NORETURN void cflare_fatal_c(const char* str);
 
 #ifdef _MSC_VER
-	extern int vasprintf(char** strp, const char* format, va_list ap);
-	extern int asprintf(char** strp, const char* format, ...);
+	CFLARE_API extern int vasprintf(char** strp, const char* format, va_list ap);
+	CFLARE_API extern int asprintf(char** strp, const char* format, ...);
 #define CFLARE_ASPRINTF_NEEDS_IMPLIMENT_WINDOWS
 #endif
 
