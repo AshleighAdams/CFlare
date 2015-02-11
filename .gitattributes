@@ -1,0 +1,11 @@
+Makefile eol=lf
+LICENCE eol=lf
+
+*.gitignore eol=lf
+*.gitattributes eol=lf
+*.md eol=lf
+*.c eol=lf
+*.h eol=lf
+
+*.vcxproj eol=crlf
+*.vcproj eol=crlf
