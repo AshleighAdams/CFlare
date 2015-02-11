@@ -51,9 +51,8 @@ void cflare_hashtable_delete(cflare_hashtable* map)
 		map->buckets = 0;
 	}
 	
-	free(map);
-	
 	cflare_rwmutex_delete(map->mutex);
+	free(map);
 }
 
 void cflare_hashtable_ondelete(cflare_hashtable* map, cflare_deleter* func, void* context)

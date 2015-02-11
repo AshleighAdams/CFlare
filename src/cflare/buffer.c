@@ -11,6 +11,10 @@ cflare_buffer* cflare_buffer_new(cflare_buffer_options opts)
 	ret->count = 0;
 	ret->alloc_count = 8;
 	ret->parts = malloc(sizeof(cflare_buffer_part) * ret->alloc_count);
+	
+	if(ret->reversed)
+		cflare_fatal("buffer_new(): buffer reversing not yet implimented.");
+	
 	return ret;
 }
 
@@ -55,7 +59,7 @@ uint8_t* cflare_buffer_build(cflare_buffer* buff)
 	if(buff->nullchar)
 		len += 1;
 	
-	uint8_t* ret = malloc(buff->length);
+	uint8_t* ret = malloc(len);
 	uint8_t* position_ptr = ret;
 	
 	for(size_t i = 0; i < buff->count; i++)
