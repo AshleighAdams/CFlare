@@ -19,6 +19,12 @@ void cflare_log_c(const char* str);
 void cflare_warn_c(const char* str);
 void cflare_fatal_c(const char* str);
 
+#ifdef _MSC_VER
+	extern int vasprintf(char** strp, const char* format, va_list ap);
+	extern int asprintf(char** strp, const char* format, ...);
+#define CFLARE_ASPRINTF_NEEDS_IMPLIMENT_WINDOWS
+#endif
+
 #define cflare_notimp() \
 	cflare_fatal("%s(): not implemented", __func__)
 
