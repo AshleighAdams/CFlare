@@ -3,9 +3,13 @@
 #include "cflare/util.h"
 #include <Windows.h>
 
+/*
+Some code taken from the windows pthreads
+wrapper, found at: http://locklessinc.com/articles/pthreads_on_windows/
+*/
+
 cflare_mutex* cflare_mutex_new(cflare_mutex_type type)
 {
-	//cflare_warn("mutex: Windows mutexes are not implemented");
 	CRITICAL_SECTION* mtx = malloc(sizeof(CRITICAL_SECTION));
 	InitializeCriticalSection(mtx);
 	return (cflare_mutex*)mtx;
@@ -13,7 +17,6 @@ cflare_mutex* cflare_mutex_new(cflare_mutex_type type)
 
 void cflare_mutex_delete(cflare_mutex* mtx)
 {
-	//cflare_warn("mutex: Windows mutexes are not implemented");
 	// by the way, API funcs now have CFLARE_API prepended in their defs
 	// as win32/64 needs __declspec(dllexport) to make .libs for .dlls
 	CRITICAL_SECTION* mutex = (CRITICAL_SECTION*)mtx;
@@ -33,30 +36,46 @@ void cflare_mutex_unlock(cflare_mutex* mtx)
 	LeaveCriticalSection(mutex);
 }
 
+// for when I add trylock
+// return TryEnterCriticalSection(mutex) ? success : fail;
+
 cflare_rwmutex* cflare_rwmutex_new(cflare_mutex_type type)
 {
-	cflare_warn("mutex: Windows readwrite mutexes are not implemented");
-	return 0;
+	SRWLOCK* mutex = malloc(sizeof(SRWLOCK));
+	InitializeSRWLock(mutex);
+	return (cflare_rwmutex*)mutex;
 }
 
 void cflare_rwmutex_delete(cflare_rwmutex* mtx)
 {
-	cflare_warn("mutex: Windows readwrite mutexes are not implemented");
+	SRWLOCK* mutex = (SRWLOCK*)mtx;
+	// apparently you can't destroy it? wow
+	cflare_warn("readwrite mutex: unable to free on Windows platform.");
+	// is it safe to free() it?
+	//free(mutex);
 }
 
 void cflare_rwmutex_read_lock(cflare_rwmutex* mtx)
 {
+	SRWLOCK* mutex = (SRWLOCK*)mtx;
+	AcquireSRWLockShared(mutex);
 }
 
 void cflare_rwmutex_read_unlock(cflare_rwmutex* mtx)
 {
+	SRWLOCK* mutex = (SRWLOCK*)mtx;
+	ReleaseSRWLockShared(mutex);
 }
 
 void cflare_rwmutex_write_lock(cflare_rwmutex* mtx)
 {
+	SRWLOCK* mutex = (SRWLOCK*)mtx;
+	AcquireSRWLockExclusive(mutex);
 }
 
 void cflare_rwmutex_write_unlock(cflare_rwmutex* mtx)
 {
+	SRWLOCK* mutex = (SRWLOCK*)mtx;
+	ReleaseSRWLockExclusive(mutex);
 }
 
