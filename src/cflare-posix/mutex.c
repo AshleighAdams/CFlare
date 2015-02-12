@@ -1,5 +1,6 @@
 
 #include "cflare/mutex.h"
+#include "cflare/util.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -20,7 +21,13 @@ cflare_mutex* cflare_mutex_new(cflare_mutex_type type)
 	if(type & CFLARE_MUTEX_TRY)
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
 	if(type & CFLARE_MUTEX_TIMED)
+	{
+		#ifdef PTHREAD_MUTEX_TIMED_NP // this is commonly not availible.
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_TIMED_NP);
+		#else
+		cflare_warn("this version of pthreads does not support MUTEX_TIMED_NP!");
+		#endif
+	}
 	if(type & CFLARE_MUTEX_RECURSIVE)
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	

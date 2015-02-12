@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 	
 	int result = 0;
 	
-	if(strcmp(cflare_options_argument(0), "unit-test") == 0)
+	if(cflare_options_argument(0) && strcmp(cflare_options_argument(0), "unit-test") == 0)
 	{
 		result = unit_test();
 	}

@@ -9,7 +9,7 @@ LDFLAGS += -L.
 DEBUG ?= 1
 
 ifeq ($(DEBUG), 1)
-	LDFLAGS += -Wl,-R -Wl,`pwd`
+	LDFLAGS += -Wl,-R -Wl,.
 	CFLAGS += -g
 else
 	CFLAGS += -O3
@@ -33,7 +33,11 @@ ifeq ($(OS),Windows_NT)
 else
 	LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-posix/**/*.c) $(wildcard src/cflare-posix/*.c))
 	LIB_HEADERS += $(wildcard src/cflare-posix/**/*.h) $(wildcard src/cflare-posix/*.h)
-	LIB_EXTENSION ?= so
+	ifeq ($(shell uname -s), Darwin)
+		LIB_EXTENSION ?= dylib
+	else
+		LIB_EXTENSION ?= so
+	endif
 endif
 
 %.o: %.c $(LIB_HEADERS)
