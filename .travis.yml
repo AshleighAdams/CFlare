@@ -2,7 +2,7 @@ language: c
 compiler:
 - clang
 - gcc
-install: make get-deps
+install:
 #install:
 #- sudo apt-get update
 #- sudo apt-get install lua5.1 luarocks libssl1.0.0 unaccent
