@@ -9,7 +9,9 @@ LDFLAGS += -L.
 DEBUG ?= 1
 
 ifeq ($(DEBUG), 1)
-	LDFLAGS += -Wl,-R -Wl,.
+	ifeq ($(shell uname -s), Linux)
+		LDFLAGS += -Wl,-R -Wl,.
+	endif
 	CFLAGS += -g
 else
 	CFLAGS += -O3
