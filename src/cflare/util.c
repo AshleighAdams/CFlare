@@ -19,29 +19,34 @@ void cflare_debug_c(const char* str)
 {
 	call_log_hook("debug", str);
 	fprintf(stderr, "debug: %s\n", str);
+	fflush(stderr);
 }
 
 void cflare_info_c(const char* str)
 {
 	call_log_hook("info", str);
 	fprintf(stdout, "info: %s\n", str);
+	fflush(stdout);
 }
 
 void cflare_log_c(const char* str)
 {
 	call_log_hook("log", str);
 	fprintf(stdout, "%s\n", str);
+	fflush(stdout);
 }
 
 void cflare_warn_c(const char* str)
 {
 	call_log_hook("warn", str);
 	fprintf(stderr, "warning: %s\n", str);
+	fflush(stderr);
 }
 
 void cflare_fatal_c(const char* str)
 {
 	call_log_hook("fatal", str);
 	fprintf(stderr, "fatal: %s\n", str);
+	fflush(stderr);
 	abort();
 }
