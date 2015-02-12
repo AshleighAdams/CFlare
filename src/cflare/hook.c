@@ -136,9 +136,13 @@ void free_element(void* data, void* context)
 {
 	cflare_hookstack_elm* elm = (cflare_hookstack_elm*)data;
 	
-	if(elm->deleter && elm->data)
-		elm->deleter(elm->data, elm->deleter_context);
-	free(elm->data);
+	if(elm->deleter)
+		elm->deleter(elm->data.pointer, elm->deleter_context);
+}
+
+void free_string(void* data, void* context)
+{
+	free((char*)data);
 }
 
 cflare_hookstack* cflare_hookstack_new()
@@ -220,11 +224,10 @@ void cflare_hookstack_push_integer(cflare_hookstack* stack, int64_t value)
 	cflare_linkedlist_insert_last(stack->elements, (void**)&elm);
 	
 	elm->type = CFLARE_HOOKSTACK_INTEGER;
-	elm->data = malloc(sizeof(int64_t));
+	elm->data.integer = value;
 	elm->deleter = 0;
 	elm->deleter_context = 0;
 	
-	*(int64_t*)elm->data = value;
 }
 int32_t cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t index,
 	int64_t* out)
@@ -233,7 +236,7 @@ int32_t cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t inde
 	if(!elm)
 		return 0;
 	
-	*out = *(int64_t*)elm->data;
+	*out = elm->data.integer;
 	return 1;
 }
 
@@ -247,11 +250,9 @@ void cflare_hookstack_push_number(cflare_hookstack* stack, double64_t value)
 	cflare_linkedlist_insert_last(stack->elements, (void**)&elm);
 	
 	elm->type = CFLARE_HOOKSTACK_NUMBER;
-	elm->data = malloc(sizeof(double64_t));
+	elm->data.number = value;
 	elm->deleter = 0;
 	elm->deleter_context = 0;
-	
-	*(double64_t*)elm->data = value;
 }
 int32_t cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index,
 	double64_t* out)
@@ -260,6 +261,30 @@ int32_t cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index
 	if(!elm)
 		return 0;
 	
-	*out = *(double64_t*)elm->data;
+	*out = elm->data.number;
+	return 1;
+}
+
+void cflare_hookstack_push_string(cflare_hookstack* stack, const char* value)
+{
+	if(!stack)
+		return;
+	
+	cflare_hookstack_elm* elm;
+	cflare_linkedlist_insert_last(stack->elements, (void**)&elm);
+	
+	elm->type = CFLARE_HOOKSTACK_STRING;
+	elm->data.string = strdup(value);
+	elm->deleter = &free_string;
+	elm->deleter_context = 0;
+}
+int32_t cflare_hookstack_get_string(const cflare_hookstack* stack, int32_t index,
+	const char** out)
+{
+	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_NUMBER);
+	if(!elm)
+		return 0;
+	
+	*out = elm->data.string;
 	return 1;
 }

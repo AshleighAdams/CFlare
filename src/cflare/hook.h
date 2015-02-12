@@ -21,7 +21,13 @@ const char* cflare_hookstack_type_tostring(cflare_hookstack_type input);
 typedef struct cflare_hookstack_elm
 {
 	cflare_hookstack_type type;
-	void* data;
+	union {
+		int64_t integer;
+		double64_t number;
+		char* string;
+		void* pointer;
+		size_t handle;
+	} data;
 	cflare_deleter* deleter;
 	void* deleter_context;
 } cflare_hookstack_elm;
@@ -55,7 +61,7 @@ CFLARE_API int32_t cflare_hookstack_get_number(const cflare_hookstack* stack, in
 
 CFLARE_API void cflare_hookstack_push_string(cflare_hookstack* stack, const char* value);
 CFLARE_API int32_t cflare_hookstack_get_string(const cflare_hookstack* stack, int32_t index,
-	char** out);
+	const char** out);
 
 CFLARE_API void cflare_hookstack_push_pointer(cflare_hookstack* stack, const char* type,
 	void* ptr, cflare_deleter* deleter, void* context);
