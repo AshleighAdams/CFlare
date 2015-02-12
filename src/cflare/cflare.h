@@ -17,5 +17,9 @@
 	#endif
 #endif
 
+#ifndef __func__
+#define __func__ __FUNCTION__
+#endif
+
 #endif /* CFLARE_H */
 
