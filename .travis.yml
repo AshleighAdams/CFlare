@@ -2,7 +2,7 @@ language: c
 env:
   - DEBUG=1
 compiler:
-  - gcc
+#  - gcc # gcc doesn't work right now...
   - clang
 before_install:
   # g++4.9
