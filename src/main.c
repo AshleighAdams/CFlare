@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 		cflare_hook_add("Unload", "unload test", 0, &unload_test, 0);
 	
 		cflare_handle hd = cflare_handle_new("test", 0, 0, 0);
-		printf("hd = %lu\n", hd);
+		printf("hd = %zu\n", hd);
 		cflare_handle_unreference(hd);
 	
 		{
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 				cflare_hook_call("Unload", args, rets);
 				int64_t val;
 				if(cflare_hookstack_get_integer(rets, 0, &val))
-					cflare_debug("Unload: return 0: %li", val);
+					cflare_debug("Unload: return 0: %zu", val);
 				else
 					cflare_debug("Unload: return 0: (nil)");
 			cflare_hookstack_delete(args);
