@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 				cflare_hook_call("Unload", args, rets);
 				int64_t val;
 				if(cflare_hookstack_get_integer(rets, 0, &val))
-					cflare_debug("Unload: return 0: %zu", val);
+					cflare_debug("Unload: return 0: %li", val);
 				else
 					cflare_debug("Unload: return 0: (nil)");
 			cflare_hookstack_delete(args);
