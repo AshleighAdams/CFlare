@@ -60,7 +60,7 @@ clean:
 test:
 	@ \
 	echo -n "testing for tabs as allignment... "; \
-	OUTPUT=$$(grep "	[^	].*	" -r src); \
+	OUTPUT=$$(grep --include "*.h" --include "*.c" "	[^	].*	" -r src); \
 	RETURN=$$?; \
 	if [ "$$RETURN" = "0" ]; then \
 		echo "fail"; \
