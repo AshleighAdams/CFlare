@@ -14,6 +14,9 @@ before_install:
   - sudo apt-get update -qq
 
 install:
+  # valgrind
+  - sudo apt-get install valgrind
+
   # g++4.9
   - if [ "$CC" = "gcc" ]; then sudo apt-get install -qq gcc-4.9; fi
   - if [ "$CC" = "gcc" ]; then export CC="gcc-4.9"; fi

@@ -70,4 +70,6 @@ test:
 		echo "okay"; \
 	fi;
 	@echo "performing unit tests..."
-	@./cflare unit-test;
+	./cflare unit-test;
+	@echo "testing for memory leaks..."
+	valgrind --leak-check=full --error-exitcode=1 ./cflare unit-test > /dev/null
