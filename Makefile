@@ -68,6 +68,6 @@ test:
 		exit 1; \
 	else \
 		echo "okay"; \
-	fi; \
-	echo "performing unit tests..." \
-	./cflare unit-test;
+	fi;
+	@echo "performing unit tests..."
+	@./cflare unit-test;
