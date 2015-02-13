@@ -57,3 +57,17 @@ clean:
 	@echo $(LIB_OBJECTS)
 	-$(RM) "lib$(TARGET).$(LIB_EXTENSION)" "$(TARGET)" $(wildcard src/**.o) $(wildcard src/**/*.o)
 
+test:
+	@ \
+	echo -n "testing for tabs as allignment... "; \
+	OUTPUT=$$(grep "	[^	].*	" -r src); \
+	RETURN=$$?; \
+	if [ "$$RETURN" = "0" ]; then \
+		echo "fail"; \
+		echo $$OUTPUT; \
+		exit 1; \
+	else \
+		echo "okay"; \
+	fi; \
+	echo "performing unit tests..." \
+	./cflare unit-test;

@@ -23,4 +23,4 @@ install:
   - if [ "$CC" == "clang" ]; then export CC="clang-3.4"; fi
 script:
   - make
-  - ./cflare unit-test
+  - make test
