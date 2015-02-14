@@ -51,8 +51,8 @@ void cflare_hook_unload()
 	if(!hook_loaded)
 		cflare_fatal("hook_unload(): not loaded!");
 	
-	cflare_hashtable_delete(hook_tables);
 	hook_loaded = 0;
+	cflare_hashtable_delete(hook_tables);
 }
 
 void cflare_hook_add(const char* name, const char* id, double64_t priority,
