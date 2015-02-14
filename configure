@@ -1,4 +1,4 @@
-#!/usr/bin/lua5.2
+#!/usr/bin/lua
 
 local function find_arg(name, default)
 	local function escape_pattern(i)
