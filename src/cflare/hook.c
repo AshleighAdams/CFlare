@@ -33,20 +33,34 @@ void free_hooktable(void* ptr, void* unused)
 	cflare_linkedlist_delete(tbl->funcs);
 }
 
+uint8_t hook_loaded = 0;
+
 void cflare_hook_load()
 {
+	if(hook_loaded)
+		cflare_fatal("hook_load(): already loaded!");
+	
 	hook_tables = cflare_hashtable_new();
 	cflare_hashtable_ondelete(hook_tables, &free_hooktable, 0);
+	
+	hook_loaded = 1;
 }
 
 void cflare_hook_unload()
 {
-	 cflare_hashtable_delete(hook_tables);
+	if(!hook_loaded)
+		cflare_fatal("hook_unload(): not loaded!");
+	
+	cflare_hashtable_delete(hook_tables);
+	hook_loaded = 0;
 }
 
 void cflare_hook_add(const char* name, const char* id, double64_t priority,
 	hook_function* func, void* context)
 {
+	if(!hook_loaded)
+		cflare_fatal("hook_add(): hook system not yet loaded!");
+	
 	cflare_hook_remove(name, id);
 	
 	hook_table* tbl;
@@ -91,6 +105,9 @@ void cflare_hook_add(const char* name, const char* id, double64_t priority,
 
 void cflare_hook_remove(const char* name, const char* id)
 {
+	if(!hook_loaded)
+		cflare_fatal("hook_remove(): hook system not yet loaded!");
+	
 	hook_table* tbl;
 	size_t len;
 	
@@ -109,6 +126,11 @@ void cflare_hook_remove(const char* name, const char* id)
 int32_t cflare_hook_call(const char* name, const cflare_hookstack* args,
 	cflare_hookstack* returns)
 {
+	// if we're not loaded, fail silently, because if we WERE loaded, we'd have
+	// the same affect as it is not yet possible for a hook to be added.
+	if(!hook_loaded)
+		return 0;
+	
 	hook_table* tbl;
 	size_t len;
 	
