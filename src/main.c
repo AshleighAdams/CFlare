@@ -19,9 +19,9 @@ uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void*
 
 int main(int argc, char** argv)
 {
-	cflare_options_load(argc, argv);
 	cflare_handle_load();
 	cflare_hook_load();
+	cflare_options_load(argc, argv);
 	cflare_hook_call("Load", 0, 0);
 	
 	int result = 0;
@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 		}
 	}
 	
+	clfare_options_unload();
 	cflare_hook_unload();
 	cflare_handle_unload();
-	clfare_options_unload();
 	return result;
 }

@@ -27,7 +27,34 @@ CFLARE_API void cflare_options_load(int argc, char** argv)
 		char* arg = argv[i];
 		if(arg[0] == '-')
 		{
-			cflare_fatal("option parsing not implimented");
+			size_t len = strlen(arg);
+			if(arg[1] != '-')
+			{
+				for(size_t n = 1; n < len; n++)
+					cflare_hashtable_set(opt_hashtable,
+						cflare_hash_compute(arg + n, 1), "", strlen(""));
+			}
+			else
+			{
+				len -= 2;
+				arg += 2;
+				char* name = arg;
+				size_t name_len = 0;
+				
+				while(name_len < len)
+				{
+					if(name[name_len] == '=')
+						break;
+					name_len += 1;
+				}
+				
+				char* value = name + name_len + 1/*=*/;
+				size_t value_len = len - name_len - 1/*=*/;
+				
+				cflare_hashtable_set(opt_hashtable,
+					cflare_hash_compute(name, name_len),
+					value, value_len);
+			}
 		}
 		else
 		{
@@ -35,6 +62,8 @@ CFLARE_API void cflare_options_load(int argc, char** argv)
 			args_count += 1;
 		}
 	}
+	
+	// TODO: load enviroment variables
 }
 
 CFLARE_API void clfare_options_unload()
