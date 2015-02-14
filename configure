@@ -1,0 +1,112 @@
+#!/usr/bin/lua5.2
+
+local function find_arg(name, default)
+	local function escape_pattern(i)
+		return (i:gsub("[%-%+%(%)%[%]%.%?]", "%%%1"))
+	end
+	
+	name = escape_pattern(name)
+	local patt = string.format("%%-%%-%s=(.+)", name)
+	for k,v in pairs(arg) do
+		local found = v:match(patt) or (v:match("%-%-" .. name) and "" or nil)
+		if found then return found end
+	end
+	
+	return default
+end
+
+function detect_platform()
+	local system = io.popen("uname -s"):read("*l")
+	
+	if system == "FreeBSD" then
+	   platform.posix = true
+	   platform.freebsd = true
+	   platform.bsd = true
+	   platform.gnu = true
+	elseif system == "OpenBSD" then
+	   platform.posix = true
+	   platform.openbsd = true
+	   platform.bsd = true
+	   platform.gnu = true
+	elseif system == "NetBSD" then
+	   platform.posix = true
+	   platform.netbsd = true
+	   platform.bsd = true
+	elseif system == "Darwin" then
+	   platform.posix = true
+	   platform.osx = true
+	   platform.bsd = true
+	   platform.gnu = true
+	elseif system == "Linux" then
+	   platform.posix = true
+	   platform.linux = true
+	   platform.gnu = true
+	elseif system == "SunOS" then
+	   platform.posix = true
+	   platform.solaris = true
+	elseif system and system:match("^CYGWIN") then
+	   platform.posix = true
+	   platform.cygwin = true
+	   platform.gnu = true
+	elseif system and system:match("^Windows") then
+	   platform.windows = true
+	elseif system and system:match("^MINGW") then
+	   platform.windows = true
+	   platform.mingw = true
+	   platform.gnu = true
+	else
+	   detected.unix = true
+	end
+	
+	for platform,_ in pairs(platform) do
+		defines[platform:upper()] = true
+	end
+end
+
+platform = {}
+defines = {}
+cflags = {"-Wall", "-std=c11"}
+lflags = {}
+ldflags = {"-L."}
+libs = {"pthread"}
+prefix = find_arg("prefix", "/usr/local")
+release = find_arg("release")
+cc = find_arg("cc", "cc")
+
+detect_platform()
+
+if platform.gnu then
+	defines._GNU_SOURCE = true
+end
+
+for name, value in pairs(defines) do
+	local cflag = string.format("-D%s", name)
+	if value ~= true then
+		cflag = cflag.."="..value
+	end
+	table.insert(cflags, cflag)
+end
+
+local config = {
+	"PREFIX  ?= " .. prefix;
+	"LIBS    += " .. table.concat(libs, " ");
+	"CFLAGS  += " .. table.concat(cflags, " ");
+	"LFLAGS  += " .. table.concat(lflags, " ");
+	"LDFLAGS += " .. table.concat(ldflags, " ");
+	"CC      += " .. cc;
+	"TARGET   = " .. "cflare";
+	"RELEASE  = " .. (release and "1" or "0");
+	"LIB_EXTENSION = " .. (function()
+			if platform.windows then
+				return "dll"
+			elseif platform.osx then
+				return "dylib"
+			else
+				return "so"
+			end
+		end)()
+}
+
+
+
+print(table.concat(config, "\n"))
