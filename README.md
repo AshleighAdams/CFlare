@@ -6,13 +6,12 @@ Build depends:
  - POSIX/UNIX (Linux/OS X/Cygwin):
 	 - Lua >= 5.1
 	 - gcc >= 4.8 | clang >= 3.4 (C11 support)
+	 - pthreads
 	 - GNU Make
- - Windows (MSVC)
+ - Windows:
+ 	 - Windows NT >= 6.0
+ 		Required by the implimentation of cflare_mutex, using the newer and
+ 		faster SRWLock rather than CriticalSection.
 	 - MSVC 2013
 	 - MSVC 2013 Redist
 
-cflare_mutex:
-	Windows:
-		Depends on Windows Vista or higher, due to SRWLock.
-	Posix:
-		Depends on pthreads
