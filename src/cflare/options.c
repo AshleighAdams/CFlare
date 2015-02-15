@@ -53,6 +53,7 @@ void cflare_options_load(int argc, char** argv)
 				
 				if(len == name_len)
 				{
+					value = "";
 					value_len = 0;
 				}
 				else
