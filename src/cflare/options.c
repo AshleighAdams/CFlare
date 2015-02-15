@@ -85,6 +85,11 @@ void clfare_options_unload()
 	free(args);
 }
 
+uint8_t cflare_options_boolean(const char** name, uint8_t fallback)
+{
+	cflare_notimp();
+}
+
 int64_t cflare_options_integer(const char** name, int64_t fallback)
 {
 	cflare_notimp();
