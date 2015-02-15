@@ -22,10 +22,12 @@ void cflare_options_load(int argc, char** argv)
 	args_count = 0;
 	args = malloc(sizeof(char**) * argc); // this is the abs max
 	
-	for(int i = 1; i < argc; i++)
+	uint8_t parsing_options = 1;
+	
+	for(size_t i = 1; i < argc; i++)
 	{
 		char* arg = argv[i];
-		if(arg[0] == '-')
+		if(parsing_options && arg[0] == '-')
 		{
 			size_t len = strlen(arg);
 			if(arg[1] != '-')
@@ -33,6 +35,10 @@ void cflare_options_load(int argc, char** argv)
 				for(size_t n = 1; n < len; n++)
 					cflare_hashtable_set(opt_hashtable,
 						cflare_hash_compute(arg + n, 1), "", strlen(""));
+			}
+			else if(len == 2) // "--", stop parsing options
+			{
+				parsing_options = 0;
 			}
 			else
 			{
