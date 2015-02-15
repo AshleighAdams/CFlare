@@ -87,6 +87,14 @@ for name, value in pairs(defines) do
 	table.insert(cflags, cflag)
 end
 
+do
+	local p = assert(io.popen("git describe --tags --always"))
+	local version = p:read("*l")
+	p:close()
+	
+	version_major, version_minor = version:match("(%d+).(%d+)")
+end
+
 local config = {
 	"PREFIX  ?= " .. prefix;
 	"LIBS    += " .. table.concat(libs, " ");
@@ -104,7 +112,9 @@ local config = {
 			else
 				return "so"
 			end
-		end)()
+		end)(),
+	"VERSION_MAJOR = " .. version_major,
+	"VERSION_MINOR = " .. version_minor
 }
 
 
