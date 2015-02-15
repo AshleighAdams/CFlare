@@ -10,3 +10,9 @@ Build depends:
  - Windows (MSVC)
 	 - MSVC 2013
 	 - MSVC 2013 Redist
+
+cflare_mutex:
+	Windows:
+		Depends on Windows Vista or higher, due to SRWLock.
+	Posix:
+		Depends on pthreads
