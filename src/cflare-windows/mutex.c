@@ -102,17 +102,25 @@ size_t alloc_lock()
 	infos_free -= 1;
 
 	ReleaseSRWLockExclusive(&infos_lock);
-	return info->position;
+	return info->position + 1; // so 0 is never used, and passes if checks
+}
+
+lockinfo* get_info(cflare_rwmutex* mtx)
+{
+	size_t id = (size_t)mtx;
+	if (id == 0)
+		cflare_fatal("mutex: is null.");
+	id -= 1; // 'cause we +1'ed on alloc
+	if (id > infos_len)
+		cflare_fatal("mutex: outside range of allocated locks.");
+	return infos + id;
 }
 
 void free_lock(size_t lock)
 {
 	AcquireSRWLockExclusive(&infos_lock);
 
-	if (lock > infos_len)
-		cflare_fatal("mutex: outside range of allocated locks.");
-
-	lockinfo* info = infos + lock;
+	lockinfo* info = get_info((cflare_mutex*)lock);
 	if (!info->is_used)
 		cflare_fatal("mutex: freeing already free mutex.");
 
@@ -137,10 +145,7 @@ void cflare_rwmutex_delete(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_read_lock(cflare_rwmutex* mtx)
 {
-	size_t id = (size_t)mtx;
-	if (id > infos_len)
-		cflare_fatal("mutex: outside range of allocated locks.");
-	lockinfo* mutex = infos + id;
+	lockinfo* mutex = get_info(mtx);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread()) // so READ locks don't block under the same WRITE lock
 	{
@@ -155,10 +160,7 @@ void cflare_rwmutex_read_lock(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_read_unlock(cflare_rwmutex* mtx)
 {
-	size_t id = (size_t)mtx;
-	if (id > infos_len)
-		cflare_fatal("mutex: outside range of allocated locks.");
-	lockinfo* mutex = infos + id;
+	lockinfo* mutex = get_info(mtx);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread())
 	{
@@ -173,11 +175,7 @@ void cflare_rwmutex_read_unlock(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_write_lock(cflare_rwmutex* mtx)
 {
-	size_t id = (size_t)mtx;
-	if (id > infos_len)
-		cflare_fatal("mutex: outside range of allocated locks.");
-	lockinfo* mutex = infos + id;
-
+	lockinfo* mutex = get_info(mtx);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread())
 	{
@@ -196,11 +194,7 @@ void cflare_rwmutex_write_lock(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_write_unlock(cflare_rwmutex* mtx)
 {
-	size_t id = (size_t)mtx;
-	if (id > infos_len)
-		cflare_fatal("mutex: outside range of allocated locks.");
-	lockinfo* mutex = infos + id;
-
+	lockinfo* mutex = get_info(mtx);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread())
 	{
