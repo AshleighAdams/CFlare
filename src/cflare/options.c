@@ -48,8 +48,18 @@ void cflare_options_load(int argc, char** argv)
 					name_len += 1;
 				}
 				
-				char* value = name + name_len + 1/*=*/;
-				size_t value_len = len - name_len - 1/*=*/;
+				char* value;
+				size_t value_len;
+				
+				if(len == name_len)
+				{
+					value_len = 0;
+				}
+				else
+				{
+					value = name + name_len + 1/*=*/;
+					value_len = len - name_len - 1/*=*/;
+				}
 				
 				cflare_hashtable_set(opt_hashtable,
 					cflare_hash_compute(name, name_len),
