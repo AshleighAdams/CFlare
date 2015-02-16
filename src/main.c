@@ -1,6 +1,7 @@
 
 #include "unit-test.h"
 
+#include <cflare/cflare.h>
 #include <cflare/handle.h>
 #include <cflare/util.h>
 #include <cflare/hook.h>

@@ -19,43 +19,44 @@ function detect_platform()
 	local system = io.popen("uname -s"):read("*l")
 	
 	if system == "FreeBSD" then
-	   platform.posix = true
-	   platform.freebsd = true
-	   platform.bsd = true
-	   platform.gnu = true
+		platform.posix = true
+		platform.freebsd = true
+		platform.bsd = true
+		platform.gnu = true
 	elseif system == "OpenBSD" then
-	   platform.posix = true
-	   platform.openbsd = true
-	   platform.bsd = true
-	   platform.gnu = true
+		platform.posix = true
+		platform.openbsd = true
+		platform.bsd = true
+		platform.gnu = true
 	elseif system == "NetBSD" then
-	   platform.posix = true
-	   platform.netbsd = true
-	   platform.bsd = true
+		platform.posix = true
+		platform.netbsd = true
+		platform.bsd = true
 	elseif system == "Darwin" then
-	   platform.posix = true
-	   platform.osx = true
-	   platform.bsd = true
-	   platform.gnu = true
+		platform.posix = true
+		platform.osx = true
+		platform.bsd = true
+		platform.gnu = true
 	elseif system == "Linux" then
-	   platform.posix = true
-	   platform.linux = true
-	   platform.gnu = true
+		platform.posix = true
+		platform.linux = true
+		platform.gnu = true
 	elseif system == "SunOS" then
-	   platform.posix = true
-	   platform.solaris = true
+		platform.posix = true
+		platform.solaris = true
 	elseif system and system:match("^CYGWIN") then
-	   platform.posix = true
-	   platform.cygwin = true
-	   platform.gnu = true
+		platform.windows = true
+		platform.posix = true
+		platform.cygwin = true
+		platform.gnu = true
 	elseif system and system:match("^Windows") then
-	   platform.windows = true
+		platform.windows = true
 	elseif system and system:match("^MINGW") then
-	   platform.windows = true
-	   platform.mingw = true
-	   platform.gnu = true
+		platform.windows = true
+		platform.mingw = true
+		platform.gnu = true
 	else
-	   detected.unix = true
+		detected.unix = true
 	end
 	
 	for platform,_ in pairs(platform) do
