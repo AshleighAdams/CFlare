@@ -91,12 +91,35 @@ if platform.linux then -- make sure gcc looks for libs in current dir when runni
 end
 
 do
-	local p = assert(io.popen("git describe --tags --always"))
+	local p = assert(io.popen("git describe --tags"))
 	local version = p:read("*l")
-	p:close()
+	local okay = p:close()
 	
-	version_major, version_minor = version:match("(%d+).(%d+)")
-	version_patch = version:match("%d+.%d+%-(%d+)") or 0
+	if not okay then
+		os.execute("git fetch -t") -- fetch the tags
+		
+		local depth = 100
+		for i = depth, 1000, 100 do
+			os.execute("git fetch --depth="..depth)
+			if os.execute("git describe --tags") then
+				print("found tag that describes us at fetch depth of " .. depth)
+				
+				-- re-fetch
+				p = assert(io.popen("git describe --tags"))
+				version = p:read("*l")
+				okay = p:close()
+				break
+			end
+		end
+	end
+	
+	if okay then
+		version_major, version_minor = version:match("(%d+).(%d+)")
+		version_patch = version:match("%d+.%d+%-(%d+)") or 0
+	else
+		io.stderr:write("warning: could not get version from git describe; falling back to 0.0.0\n")
+		version_major, version_minor, version_patch = 0, 0, 0
+	end
 	
 	defines["CFLARE_VERSION_MAJOR"] = version_major
 	defines["CFLARE_VERSION_MINOR"] = version_minor
