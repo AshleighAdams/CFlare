@@ -65,10 +65,10 @@ end
 
 platform = {}
 defines = {}
-cflags = {"-Wall", "-std=c11"}
+cflags = {"-Wall", "-std=c11", "-I./src"}
 lflags = {}
 ldflags = {"-L."}
-libs = {"pthread"}
+libs = {"pthread", "m"}
 prefix = find_arg("prefix", "/usr/local")
 release = find_arg("release")
 cc = find_arg("cc", os.getenv("CC") or "cc")
@@ -83,6 +83,10 @@ if release then
 	table.insert(cflags, "-O2")
 else
 	table.insert(cflags, "-g")
+end
+
+if platform.linux then -- make sure gcc looks for libs in current dir when running
+	table.insert(ldflags, "-Wl,-R -Wl,.")
 end
 
 do
@@ -132,6 +136,24 @@ local config = {
 	"VERSION_MINOR = " .. version_minor,
 	"VERSION_PATCH = " .. version_patch,
 }
+
+do
+	table.insert(config, "LIB_OBJECTS = $(patsubst %.c, %.o, $(wildcard src/cflare/**/*.c) $(wildcard src/cflare/*.c))")
+	table.insert(config, "LIB_HEADERS = $(wildcard src/cflare/**/*.h) $(wildcard src/cflare/*.h)")
+	
+	table.insert(config, "EXE_SOURCES = $(wildcard src/*.c)")
+	table.insert(config, "EXE_HEADERS = $(wildcard src/*.h)")
+
+	if platform.windows then
+		table.insert(config, "LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-windows/**/*.c) $(wildcard src/cflare-windows/*.c))")
+		table.insert(config, "LIB_HEADERS += $(wildcard src/cflare-windows/**/*.h) $(wildcard src/cflare-windows/*.h)")
+	elseif platform.posix then
+		table.insert(config, "LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-posix/**/*.c) $(wildcard src/cflare-posix/*.c))")
+		table.insert(config, "LIB_HEADERS += $(wildcard src/cflare-posix/**/*.h) $(wildcard src/cflare-posix/*.h)")
+	end
+end
+
+
 
 config = table.concat(config, "\n")
 --print()
