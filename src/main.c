@@ -19,14 +19,16 @@ uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void*
 
 int main(int argc, char** argv)
 {
-	cflare_handle_load();
-	cflare_hook_load();
-	cflare_options_load(argc, argv);
+	cflare_load(argc, argv);
 	cflare_hook_call("Load", 0, 0);
 	
 	int result = 0;
 	
-	if(cflare_options_argument(0) && strcmp(cflare_options_argument(0), "unit-test") == 0)
+	if(cflare_options_boolean("version", 0))
+	{
+		cflare_log("cflare %s", cflare_version());
+	}
+	else if(cflare_options_argument(0) && strcmp(cflare_options_argument(0), "unit-test") == 0)
 	{
 		result = unit_test();
 	}
@@ -52,8 +54,6 @@ int main(int argc, char** argv)
 		}
 	}
 	
-	clfare_options_unload();
-	cflare_hook_unload();
-	cflare_handle_unload();
+	cflare_unload();
 	return result;
 }

@@ -1,4 +1,6 @@
 
+include config
+
 TARGET=cflare
 CC ?= gcc
 CFLAGS += -Wall -Isrc/ -std=c11 -D_GNU_SOURCE
@@ -59,6 +61,7 @@ clean:
 
 test:
 	@ \
+	./cflare --version; \
 	echo -n "testing for tabs as allignment... "; \
 	OUTPUT=$$(grep --include "*.h" --include "*.c" "	[^	].*	" -r src); \
 	RETURN=$$?; \

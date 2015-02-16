@@ -79,12 +79,10 @@ if platform.gnu then
 	defines._GNU_SOURCE = true
 end
 
-for name, value in pairs(defines) do
-	local cflag = string.format("-D%s", name)
-	if value ~= true then
-		cflag = cflag.."="..value
-	end
-	table.insert(cflags, cflag)
+if release then
+	table.insert(cflags, "-O2")
+else
+	table.insert(cflags, "-g")
 end
 
 do
@@ -93,6 +91,23 @@ do
 	p:close()
 	
 	version_major, version_minor = version:match("(%d+).(%d+)")
+	version_patch = version:match("%d+.%d+%-(%d+)") or 0
+	
+	defines["CFLARE_VERSION_MAJOR"] = version_major
+	defines["CFLARE_VERSION_MINOR"] = version_minor
+	defines["CFLARE_VERSION_PATCH"] = version_patch
+end
+
+for name, value in pairs(defines) do
+	local cflag = string.format("-D%s", name)
+	if value ~= true then
+		cflag = cflag.."="..value
+	end
+	table.insert(cflags, cflag)
+end
+
+for k,v in pairs(libs) do
+	libs[k] = string.format("-l%s", v)
 end
 
 local config = {
@@ -101,7 +116,7 @@ local config = {
 	"CFLAGS  += " .. table.concat(cflags, " ");
 	"LFLAGS  += " .. table.concat(lflags, " ");
 	"LDFLAGS += " .. table.concat(ldflags, " ");
-	"CC      += " .. cc;
+	"CC       = " .. cc;
 	"TARGET   = " .. "cflare";
 	"RELEASE  = " .. (release and "1" or "0");
 	"LIB_EXTENSION = " .. (function()
@@ -114,9 +129,13 @@ local config = {
 			end
 		end)(),
 	"VERSION_MAJOR = " .. version_major,
-	"VERSION_MINOR = " .. version_minor
+	"VERSION_MINOR = " .. version_minor,
+	"VERSION_PATCH = " .. version_patch,
 }
 
+config = table.concat(config, "\n")
+--print()
 
-
-print(table.concat(config, "\n"))
+local f = assert(io.open("config", "w"))
+f:write(config)
+f:close()

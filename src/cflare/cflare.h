@@ -1,6 +1,8 @@
 #ifndef CFLARE_H
 #define CFLARE_H
 
+#include <stddef.h>
+
 #ifndef CFLARE_API
 	#ifdef _MSC_VER
 		#define CFLARE_API __declspec(dllexport)
@@ -20,6 +22,14 @@
 #ifndef __func__
 #define __func__ __FUNCTION__
 #endif
+
+CFLARE_API size_t cflare_version_major();
+CFLARE_API size_t cflare_version_minor();
+CFLARE_API size_t cflare_version_patch();
+CFLARE_API const char* cflare_version();
+
+CFLARE_API void cflare_load(int argc, char** argv);
+CFLARE_API void cflare_unload();
 
 #endif /* CFLARE_H */
 

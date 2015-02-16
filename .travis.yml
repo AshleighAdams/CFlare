@@ -14,8 +14,8 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  # valgrind
-  - sudo apt-get install valgrind
+  # valgrind and lua
+  - sudo apt-get install valgrind lua5.2
 
   # g++4.9
   - if [ "$CC" = "gcc" ]; then sudo apt-get install -qq gcc-4.9; fi
@@ -25,5 +25,6 @@ install:
   - if [ "$CC" == "clang" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.4; fi
   - if [ "$CC" == "clang" ]; then export CC="clang-3.4"; fi
 script:
+  - ./configure
   - make
   - make test
