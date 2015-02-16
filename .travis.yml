@@ -25,6 +25,7 @@ install:
   - if [ "$CC" == "clang" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.4; fi
   - if [ "$CC" == "clang" ]; then export CC="clang-3.4"; fi
 script:
+  - git fetch -t # get the tags so ./configure knows the version number
   - ./configure
   - make
   - make test
