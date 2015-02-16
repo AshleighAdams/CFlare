@@ -91,22 +91,45 @@ void clfare_options_unload()
 	free(args);
 }
 
-uint8_t cflare_options_boolean(const char** name, uint8_t fallback)
+uint8_t cflare_options_boolean(const char* name, uint8_t fallback)
+{
+	const char* value;
+	size_t len;
+	
+	if(!cflare_hashtable_get(opt_hashtable,
+		cflare_hash_compute(name, strlen(name)), (void**)&value, &len))
+	{
+		return fallback;
+	}
+	
+	if(len == 0) // set via --abc
+		return 1;
+	
+	if(len == 1)
+	{
+		if(value[0] == '0')
+			return 0;
+		else
+			return 1;
+	}
+	
+	if(strcmp(value, "false") == 0 || strcmp(value, "0") == 0 || strcmp(value, "no") == 0 || strcmp(value, "off") == 0)
+		return 0;
+	else
+		return 1;
+}
+
+int64_t cflare_options_integer(const char* name, int64_t fallback)
 {
 	cflare_notimp();
 }
 
-int64_t cflare_options_integer(const char** name, int64_t fallback)
+double64_t cflare_options_number(const char* name, double64_t fallback)
 {
 	cflare_notimp();
 }
 
-double64_t cflare_options_number(const char** name, double64_t fallback)
-{
-	cflare_notimp();
-}
-
-const char* cflare_options_string(const char** name, const char* fallback)
+const char* cflare_options_string(const char* name, const char* fallback)
 {
 	cflare_notimp();
 }
