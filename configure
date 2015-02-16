@@ -71,7 +71,7 @@ ldflags = {"-L."}
 libs = {"pthread"}
 prefix = find_arg("prefix", "/usr/local")
 release = find_arg("release")
-cc = find_arg("cc", "cc")
+cc = find_arg("cc", os.getenv("CC") or "cc")
 
 detect_platform()
 
