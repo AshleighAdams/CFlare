@@ -1,6 +1,7 @@
 
 #include "unit-test.h"
 
+#include <cflare/cflare.h>
 #include <cflare/buffer.h>
 #include <cflare/hook.h>
 #include <cflare/hashtable.h>
