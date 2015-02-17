@@ -121,17 +121,52 @@ uint8_t cflare_options_boolean(const char* name, uint8_t fallback)
 
 int64_t cflare_options_integer(const char* name, int64_t fallback)
 {
-	cflare_notimp();
+	const char* value;
+	size_t len;
+	
+	if(!cflare_hashtable_get(opt_hashtable,
+		cflare_hash_compute(name, strlen(name)), (void**)&value, &len))
+	{
+		return fallback;
+	}
+	
+	int64_t ret;
+	
+	if(!cflare_tointeger(value, &ret))
+		return fallback;
+	return ret;
 }
 
 double64_t cflare_options_number(const char* name, double64_t fallback)
 {
-	cflare_notimp();
+	const char* value;
+	size_t len;
+	
+	if(!cflare_hashtable_get(opt_hashtable,
+		cflare_hash_compute(name, strlen(name)), (void**)&value, &len))
+	{
+		return fallback;
+	}
+	
+	double64_t ret;
+	
+	if(!cflare_tonumber(value, &ret))
+		return fallback;
+	return ret;
 }
 
 const char* cflare_options_string(const char* name, const char* fallback)
 {
-	cflare_notimp();
+	const char* value;
+	size_t len;
+	
+	if(!cflare_hashtable_get(opt_hashtable,
+		cflare_hash_compute(name, strlen(name)), (void**)&value, &len))
+	{
+		return fallback;
+	}
+	
+	return value;
 }
 
 size_t cflare_options_argument_count()
