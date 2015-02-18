@@ -3,6 +3,8 @@
 
 #include "cflare/hook.h"
 
+#include <math.h>
+
 void call_log_hook(const char* level, const char* str)
 {
 	cflare_hookstack* args = cflare_hookstack_new();
