@@ -76,9 +76,9 @@ uint8_t cflare_tointeger(const char* str, int64_t* out)
 	// look for the sign: +1337 or -1337
 	if(ptr[0] == '-' || ptr[0] == '+')
 	{
+		sign = ptr[0] == '+' ? 1 : -1;
 		ptr += 1;
 		len -= 1;
-		sign = *ptr == '+' ? 1 : -1;
 	}
 	
 	// find the base
@@ -112,7 +112,7 @@ uint8_t cflare_tointeger(const char* str, int64_t* out)
 		int64_t n = char_to_number(ptr[i]);
 		if(i < 0 || n >= base) // check if it's outside our base range
 			return 0;
-		ret += (base ^ b) * n;
+		ret += pow(base, b) * n;
 	}
 	
 	*out = sign * ret;
