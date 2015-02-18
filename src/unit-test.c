@@ -146,6 +146,29 @@ int test_hashtable()
 	return 0;
 }
 
+int test_util()
+{
+	int64_t val;
+	
+	unit_test_part("tointeger: base10");
+	if(!cflare_tointeger("1337", &val) || val != 1337)
+		return 1;
+	if(!cflare_tointeger("+123", &val) || val != 123)
+		return 1;
+	if(!cflare_tointeger("-100", &val) || val != -100)
+		return 1;
+	
+	unit_test_part("tointeger: base16");
+	if(!cflare_tointeger("0x1337", &val) || val != 0x1337)
+		return 1;
+	if(!cflare_tointeger("+0x123", &val) || val != 0x123)
+		return 1;
+	if(!cflare_tointeger("-0x100", &val) || val != -0x100)
+		return 1;
+	
+	return 0;
+}
+
 int test_failed;
 const char* msg;
 void unit_test_part(const char* location)
@@ -177,6 +200,7 @@ int unit_test()
 	test_function("hook", &test_hook);
 	test_function("linkedlist", &test_linkedlist);
 	test_function("hashtable", &test_hashtable);
+	test_function("util", &test_util);
 	
 	if(test_failed)
 		cflare_log("One or more unit tests failed.");
