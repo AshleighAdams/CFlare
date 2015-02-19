@@ -9,6 +9,8 @@
 
 #include <cflare/linkedlist.h>
 #include <cflare/hashtable.h>
+#include <cflare/filesystem.h>
+
 
 uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
@@ -52,6 +54,19 @@ int main(int argc, char** argv)
 					cflare_debug("Unload: return 0: (nil)");
 			cflare_hookstack_delete(args);
 			cflare_hookstack_delete(rets);
+		}
+		
+		{
+			cflare_linkedlist* files = cflare_filesystem_list(".", CFLARE_FILESYSTEM_LIST_RECURSIVE | CFLARE_FILESYSTEM_LIST_EXCLUDE_DIRECTORIES);
+			
+			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(files);
+			while(cflare_linkedlist_iterator_next(&iter))
+			{
+				cflare_filesystem_entry* ent = (cflare_filesystem_entry*)iter.value->data;
+				cflare_log("ls: %lu %s", ent->depth, ent->name);
+			}
+			
+			cflare_linkedlist_delete(files);
 		}
 	}
 	
