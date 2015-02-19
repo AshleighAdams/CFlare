@@ -137,7 +137,7 @@ char* cflare_string_concat_n(size_t count, size_t* length, ...)
 	
 	size_t total_size = 0;
 	
-	va_start(ap, count);
+	va_start(ap, length);
 	for(size_t n = 0; n < count; n++)
 	{
 		const char* arg = va_arg(ap, char*);
