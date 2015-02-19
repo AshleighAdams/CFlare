@@ -4,6 +4,7 @@
 #include "cflare/hook.h"
 
 #include <math.h>
+#include <stdarg.h>
 
 void call_log_hook(const char* level, const char* str)
 {
@@ -127,3 +128,38 @@ uint8_t cflare_tonumber(const char* str, double64_t* out)
 	return 0;
 }
 
+char* cflare_string_add_n(size_t count, size_t* length, ...)
+{
+	va_list ap;
+	
+	const char* buffs[count];
+	size_t buffs_len[count];
+	
+	size_t total_size = 0;
+	
+	va_start(ap, count);
+	for(size_t n = 0; n < count; n++)
+	{
+		const char* arg = va_arg(ap, char*);
+		size_t len = strlen(arg);
+		buffs[n] = arg;
+		buffs_len[n] = len;
+		total_size += len;
+	}
+	va_end(ap);
+	
+	char* ret = malloc(total_size + 1);
+	char* ptr = ret;
+	
+	for(size_t n = 0; n < count; n++)
+	{
+		memcpy(ptr, buffs[n], buffs_len[n]);
+		ptr += buffs_len[n];
+	}
+	
+	*ptr = '\0';
+	
+	if(length)
+		*length = total_size;
+	return ret;
+}
