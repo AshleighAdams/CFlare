@@ -128,7 +128,7 @@ uint8_t cflare_tonumber(const char* str, double64_t* out)
 	return 0;
 }
 
-char* cflare_string_add_n(size_t count, size_t* length, ...)
+char* cflare_string_concat_n(size_t count, size_t* length, ...)
 {
 	va_list ap;
 	

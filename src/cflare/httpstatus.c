@@ -18,7 +18,7 @@ void cflare_httpstatus_load()
 {
 	cache_string2code = cflare_hashtable_new();
 	
-	char* path = cflare_string_add_n(2, 0, cflare_cfgpath(), "http/statuses");
+	char* path =  cflare_string_concat_n(2, 0, cflare_cfgpath(), "http/statuses");
 	cflare_linkedlist* list = cflare_filesystem_list(path, 0);
 	
 	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
