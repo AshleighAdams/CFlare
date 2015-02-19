@@ -4,7 +4,7 @@
 #include <cflare/handle.h>
 #include <cflare/hook.h>
 #include <cflare/options.h>
-
+#include <cflare/httpstatus.h>
 
 
 size_t cflare_version_major()
@@ -52,11 +52,25 @@ void cflare_load(int argc, char** argv)
 	cflare_handle_load();
 	cflare_hook_load();
 	cflare_options_load(argc, argv);
+	cflare_httpstatus_load();
 }
 
 void cflare_unload()
 {
+	cflare_httpstatus_unload();
 	clfare_options_unload();
 	cflare_hook_unload();
 	cflare_handle_unload();
+}
+
+
+// TODO: these below
+const char* cflare_cfgpath()
+{
+	return "./";
+}
+
+const char* cflare_libpath()
+{
+	return "./";
 }

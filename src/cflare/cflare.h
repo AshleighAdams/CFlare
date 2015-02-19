@@ -31,5 +31,8 @@ CFLARE_API const char* cflare_version();
 CFLARE_API void cflare_load(int argc, char** argv);
 CFLARE_API void cflare_unload();
 
+CFLARE_API const char* cflare_cfgpath();
+CFLARE_API const char* cflare_libpath();
+
 #endif /* CFLARE_H */
 
