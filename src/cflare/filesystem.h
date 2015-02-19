@@ -18,6 +18,7 @@ typedef enum
 
 typedef struct cflare_filesystem_entry
 {
+	char* path;
 	char* name;
 	cflare_filesystem_entry_type type;
 	size_t depth;

@@ -1,5 +1,6 @@
 
 #include "cflare/filesystem.h"
+#include "cflare/util.h"
 
 #include <dirent.h>
 #include <stdlib.h>
@@ -8,7 +9,7 @@
 void free_list(void* data, void* context)
 {
 	cflare_filesystem_entry* e = (cflare_filesystem_entry*)data;
-	free(e->name);
+	free(e->path);
 }
 
 void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, size_t depth, uint8_t recursive, uint8_t exc_dirs)
@@ -72,27 +73,16 @@ void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, s
 			cflare_filesystem_entry* f;
 			cflare_linkedlist_insert_last(list, (void**)&f);
 			
-			size_t len = path_len + f_len + 1;
-			char* name = malloc(len);
-			
-			memcpy(name, path, path_len);
-			memcpy(name + path_len, ent->d_name, f_len);
-			name[path_len + f_len] = '\0';
-			
-			f->name = name;
+			f->path = cflare_string_add_n(2, 0, path, ent->d_name);
+			f->name = f->path + path_len; // ptr to the name part only
 			f->type = t;
 			f->depth = depth;
 		}
 		
 		if(recursive && t == CFLARE_FILESYSTEM_DIRECTORY)
 		{
-			size_t newpath_len = path_len + f_len + 1; // +1 for slash
-			char* newpath = malloc(newpath_len + 1); // +1 for \0
-			
-			memcpy(newpath, path, path_len);
-			memcpy(newpath + path_len, ent->d_name, f_len);
-			newpath[newpath_len - 1] = '/';
-			newpath[newpath_len    ] = '\0';
+			size_t newpath_len;
+			char* newpath = cflare_string_add_n(3, &newpath_len, path, ent->d_name, "/");
 			
 			populate_list(list, newpath, newpath_len, depth + 1, recursive, exc_dirs);
 			
@@ -113,13 +103,7 @@ cflare_linkedlist* cflare_filesystem_list(const char* path, cflare_filesystem_li
 	
 	if(path[path_len - 1] != '/')
 	{
-		// pp = path + "/";
-		pp = malloc(path_len + 2);
-		memcpy(pp, path, path_len);
-		pp[path_len    ] = '/';
-		pp[path_len + 1] = '\0';
-		path_len += 1;
-		
+		pp = cflare_string_add_n(2, &path_len, path, "/");
 		path = pp;
 	}
 	
