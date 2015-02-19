@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 			cflare_hookstack_delete(rets);
 		}
 		
-		{
+		/*{
 			cflare_linkedlist* files = cflare_filesystem_list(".", CFLARE_FILESYSTEM_LIST_RECURSIVE | CFLARE_FILESYSTEM_LIST_EXCLUDE_DIRECTORIES);
 			
 			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(files);
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 			}
 			
 			cflare_linkedlist_delete(files);
-		}
+		}*/
 	}
 	
 	cflare_unload();
