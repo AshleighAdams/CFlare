@@ -3,7 +3,7 @@ CFlare [![Build Status](https://travis-ci.org/KateAdams/CFlare.svg?branch=master
 
 Build depends:
 
- - POSIX/UNIX (Linux/OS X/Cygwin):
+ - Posix/Unix (Linux/OS X/Cygwin):
 	 - Lua >= 5.1
 	 - gcc >= 4.8 | clang >= 3.4 (C11 support)
 	 - pthreads
