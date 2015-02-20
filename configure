@@ -205,14 +205,16 @@ do
 		local okay = {}
 		for src, imp in pairs(imps) do
 			local priority = 0
+			local why = ""
 			for plat, prior in pairs(imp.platforms) do
 				if platform[plat] and prior > priority then
 					priority = prior
+					why = plat
 				end
 			end
 			
 			if priority > 0 then
-				table.insert(okay, {priority = priority, src = src, name = imp.name})
+				table.insert(okay, {priority = priority, src = src, name = imp.name, why = why})
 			end
 		end
 		
@@ -222,9 +224,9 @@ do
 		local imp = table.remove(okay, 1)
 		
 		if imp then
-			print(string.format("*\t%s: %s; priority: %d%%", imp.src, imp.name, imp.priority*100))
+			print(string.format("*\t%s: %s; priority: %d%% (%s)", imp.src, imp.name, imp.priority*100, imp.why))
 			for _, other in pairs(okay) do
-				print(string.format("\t%s: %s; priority: %d%%", other.src, other.name, other.priority*100))
+				print(string.format("\t%s: %s; priority: %d%% (%s)", other.src, other.name, other.priority*100, other.why))
 			end
 		else
 			print(string.format("error: nothing can implement %s on your platform", api))
