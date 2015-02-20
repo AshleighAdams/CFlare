@@ -73,7 +73,7 @@ void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, s
 			cflare_filesystem_entry* f;
 			cflare_linkedlist_insert_last(list, (void**)&f);
 			
-			f->path =  cflare_string_concat_n(2, 0, path, ent->d_name);
+			f->path =  cflare_string_concat(path, ent->d_name);
 			f->name = f->path + path_len; // ptr to the name part only
 			f->type = t;
 			f->depth = depth;
@@ -82,7 +82,7 @@ void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, s
 		if(recursive && t == CFLARE_FILESYSTEM_DIRECTORY)
 		{
 			size_t newpath_len;
-			char* newpath =  cflare_string_concat_n(3, &newpath_len, path, ent->d_name, "/");
+			char* newpath =  cflare_string_concat_n(&newpath_len, path, ent->d_name, "/");
 			
 			populate_list(list, newpath, newpath_len, depth + 1, recursive, exc_dirs);
 			
@@ -103,7 +103,7 @@ cflare_linkedlist* cflare_filesystem_list(const char* path, cflare_filesystem_li
 	
 	if(path[path_len - 1] != '/')
 	{
-		pp =  cflare_string_concat_n(2, &path_len, path, "/");
+		pp =  cflare_string_concat_n(&path_len, path, "/");
 		path = pp;
 	}
 	

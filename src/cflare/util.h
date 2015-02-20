@@ -25,7 +25,16 @@ CFLARE_API CFLARE_API_NORETURN void cflare_fatal_c(const char* str);
 CFLARE_API uint8_t cflare_tointeger(const char* str, int64_t* out);
 CFLARE_API uint8_t cflare_tonumber(const char* str, double64_t* out);
 
-CFLARE_API char* cflare_string_concat_n(size_t count, size_t* length, ...);
+CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
+
+#define CFLARE_VA_NUM_ARGS(...) CFLARE_VA_NUM_ARGS_IMPL(__VA_ARGS__, 8,7,6,5,4,3,2,1)
+#define CFLARE_VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,N,...) N
+
+#define cflare_string_concat_n(_LEN_, ...) \
+        cflare_string_concat_n_c(CFLARE_VA_NUM_ARGS(__VA_ARGS__), _LEN_, __VA_ARGS__)
+
+#define cflare_string_concat(...) \
+        cflare_string_concat_n(0, __VA_ARGS__)
 
 #ifdef _MSC_VER
 	CFLARE_API extern int vasprintf(char** strp, const char* format, va_list ap);
