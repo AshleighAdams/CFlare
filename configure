@@ -250,13 +250,16 @@ do
 		local okay = {}
 		for src, imp in pairs(imps) do
 			local priority = 0
-			local why = ""
+			local why = {}
 			for plat, prior in pairs(imp.platforms) do
-				if platform[plat] and prior > priority then
-					priority = prior
-					why = plat
+				if platform[plat] then
+					if prior > priority then
+						priority = prior
+					end
+					table.insert(why, ("%s=%d%%"):format(plat, prior*100))
 				end
 			end
+			why = table.concat(why, ", ")
 			
 			if priority > 0 then
 				table.insert(okay, {priority = priority, src = src, name = imp.name, why = why})
