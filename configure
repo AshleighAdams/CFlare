@@ -18,6 +18,25 @@ end
 function detect_platform()
 	local system = io.popen("uname -s"):read("*l")
 	
+	local nt_versions = {
+		6.3, -- 10
+		6.2, -- 8
+		6.1, -- 7
+		6.0, -- vista
+		5.2, -- 2003 / xp 64bit
+		5.1, -- xp
+		5.0, -- 2000
+	}
+	
+	local function set_nt_version(version)
+		for k,v in pairs(nt_versions) do
+			if v <= version then
+				local p = "windows_nt"..tostring(v):gsub("%.", "_")
+				platform[p] = true
+			end
+		end
+	end
+		
 	-- http://en.wikipedia.org/wiki/C_POSIX_library for posix#n (#n is issue)
 	if system == "FreeBSD" then
 		platform.unix = true
@@ -92,6 +111,7 @@ function detect_platform()
 		platform.posix6 = true
 		platform.cygwin = true
 		platform.gnu = true
+		set_nt_version(tonumber(system:match("([%d%.]+)")) or 6)
 	elseif system and system:match("^Windows") then
 		platform.windows = true
 		platform.posix1 = true
@@ -100,6 +120,7 @@ function detect_platform()
 		platform.mingw = true
 		platform.gnu = true
 		platform.posix1 = true
+		set_nt_version(tonumber(system:match("([%d%.]+)")) or 6)
 	else
 		detected.unix = true
 	end
@@ -242,7 +263,7 @@ do
 			["cflare-windows/mutex.c"] = {
 				name = "SRWLock",
 				platforms = {
-					windows = 0.75 -- the posix one is better, if we can use it
+					windows_nt6 = 0.75 -- the posix one is better, if we can use it
 				}
 			}
 		}
