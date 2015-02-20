@@ -27,7 +27,9 @@ CFLARE_API uint8_t cflare_tonumber(const char* str, double64_t* out);
 
 CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 
-#define CFLARE_VA_NUM_ARGS(...) CFLARE_VA_NUM_ARGS_IMPL(__VA_ARGS__, 8,7,6,5,4,3,2,1)
+// from 0 to 8 args
+#define CFLARE_VA_NUM_ARGS(...) \
+	(sizeof(#__VA_ARGS__) == sizeof("")) ? 0 : CFLARE_VA_NUM_ARGS_IMPL(__VA_ARGS__, 8,7,6,5,4,3,2,1)
 #define CFLARE_VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,_6,_7,_8,N,...) N
 
 #define cflare_string_concat_n(_LEN_, ...) \

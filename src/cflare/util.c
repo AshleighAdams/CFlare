@@ -132,8 +132,14 @@ char* cflare_string_concat_n_c(size_t count, size_t* length, ...)
 {
 	va_list ap;
 	
+	#ifdef _MSC_VER
+	// MSVC doesn't support VLAs
+	char* buffs = malloc(sizeof(const char*) * count);
+	size_t* buffs_len = malloc(sizeof(size_t) * count);
+	#else
 	const char* buffs[count];
 	size_t buffs_len[count];
+	#endif
 	
 	size_t total_size = 0;
 	
@@ -156,6 +162,11 @@ char* cflare_string_concat_n_c(size_t count, size_t* length, ...)
 		memcpy(ptr, buffs[n], buffs_len[n]);
 		ptr += buffs_len[n];
 	}
+	
+	#ifdef _MSC_VER
+	free(buffs);
+	free(buffs_len);
+	#endif
 	
 	*ptr = '\0';
 	
