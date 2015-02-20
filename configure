@@ -228,9 +228,7 @@ do
 			["cflare-posix/filesystem.c"] = {
 				name = "dirent",
 				platforms = {
-					posix2 = 1,
-					cygwin = 0.5,
-					mingw = 0.5
+					posix2 = 1
 				}
 			}
 		},
@@ -238,9 +236,7 @@ do
 			["cflare-posix/mutex.c"] = {
 				name = "pthreads",
 				platforms = {
-					posix5 = 1,
-					cygwin = 0.5,
-					mingw = 0.5
+					posix5 = 1
 				}
 			},
 			["cflare-windows/mutex.c"] = {
@@ -265,7 +261,12 @@ do
 					table.insert(why, ("%s=%d%%"):format(plat, prior*100))
 				end
 			end
-			why = table.concat(why, ", ")
+			
+			if #why == 1 then
+				why = why[1]:match("([^=]+)")
+			else
+				why = table.concat(why, ", ")
+			end
 			
 			if priority > 0 then
 				table.insert(okay, {priority = priority, src = src, name = imp.name, why = why})
