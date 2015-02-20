@@ -18,45 +18,90 @@ end
 function detect_platform()
 	local system = io.popen("uname -s"):read("*l")
 	
+	-- http://en.wikipedia.org/wiki/C_POSIX_library for posix#n (#n is issue)
 	if system == "FreeBSD" then
-		platform.posix = true
+		platform.unix = true
+		platform.posix1 = true
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.freebsd = true
 		platform.bsd = true
 		platform.gnu = true
 	elseif system == "OpenBSD" then
-		platform.posix = true
+		platform.unix = true
+		platform.posix1 = true
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.openbsd = true
 		platform.bsd = true
 		platform.gnu = true
 	elseif system == "NetBSD" then
-		platform.posix = true
+		platform.unix = true
+		platform.posix1 = true -- not fully compliant, like linux
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.netbsd = true
 		platform.bsd = true
 	elseif system == "Darwin" then
-		platform.posix = true
+		platform.unix = true
+		platform.posix1 = true
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.osx = true
 		platform.bsd = true
 		platform.gnu = true
 	elseif system == "Linux" then
-		platform.posix = true
+		platform.unix = true
 		platform.linux = true
+		platform.posix1 = true -- untested which of these are, so may be wrong
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.gnu = true
 	elseif system == "SunOS" then
-		platform.posix = true
+		platform.unix = true
+		platform.posix1 = true
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.solaris = true
 	elseif system and system:match("^CYGWIN") then
 		platform.windows = true
-		platform.posix = true
+		platform.unix = true
+		platform.posix1 = true
+		platform.posix2 = true
+		platform.posix3 = true
+		platform.posix4 = true
+		platform.posix5 = true
+		platform.posix6 = true
 		platform.cygwin = true
 		platform.gnu = true
 	elseif system and system:match("^Windows") then
 		platform.windows = true
+		platform.posix1 = true
 	elseif system and system:match("^MINGW") then
 		platform.windows = true
 		platform.mingw = true
 		platform.gnu = true
+		platform.posix1 = true
 	else
-		detected.posix = true
+		detected.unix = true
 	end
 	
 	for platform,_ in pairs(platform) do
@@ -177,7 +222,7 @@ do
 			["cflare-posix/filesystem.c"] = {
 				name = "dirent",
 				platforms = {
-					posix = 1,
+					posix2 = 1,
 					cygwin = 0.5,
 					mingw = 0.5
 				}
@@ -187,7 +232,7 @@ do
 			["cflare-posix/mutex.c"] = {
 				name = "pthreads",
 				platforms = {
-					posix = 1,
+					posix5 = 1,
 					cygwin = 0.5,
 					mingw = 0.5
 				}
