@@ -12,7 +12,7 @@ void free_list(void* data, void* context)
 	free(e->path);
 }
 
-void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, size_t depth, uint8_t recursive, uint8_t exc_dirs)
+void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, size_t depth, bool recursive, bool exc_dirs)
 {
 	DIR* dir;
 	struct dirent* ent;

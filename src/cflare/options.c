@@ -22,7 +22,7 @@ void cflare_options_load(int argc, char** argv)
 	args_count = 0;
 	args = malloc(sizeof(char**) * argc); // this is the abs max
 	
-	uint8_t parsing_options = 1;
+	bool parsing_options = true;
 	
 	for(size_t i = 1; i < argc; i++)
 	{
@@ -38,7 +38,7 @@ void cflare_options_load(int argc, char** argv)
 			}
 			else if(len == 2) // "--", stop parsing options
 			{
-				parsing_options = 0;
+				parsing_options = false;
 			}
 			else
 			{
@@ -91,7 +91,7 @@ void clfare_options_unload()
 	free(args);
 }
 
-uint8_t cflare_options_boolean(const char* name, uint8_t fallback)
+bool cflare_options_boolean(const char* name, bool fallback)
 {
 	const char* value;
 	size_t len;
@@ -103,20 +103,20 @@ uint8_t cflare_options_boolean(const char* name, uint8_t fallback)
 	}
 	
 	if(len == 0) // set via --abc
-		return 1;
+		return true;
 	
 	if(len == 1)
 	{
 		if(value[0] == '0')
-			return 0;
+			return false;
 		else
-			return 1;
+			return true;
 	}
 	
 	if(strcmp(value, "false") == 0 || strcmp(value, "0") == 0 || strcmp(value, "no") == 0 || strcmp(value, "off") == 0)
-		return 0;
+		return false;
 	else
-		return 1;
+		return true;
 }
 
 int64_t cflare_options_integer(const char* name, int64_t fallback)

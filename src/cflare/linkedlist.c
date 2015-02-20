@@ -96,7 +96,7 @@ void cflare_linkedlist_remove(cflare_linkedlist* list,
 cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list)
 {
 	cflare_linkedlist_iter ret;
-	ret.started = 0;
+	ret.started = false;
 	ret.list = list;
 	ret.prev = 0;
 	ret.next = 0;
@@ -110,7 +110,7 @@ cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* 
 	{
 		iter->next = iter->list->first;
 		iter->prev = 0;
-		iter->started = 1;
+		iter->started = true;
 		iter->value = 0;
 	}
 	
@@ -130,7 +130,7 @@ cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* 
 	{
 		iter->prev = iter->list->last;
 		iter->next = 0;
-		iter->started = 1;
+		iter->started = true;
 		iter->value = 0;
 	}
 	

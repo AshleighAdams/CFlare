@@ -19,9 +19,9 @@ typedef struct cflare_buffer_part
 
 typedef struct cflare_buffer
 {
-	uint8_t needs_copy;
-	uint8_t reversed;
-	uint8_t nullchar;
+	bool needs_copy;
+	bool reversed;
+	bool nullchar;
 	size_t length; // total bytes
 	size_t count; // total parts
 	size_t alloc_count; // allocated parts

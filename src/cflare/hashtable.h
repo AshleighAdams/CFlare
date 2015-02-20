@@ -41,7 +41,7 @@ CFLARE_API void cflare_hashtable_ondelete(cflare_hashtable* list, cflare_deleter
 CFLARE_API void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count);
 
 CFLARE_API void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* value, size_t len);
-CFLARE_API uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash, void** out, size_t* len);
+CFLARE_API bool cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash, void** out, size_t* len);
 
 #endif /* CFLARE_HASHMAP_H */
 

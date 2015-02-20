@@ -33,7 +33,7 @@ void cflare_mutex_unlock(cflare_mutex* mtx)
 
 typedef struct lockinfo
 {
-	uint8_t is_used;
+	bool is_used;
 	size_t position; // position inside the array
 	SRWLOCK lock;
 	SRWLOCK internallock; // this lock us used internally for recursiveness.
@@ -64,7 +64,7 @@ void realloc_locks(size_t newsize)
 		lockinfo* info = infos + i;
 		InitializeSRWLock(&info->lock);
 		InitializeSRWLock(&info->internallock);
-		info->is_used = 0;
+		info->is_used = false;
 		info->position = i;
 		info->write_thread = 0;
 		info->writelock_depth = 0;
@@ -98,7 +98,7 @@ size_t alloc_lock()
 			break;
 		infos_curpos = (infos_curpos + 1) % infos_len;
 	}
-	info->is_used = 1;
+	info->is_used = true;
 	infos_free -= 1;
 
 	ReleaseSRWLockExclusive(&infos_lock);

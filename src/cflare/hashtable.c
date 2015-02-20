@@ -121,21 +121,21 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 	cflare_rwmutex_write_unlock(map->mutex);
 }
 
-uint8_t memory_equals(size_t len, const void* a, const void* b)
+bool memory_equals(size_t len, const void* a, const void* b)
 {
 	if(a == b)
-		return 1;
+		return true;
 	
 	const uint8_t* A = (const uint8_t*)a;
 	const uint8_t* B = (const uint8_t*)b;
 	for(size_t i = 0; i < len; i++)
 	{
 		if(*A != *B)
-			return 0;
+			return false;
 		A++;
 		B++;
 	}
-	return 1;
+	return true;
 }
 
 void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* value, size_t len)
@@ -251,10 +251,10 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 	cflare_rwmutex_write_unlock(map->mutex);
 }
 
-uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
+bool cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 	void** out, size_t* len)
 {
-	uint8_t status = 0;
+	bool status = false;
 	cflare_rwmutex_read_lock(map->mutex);
 	
 	if(map->buckets_count > 0)
@@ -277,7 +277,7 @@ uint8_t cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 				
 				if(memory_equals(hash.pointer_size, hash.pointer, cont->key))
 				{
-					status = 1;
+					status = true;
 					*out = cont->data;
 					*len = cont->data_size;
 					break;

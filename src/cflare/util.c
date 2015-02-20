@@ -66,7 +66,7 @@ int64_t char_to_number(char x)
 		return -1;
 }
 
-uint8_t cflare_tointeger(const char* str, int64_t* out)
+bool cflare_tointeger(const char* str, int64_t* out)
 {
 	size_t len = strlen(str);
 	const char* ptr = str;
@@ -74,7 +74,7 @@ uint8_t cflare_tointeger(const char* str, int64_t* out)
 	int64_t base = 10;
 	
 	if(len == 0)
-		return 0;
+		return false;
 	
 	// look for the sign: +1337 or -1337
 	if(ptr[0] == '-' || ptr[0] == '+')
@@ -106,7 +106,7 @@ uint8_t cflare_tointeger(const char* str, int64_t* out)
 	}
 	
 	if(!len)
-		return 0;
+		return true;
 	
 	int64_t ret = 0;
 	
@@ -114,18 +114,18 @@ uint8_t cflare_tointeger(const char* str, int64_t* out)
 	{
 		int64_t n = char_to_number(ptr[i]);
 		if(i < 0 || n >= base) // check if it's outside our base range
-			return 0;
+			return false;
 		ret += pow(base, b) * n;
 	}
 	
 	*out = sign * ret;
-	return 1;
+	return true;
 }
 
-uint8_t cflare_tonumber(const char* str, double64_t* out)
+bool cflare_tonumber(const char* str, double64_t* out)
 {
 	cflare_notimp();
-	return 0;
+	return false;
 }
 
 char* cflare_string_concat_n_c(size_t count, size_t* length, ...)

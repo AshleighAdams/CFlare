@@ -36,7 +36,7 @@ int test_buffer()
 	return 0;
 }
 
-uint32_t test_hook_abc(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
+bool test_hook_abc(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	int* val = (int*)context;
 	*val = 7357;

@@ -27,7 +27,7 @@ typedef struct cflare_linkedlist
 
 typedef struct cflare_linkedlist_iter
 {
-	uint8_t started;
+	bool started;
 	struct cflare_linkedlist* list;
 	struct cflare_linkedlist_node* prev;
 	struct cflare_linkedlist_node* value;

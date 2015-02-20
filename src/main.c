@@ -12,7 +12,7 @@
 #include <cflare/filesystem.h>
 
 
-uint32_t unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
+bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	cflare_debug("Inside Unload hook! args: %p; rets: %p", args, rets);
 	//cflare_hookstack_push_integer(rets, 1337);
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	
 	int result = 0;
 	
-	if(cflare_options_boolean("version", 0))
+	if(cflare_options_boolean("version", false))
 	{
 		cflare_log("cflare %s", cflare_version());
 	}

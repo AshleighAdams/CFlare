@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
@@ -22,8 +23,8 @@ CFLARE_API void cflare_log_c(const char* str);
 CFLARE_API void cflare_warn_c(const char* str);
 CFLARE_API CFLARE_API_NORETURN void cflare_fatal_c(const char* str);
 
-CFLARE_API uint8_t cflare_tointeger(const char* str, int64_t* out);
-CFLARE_API uint8_t cflare_tonumber(const char* str, double64_t* out);
+CFLARE_API bool cflare_tointeger(const char* str, int64_t* out);
+CFLARE_API bool cflare_tonumber(const char* str, double64_t* out);
 
 CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 

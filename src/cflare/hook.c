@@ -33,7 +33,7 @@ void free_hooktable(void* ptr, void* unused)
 	cflare_linkedlist_delete(tbl->funcs);
 }
 
-uint8_t hook_loaded = 0;
+bool hook_loaded = false;
 
 void cflare_hook_load()
 {
@@ -43,7 +43,7 @@ void cflare_hook_load()
 	hook_tables = cflare_hashtable_new();
 	cflare_hashtable_ondelete(hook_tables, &free_hooktable, 0);
 	
-	hook_loaded = 1;
+	hook_loaded = true;
 }
 
 void cflare_hook_unload()
@@ -51,7 +51,7 @@ void cflare_hook_unload()
 	if(!hook_loaded)
 		cflare_fatal("hook_unload(): not loaded!");
 	
-	hook_loaded = 0;
+	hook_loaded = false;
 	cflare_hashtable_delete(hook_tables);
 }
 
@@ -72,11 +72,9 @@ void cflare_hook_add(const char* name, const char* id, double64_t priority,
 	if(!cflare_hashtable_get(hook_tables, hash, (void**)&tbl, &len))
 	{
 		hook_table newtbl;
+		newtbl.name = strdup(name);
 		newtbl.funcs = cflare_linkedlist_new(sizeof(hook));
-		newtbl.name = malloc(namelen);
-		
 		cflare_linkedlist_ondelete(newtbl.funcs, &free_hook, 0);
-		strncpy(newtbl.name, name, namelen);
 		
 		cflare_hashtable_set(hook_tables, hash, &newtbl, sizeof(hook_table));
 		
@@ -94,9 +92,7 @@ void cflare_hook_add(const char* name, const char* id, double64_t priority,
 	hook* new_tbl;
 	cflare_linkedlist_insert_before(tbl->funcs, iter.value, (void**)&new_tbl);
 	
-	new_tbl->id = malloc(strlen(id));
-	strncpy(new_tbl->id, id, strlen(id));
-	
+	new_tbl->id = strdup(id);
 	new_tbl->priority = priority;
 	new_tbl->context = context;
 	
@@ -123,13 +119,13 @@ void cflare_hook_remove(const char* name, const char* id)
 	}
 }
 
-int32_t cflare_hook_call(const char* name, const cflare_hookstack* args,
+bool cflare_hook_call(const char* name, const cflare_hookstack* args,
 	cflare_hookstack* returns)
 {
 	// if we're not loaded, fail silently, because if we WERE loaded, we'd have
 	// the same affect as it is not yet possible for a hook to be added.
 	if(!hook_loaded)
-		return 0;
+		return false;
 	
 	hook_table* tbl;
 	size_t len;
@@ -143,13 +139,13 @@ int32_t cflare_hook_call(const char* name, const cflare_hookstack* args,
 	{
 		hook* val = (hook*)iter.value->data;
 		
-		uint32_t rets = val->func(args, returns, val->context);
+		bool rets = val->func(args, returns, val->context);
 		
-		if(rets != 0)
+		if(rets)
 			return rets;
 	}
 	
-	return 0;
+	return false;
 }
 
 // HookStack functions
@@ -251,15 +247,15 @@ void cflare_hookstack_push_integer(cflare_hookstack* stack, int64_t value)
 	elm->deleter_context = 0;
 	
 }
-int32_t cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t index,
+bool cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t index,
 	int64_t* out)
 {
 	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_INTEGER);
 	if(!elm)
-		return 0;
+		return false;
 	
 	*out = elm->data.integer;
-	return 1;
+	return true;
 }
 
 
@@ -276,15 +272,15 @@ void cflare_hookstack_push_number(cflare_hookstack* stack, double64_t value)
 	elm->deleter = 0;
 	elm->deleter_context = 0;
 }
-int32_t cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index,
+bool cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index,
 	double64_t* out)
 {
 	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_NUMBER);
 	if(!elm)
-		return 0;
+		return false;
 	
 	*out = elm->data.number;
-	return 1;
+	return true;
 }
 
 void cflare_hookstack_push_string(cflare_hookstack* stack, const char* value)
@@ -300,13 +296,13 @@ void cflare_hookstack_push_string(cflare_hookstack* stack, const char* value)
 	elm->deleter = &free_string;
 	elm->deleter_context = 0;
 }
-int32_t cflare_hookstack_get_string(const cflare_hookstack* stack, int32_t index,
+bool cflare_hookstack_get_string(const cflare_hookstack* stack, int32_t index,
 	const char** out)
 {
 	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_NUMBER);
 	if(!elm)
-		return 0;
+		return false;
 	
 	*out = elm->data.string;
-	return 1;
+	return true;
 }
