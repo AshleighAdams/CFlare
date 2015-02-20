@@ -56,7 +56,7 @@ function detect_platform()
 		platform.mingw = true
 		platform.gnu = true
 	else
-		detected.unix = true
+		detected.posix = true
 	end
 	
 	for platform,_ in pairs(platform) do
@@ -167,20 +167,76 @@ do
 	
 	table.insert(config, "EXE_SOURCES = $(wildcard src/*.c)")
 	table.insert(config, "EXE_HEADERS = $(wildcard src/*.h)")
-
-	if platform.windows then
-		table.insert(config, "LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-windows/**/*.c) $(wildcard src/cflare-windows/*.c))")
-		table.insert(config, "LIB_HEADERS += $(wildcard src/cflare-windows/**/*.h) $(wildcard src/cflare-windows/*.h)")
-	elseif platform.posix then
-		table.insert(config, "LIB_OBJECTS += $(patsubst %.c, %.o, $(wildcard src/cflare-posix/**/*.c) $(wildcard src/cflare-posix/*.c))")
-		table.insert(config, "LIB_HEADERS += $(wildcard src/cflare-posix/**/*.h) $(wildcard src/cflare-posix/*.h)")
-	end
 end
 
 
+-- platform specific stuff
+do
+	local platform_sources = {
+		["cflare/filesystem.h"] = {
+			["cflare-posix/filesystem.c"] = {
+				name = "dirent",
+				platforms = {
+					posix = 1,
+					cygwin = 0.5,
+					mingw = 0.5
+				}
+			}
+		},
+		["cflare/mutex.h"] = {
+			["cflare-posix/mutex.c"] = {
+				name = "pthreads",
+				platforms = {
+					posix = 1,
+					cygwin = 0.5,
+					mingw = 0.5
+				}
+			},
+			["cflare-windows/mutex.c"] = {
+				name = "SRWLock",
+				platforms = {
+					windows = 1
+				}
+			}
+		}
+	}
 
-config = table.concat(config, "\n")
---print()
+	for api, imps in pairs(platform_sources) do
+		local okay = {}
+		for src, imp in pairs(imps) do
+			local priority = 0
+			for plat, prior in pairs(imp.platforms) do
+				if platform[plat] and prior > priority then
+					priority = prior
+				end
+			end
+			
+			if priority > 0 then
+				table.insert(okay, {priority = priority, src = src, name = imp.name})
+			end
+		end
+		
+		table.sort(okay, function(a,b) return a.priority > b.priority end)
+		
+		print(api..":")
+		local imp = table.remove(okay, 1)
+		
+		if imp then
+			print(string.format("*\t%s: %s; priority: %d%%", imp.src, imp.name, imp.priority*100))
+			for _, other in pairs(okay) do
+				print(string.format("\t%s: %s; priority: %d%%", other.src, other.name, other.priority*100))
+			end
+		else
+			print(string.format("error: nothing can implement %s on your platform", api))
+			return os.exit(1)
+		end
+		
+		table.insert(config, string.format("LIB_HEADERS += src/%s", imp.src))
+		table.insert(config, string.format("LIB_OBJECTS += src/%s", imp.src:gsub("%.c$", ".o")))
+	end
+end
+
+config = table.concat(config, "\n") .. "\n"
 
 local f = assert(io.open("config", "w"))
 f:write(config)
