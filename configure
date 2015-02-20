@@ -118,6 +118,7 @@ libs = {"pthread", "m"}
 prefix = find_arg("prefix", "/usr/local")
 release = find_arg("release")
 cc = find_arg("cc", os.getenv("CC") or "cc")
+pic = "-fPIC"
 
 detect_platform()
 
@@ -133,6 +134,10 @@ end
 
 if platform.linux then -- make sure gcc looks for libs in current dir when running
 	table.insert(ldflags, "-Wl,-R -Wl,.")
+end
+
+if platform.windows then
+	pic = "-fpic"
 end
 
 do
@@ -204,6 +209,7 @@ local config = {
 	"VERSION_MAJOR = " .. version_major,
 	"VERSION_MINOR = " .. version_minor,
 	"VERSION_PATCH = " .. version_patch,
+	"PIC           = " .. pic
 }
 
 do

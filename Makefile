@@ -7,7 +7,7 @@ default: $(TARGET)
 all: $(TARGET)
 
 %.o: %.c $(LIB_HEADERS)
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+	$(CC) $(CFLAGS) $(PIC) -c $< -o $@
 
 .PRECIOUS: lib$(TARGET) $(LIB_OBJECTS)
 
