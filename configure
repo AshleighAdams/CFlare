@@ -195,7 +195,7 @@ do
 			["cflare-windows/mutex.c"] = {
 				name = "SRWLock",
 				platforms = {
-					windows = 1
+					windows = 0.75 -- the posix one is better, if we can use it
 				}
 			}
 		}
