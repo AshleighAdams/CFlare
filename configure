@@ -169,8 +169,8 @@ do
 	if not okay then
 		os.execute("git fetch -t") -- fetch the tags
 		
-		local depth = 100
-		for i = depth, 1000, 100 do
+		for depth = 100, 1000, 100 do
+			print("git fetch --depth="..depth)
 			os.execute("git fetch --depth="..depth)
 			if os.execute("git describe --tags") then
 				print("found tag that describes us at fetch depth of " .. depth)
