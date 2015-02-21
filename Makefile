@@ -24,10 +24,10 @@ test: test-units test-memory test-tabs test-headers
 	echo "All tests passed for `./cflare --version`";
 
 test-headers:
-	@echo "Check that all headers are self sufficient..."; \
+	@echo "checking all headers are self sufficient..."; \
 	for HEADER in $$(find ./src/ -name "*.h"); do \
 		echo "#include \"$$HEADER\"\nint main(){return 0;}" > ./.tmp.c; \
-		echo "Testing $$HEADER...\033[s"; \
+		echo "\t$$HEADER...\033[s"; \
 		$(CC) -I./src ./.tmp.c -o /dev/null; \
 		if [ "$$?" != "0" ]; then \
 			rm ./.tmp.c; \
