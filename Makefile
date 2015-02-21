@@ -21,7 +21,7 @@ clean:
 	-$(RM) "lib$(TARGET).$(LIB_EXTENSION)" "$(TARGET)" $(wildcard src/**.o) $(wildcard src/**/*.o)
 
 test: test-units test-memory test-tabs test-headers
-	echo "All tests passed for `./cflare --version`";
+	@echo "All tests passed for `./cflare --version`";
 
 test-headers:
 	@echo "checking all headers are self sufficient..."; \

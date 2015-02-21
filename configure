@@ -132,7 +132,7 @@ end
 
 platform = {}
 defines = {}
-cflags = {"-Wall", "-std=c11", "-I./src"}
+cflags = {"-Wall", "-Wpedantic", "-std=c11", "-I./src"}
 lflags = {}
 ldflags = {"-L."}
 libs = {"pthread", "m"}
