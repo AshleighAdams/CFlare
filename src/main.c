@@ -14,7 +14,7 @@
 
 bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
-	cflare_debug("Inside Unload hook! args: %p; rets: %p", args, rets);
+	cflare_debug("Inside Unload hook! args: %p; rets: %p", (void*)args, (void*)rets);
 	//cflare_hookstack_push_integer(rets, 1337);
 	cflare_hookstack_push_number(rets, 1337);
 	return 0;

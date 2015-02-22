@@ -152,7 +152,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 			if(newsize < start_size)
 				newsize = start_size;
 		
-			cflare_debug("automatically growing a hashtable (%p) to %lu buckets", map, newsize);
+			cflare_debug("automatically growing a hashtable (%p) to %lu buckets", (void*)map, newsize);
 			cflare_hashtable_rebuild(map, newsize);
 		}
 	}
@@ -167,7 +167,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 			size_t newsize = map->buckets_count / 4;
 			if(newsize > start_size)
 			{
-				cflare_debug("automatically shrinking a hashtable (%p) to %lu buckets", map, newsize);
+				cflare_debug("automatically shrinking a hashtable (%p) to %lu buckets", (void*)map, newsize);
 				cflare_hashtable_rebuild(map, newsize);
 			}
 		}
