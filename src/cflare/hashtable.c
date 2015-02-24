@@ -226,6 +226,10 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 				if(iter.value)
 				{
 					container = (cflare_hashtable_container*)iter.value->data;
+					// the detor is usually called via the linked list; here, the
+					// element is not removed, but updated.
+					if(map->deleter)
+						map->deleter(container->data, map->deleter_context);
 					free(container->data);
 				}
 				else
