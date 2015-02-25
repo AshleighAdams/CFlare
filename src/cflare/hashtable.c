@@ -1,6 +1,8 @@
 
 #include "cflare/hashtable.h"
 
+#include <math.h>
+
 const size_t start_size = 32;
 
 void free_container(void* data, void* hashtable)
@@ -152,7 +154,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 			if(newsize < start_size)
 				newsize = start_size;
 		
-			cflare_debug("automatically growing a hashtable (%p) to %lu buckets", (void*)map, newsize);
+			//cflare_debug("automatically growing a hashtable (%p) to %lu buckets", (void*)map, newsize);
 			cflare_hashtable_rebuild(map, newsize);
 		}
 	}
@@ -167,7 +169,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 			size_t newsize = map->buckets_count / 4;
 			if(newsize > start_size)
 			{
-				cflare_debug("automatically shrinking a hashtable (%p) to %lu buckets", (void*)map, newsize);
+				//cflare_debug("automatically shrinking a hashtable (%p) to %lu buckets", (void*)map, newsize);
 				cflare_hashtable_rebuild(map, newsize);
 			}
 		}
@@ -294,4 +296,94 @@ bool cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 	
 	cflare_rwmutex_read_unlock(map->mutex);
 	return status;
+}
+
+
+void blockchar(double perc)
+{
+	int count = round(perc * 8.0);
+	switch(count)
+	{
+	case 0:
+		fprintf(stderr, "%s", "_"); break;
+	case 1:
+		fprintf(stderr, "%s", "▁"); break;
+	case 2:
+		fprintf(stderr, "%s", "▂"); break;
+	case 3:
+		fprintf(stderr, "%s", "▃"); break;
+	case 4:
+		fprintf(stderr, "%s", "▄"); break;
+	case 5:
+		fprintf(stderr, "%s", "▅"); break;
+	case 6:
+		fprintf(stderr, "%s", "▆"); break;
+	case 7:
+		fprintf(stderr, "%s", "▇"); break;
+	default:
+		fprintf(stderr, "%s", "█"); break;
+	}
+}
+
+void cflare_hashtable_printdebug(cflare_hashtable* map)
+{
+	size_t avg_per_buck = 0;
+	size_t cols = 0;
+	size_t perf_cols = map->count > map->buckets_count ? map->count - map->buckets_count : 0;
+	
+	size_t hits[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+	size_t hits_len = 9;
+	size_t hits_max = 0;
+	
+	bool layout = false;
+	
+	if(layout) fprintf(stderr, "[");
+	for(size_t i = 0; i < map->buckets_count; i++)
+	{
+		size_t count = map->buckets[i].list ? map->buckets[i].list->count : 0;
+		avg_per_buck += count;
+		if(count > 1)
+			cols += count - 1;
+		
+		size_t* hits_at;
+		if(count < hits_len)
+			hits_at = hits + count;
+		else
+			hits_at = hits + (hits_len - 1);
+		
+		(*hits_at)++;
+		if(*hits_at > hits_max)
+			hits_max = *hits_at;
+		
+		if(layout) blockchar((double)count / 8.0);
+	}
+	if(layout) fprintf(stderr, "]\n");
+	
+	double eff = (double)(map->count + perf_cols) / (double)(map->count + cols);
+	
+	fprintf(
+		stderr,
+		"%p: %lu/%lu; collisions: %lu; perfect: %lu; efficiency: %.2lf%%; distro: ",
+		(void*)map, map->count, map->buckets_count, cols, perf_cols, eff * 100.0
+	);
+	
+	for(size_t x = 0; x < hits_len; x++)
+		blockchar((double)hits[x] / (double)hits_max);
+	fprintf(stderr, "; percentile (|99th): ");
+	
+	double count = 0;
+	double total = map->buckets_count;
+	bool done_99 = false;
+	for(size_t x = 0; x < hits_len; x++)
+	{
+		count += hits[x];
+		if(!done_99 && (count/total) >= 0.99)
+		{
+			done_99 = true;
+			fprintf(stderr, "|");
+		}
+		else
+			blockchar(count / total);
+	}
+	fprintf(stderr, "\n");
 }

@@ -172,6 +172,11 @@ void cflare_httpstatus_load()
 	
 	cflare_linkedlist_delete(list);
 	free(path);
+	
+	//cflare_hashtable_rebuild(cache_code2string, cache_code2string->count);
+	//cflare_hashtable_rebuild(cache_string2code, cache_string2code->count);
+	cflare_hashtable_printdebug(cache_code2string);
+	cflare_hashtable_printdebug(cache_string2code);
 }
 
 void cflare_httpstatus_unload()
