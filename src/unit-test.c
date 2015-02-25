@@ -5,6 +5,7 @@
 #include <cflare/buffer.h>
 #include <cflare/hook.h>
 #include <cflare/hashtable.h>
+#include <cflare/httpstatus.h>
 
 // if a test fails, it doesn't need to free memory.
 
@@ -169,6 +170,33 @@ int test_util()
 	return 0;
 }
 
+bool test_httpstatus_code(uint32_t code, const char* status)
+{
+	const char* got = cflare_httpstatus_tostring(code);
+	if(strcmp(got, status) != 0)
+		return false;
+	
+	if(cflare_httpstatus_fromstring(status) != code)
+		return false;
+	
+	return true;
+}
+int test_httpstatus()
+{
+	#define TEST_CODE(_CODE_, _STATUS_) \
+		unit_test_part(#_CODE_" <-> "_STATUS_);\
+		if(!test_httpstatus_code(_CODE_, _STATUS_)) \
+			return 1;
+	
+	TEST_CODE(200, "OK");
+	TEST_CODE(304, "Not Modified");
+	TEST_CODE(404, "Not Found");
+	TEST_CODE(500, "Internal Server Error");
+	
+	return 0;
+}
+
+
 int test_failed;
 const char* msg;
 void unit_test_part(const char* location)
@@ -201,6 +229,7 @@ int unit_test()
 	test_function("linkedlist", &test_linkedlist);
 	test_function("hashtable", &test_hashtable);
 	test_function("util", &test_util);
+	test_function("httpstatus", &test_httpstatus);
 	
 	if(test_failed)
 		cflare_log("One or more unit tests failed.");
