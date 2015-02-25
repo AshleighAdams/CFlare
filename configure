@@ -135,7 +135,7 @@ defines = {}
 cflags = {"-Wall", "-Wpedantic", "-std=c11", "-I./src"}
 lflags = {}
 ldflags = {"-L."}
-libs = {"pthread", "m"}
+libs = {"m"}
 prefix = find_arg("prefix", "/usr/local")
 release = find_arg("release")
 cc = find_arg("cc", os.getenv("CC") or "cc")
@@ -244,24 +244,30 @@ end
 
 -- platform specific stuff
 do
+	table.insert(config, "# platform specific")
+	
 	local platform_sources = {
 		["cflare/filesystem.h"] = {
-			["cflare-posix/filesystem.c"] = {
+			{
 				name = "dirent",
+				src = { "cflare-posix/filesystem.c" },
 				platforms = {
 					posix2 = 1
 				}
 			}
 		},
 		["cflare/mutex.h"] = {
-			["cflare-posix/mutex.c"] = {
-				name = "pthreads",
+			{
+				name = "pthread_mutex",
+				src = { "cflare-posix/mutex.c" },
+				libs = { "pthread" },
 				platforms = {
 					posix5 = 1
 				}
 			},
-			["cflare-windows/mutex.c"] = {
+			{
 				name = "SRWLock",
+				src = { "cflare-windows/mutex.c" },
 				platforms = {
 					windows_nt6 = 0.75 -- the posix one is better, if we can use it
 				}
@@ -271,7 +277,8 @@ do
 
 	for api, imps in pairs(platform_sources) do
 		local okay = {}
-		for src, imp in pairs(imps) do
+		for _, imp in pairs(imps) do
+			local src = imp.src
 			local priority = 0
 			local why = {}
 			for plat, prior in pairs(imp.platforms) do
@@ -290,7 +297,14 @@ do
 			end
 			
 			if priority > 0 then
-				table.insert(okay, {priority = priority, src = src, name = imp.name, why = why})
+				table.insert(okay, {
+					priority = priority,
+					sources = src,
+					name = imp.name,
+					why = why,
+					libs = imp.libs,
+					defines = imp.defines
+				})
 			end
 		end
 		
@@ -300,18 +314,39 @@ do
 		local imp = table.remove(okay, 1)
 		
 		if imp then
-			print(string.format("*\t%s: %s; priority: %d%% (%s)", imp.src, imp.name, imp.priority*100, imp.why))
+			print(string.format("*\t%s: priority: %d%% (%s)", imp.name, imp.priority*100, imp.why))
 			for _, other in pairs(okay) do
-				print(string.format("\t%s: %s; priority: %d%% (%s)", other.src, other.name, other.priority*100, other.why))
+				print(string.format("\t%s: priority: %d%% (%s)", other.name, other.priority*100, other.why))
 			end
 		else
 			print(string.format("error: nothing can implement %s on your platform", api))
 			return os.exit(1)
 		end
 		
-		table.insert(config, string.format("LIB_HEADERS += src/%s", imp.src))
-		table.insert(config, string.format("LIB_OBJECTS += src/%s", imp.src:gsub("%.c$", ".o")))
+		
+		table.insert(config, string.format("# %s", imp.name))
+		
+		if imp.sources then
+			for k, src in pairs(imp.sources) do
+				table.insert(config, string.format("LIB_HEADERS += src/%s", src))
+				table.insert(config, string.format("LIB_OBJECTS += src/%s", src:gsub("%.c$", ".o")))
+			end
+		end
+		
+		if imp.defines then
+			for k, define in pairs(imp.defines) do
+				table.insert(config, string.format("CFLAGS += -D%s", define))
+			end
+		end
+		
+		if imp.libs then
+			for k, lib in pairs(imp.libs) do
+				table.insert(config, string.format("LIBS += -l%s", lib))
+			end
+		end
 	end
+	
+	table.insert(config, "# end platform specific")
 end
 
 config = table.concat(config, "\n") .. "\n"
