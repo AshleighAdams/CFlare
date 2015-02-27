@@ -132,7 +132,7 @@ end
 
 platform = {}
 defines = {}
-cflags = {"-Wall", "-Wpedantic", "-std=c11", "-I./src"}
+cflags = {"-Wall", "-Wpedantic", "-std=c11", "-I./src", "-frandom-seed=cflare"}
 lflags = {}
 ldflags = {"-L."}
 libs = {"m"}
