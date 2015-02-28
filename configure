@@ -237,7 +237,7 @@ do
 	table.insert(config, "LIB_OBJECTS = $(patsubst %.c, %.o, $(wildcard src/cflare/**/*.c) $(wildcard src/cflare/*.c))")
 	table.insert(config, "LIB_HEADERS = $(wildcard src/cflare/**/*.h) $(wildcard src/cflare/*.h)")
 	
-	table.insert(config, "EXE_SOURCES = $(wildcard src/*.c)")
+	table.insert(config, "EXE_OBJECTS = $(patsubst %.c, %.o, $(wildcard src/*.c))")
 	table.insert(config, "EXE_HEADERS = $(wildcard src/*.h)")
 end
 

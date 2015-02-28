@@ -9,13 +9,13 @@ all: $(TARGET)
 %.o: %.c $(LIB_HEADERS)
 	$(CC) $(CFLAGS) $(PIC) -c $< -o $@
 
-.PRECIOUS: lib$(TARGET) $(LIB_OBJECTS)
+.PRECIOUS: lib$(TARGET) $(LIB_OBJECTS) $(EXE_OBJECTS)
 
 lib$(TARGET): $(LIB_OBJECTS)
 	$(CC) $(CFLAGS) -shared $(LIB_OBJECTS) $(LFLAGS) $(LIBS) -o "$@.$(LIB_EXTENSION)"
 
-$(TARGET): lib$(TARGET) $(EXE_HEADERS) $(EXE_SOURCES)
-	$(CC) $(CFLAGS) $(LDFLAGS) -l$(TARGET) $(LFLAGS) $(LIBS) -o "$@" $(EXE_SOURCES)
+$(TARGET): lib$(TARGET) $(EXE_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -l$(TARGET) $(LFLAGS) $(LIBS) $(EXE_OBJECTS) -o "$@"
 
 clean:
 	-$(RM) "lib$(TARGET).$(LIB_EXTENSION)" "$(TARGET)" $(wildcard src/**.o) $(wildcard src/**/*.o)
