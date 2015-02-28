@@ -1,0 +1,27 @@
+# X-Frame-Options doesn't belong here; that's X as in cross, such as XSS.
+
+# These headers are not a IANA registered, but are often seen used.
+Permanent
+X-Requested-With
+DNT
+# superseeded by Forwarded: http://tools.ietf.org/html/rfc7239
+# Forwarded: for=192.0.2.43, for="[2001:db8:cafe::17]", for=unknown, for=_secret
+# Should also set Via header
+X-Forwarded-For
+X-Forwarded-Proto
+Front-End-Https
+X-ATT-DeviceId
+X-Wap-Profile
+Proxy-Connection
+Access-Control-Allow-Origin
+Refresh
+Status
+X-XSS-Protection
+Content-Security-Policy
+X-Content-Security-Policy
+X-WebKit-CSP
+X-Content-Type-Options
+X-Powered-By
+X-UA-Compatible
+X-Sendfile
+X-Accel-Redirect
