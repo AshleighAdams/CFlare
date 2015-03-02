@@ -9,7 +9,7 @@
 
 // if a test fails, it doesn't need to free memory.
 
-int test_buffer()
+static int test_buffer()
 {
 	cflare_buffer* buff = cflare_buffer_new(CFLARE_BUFFER_NOCOPY | CFLARE_BUFFER_NULLCHAR);
 	
@@ -37,13 +37,13 @@ int test_buffer()
 	return 0;
 }
 
-bool test_hook_abc(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
+static bool test_hook_abc(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	int* val = (int*)context;
 	*val = 7357;
 	return 0;
 }
-int test_hook()
+static int test_hook()
 {
 	int x = 0;
 	cflare_hook_add("Abc", "test", 0, &test_hook_abc, &x);
@@ -56,7 +56,7 @@ int test_hook()
 	return 0;
 }
 
-int test_linkedlist()
+static int test_linkedlist()
 {
 	cflare_linkedlist* list = cflare_linkedlist_new(32);
 	{
@@ -92,7 +92,7 @@ int test_linkedlist()
 	return 0;
 }
 
-int test_hashtable()
+static int test_hashtable()
 {
 	cflare_hashtable* map = cflare_hashtable_new();
 	{
@@ -147,7 +147,7 @@ int test_hashtable()
 	return 0;
 }
 
-int test_util()
+static int test_util()
 {
 	int64_t val;
 	
@@ -170,7 +170,7 @@ int test_util()
 	return 0;
 }
 
-bool test_httpstatus_code(uint32_t code, const char* status)
+static bool test_httpstatus_code(uint32_t code, const char* status)
 {
 	const char* got = cflare_httpstatus_tostring(code);
 	if(strcmp(got, status) != 0)
@@ -181,7 +181,7 @@ bool test_httpstatus_code(uint32_t code, const char* status)
 	
 	return true;
 }
-int test_httpstatus()
+static int test_httpstatus()
 {
 	#define TEST_CODE(_CODE_, _STATUS_) \
 		unit_test_part(#_CODE_" <-> "_STATUS_);\
@@ -197,14 +197,14 @@ int test_httpstatus()
 }
 
 
-int test_failed;
-const char* msg;
+static int test_failed;
+static const char* msg;
 void unit_test_part(const char* location)
 {
 	msg = location;
 	cflare_log("\tchecking %s...", msg);
 }
-void test_function(const char* testname, int(*testfunc)())
+static void test_function(const char* testname, int(*testfunc)())
 {
 	msg = 0;
 	cflare_log("Testing %s...", testname);

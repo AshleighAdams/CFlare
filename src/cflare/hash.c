@@ -3,7 +3,7 @@
 
 #include "cflare/options.h"
 
-uint32_t murmur3_32(const void* buff, uint32_t len)
+static uint32_t murmur3_32(const void* buff, uint32_t len)
 {
 	const char* key = (const char*)buff;
 	uint32_t seed = 0;
@@ -58,7 +58,7 @@ uint32_t murmur3_32(const void* buff, uint32_t len)
 	return hash;
 }
 
-uint32_t lua_hash(const void* buff, uint32_t len)
+static uint32_t lua_hash(const void* buff, uint32_t len)
 {
 	#define HASHLIMIT 5
 
@@ -73,7 +73,7 @@ uint32_t lua_hash(const void* buff, uint32_t len)
 	return (uint32_t)computed;
 }
 
-uint32_t orig(const void* data, size_t len)
+static uint32_t orig(const void* data, size_t len)
 {
 	const char* ptr = (const char*)data;
 	uint32_t computed, i;
@@ -102,7 +102,7 @@ uint32_t orig(const void* data, size_t len)
 #endif
 
 // http://www.azillionmonkeys.com/qed/hash.html
-uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
+static uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
 {
 	const char * data = (const char*)arg_data;;
 	int len = (int)arg_len;
@@ -151,7 +151,7 @@ uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
     return hash;
 }
 
-uint32_t fnv_hash_1a_32(const void *key, size_t len)
+static uint32_t fnv_hash_1a_32(const void *key, size_t len)
 {
 	const uint8_t *p = key;
 	uint32_t h = 0x811c9dc5;

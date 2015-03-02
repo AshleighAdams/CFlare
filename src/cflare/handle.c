@@ -13,12 +13,12 @@ struct reference
 };
 
 #define MAX_REFS 255
-struct reference refs[MAX_REFS];
-cflare_handle curid = 0;
-int loaded = 0;
-cflare_mutex* mutex;
+static struct reference refs[MAX_REFS];
+static cflare_handle curid = 0;
+static int loaded = 0;
+static cflare_mutex* mutex;
 
-int32_t find_handle(cflare_handle id, struct reference** out)
+static int32_t find_handle(cflare_handle id, struct reference** out)
 {
 	for(size_t i = 0; i < MAX_REFS; i++)
 	{
@@ -34,7 +34,7 @@ int32_t find_handle(cflare_handle id, struct reference** out)
 	return 0;
 }
 
-cflare_handle new_handle(struct reference** out)
+static cflare_handle new_handle(struct reference** out)
 {
 	*out = 0;
 	

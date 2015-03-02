@@ -6,13 +6,13 @@
 #include <stdlib.h>
 
 
-void free_list(void* data, void* context)
+static void free_list(void* data, void* context)
 {
 	cflare_filesystem_entry* e = (cflare_filesystem_entry*)data;
 	free(e->path);
 }
 
-void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, size_t depth, bool recursive, bool exc_dirs)
+static void populate_list(cflare_linkedlist* list, const char* path, size_t path_len, size_t depth, bool recursive, bool exc_dirs)
 {
 	DIR* dir;
 	struct dirent* ent;
@@ -108,8 +108,8 @@ cflare_linkedlist* cflare_filesystem_list(const char* path, cflare_filesystem_li
 	}
 	
 	populate_list(list, path, path_len, 0,
-		!!(opts & CFLARE_FILESYSTEM_LIST_RECURSIVE),
-		!!(opts & CFLARE_FILESYSTEM_LIST_EXCLUDE_DIRECTORIES)
+		opts & CFLARE_FILESYSTEM_LIST_RECURSIVE,
+		opts & CFLARE_FILESYSTEM_LIST_EXCLUDE_DIRECTORIES
 	);
 	
 	if(pp)

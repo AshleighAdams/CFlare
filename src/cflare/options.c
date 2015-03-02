@@ -3,14 +3,11 @@
 
 #include "cflare/hashtable.h"
 
-int original_argc;
-char** original_argv;
-
-cflare_hashtable* opt_hashtable;
-cflare_hashtable* env_hashtable;
-char**            args;
-size_t            args_count;
-char*             self;
+static cflare_hashtable* opt_hashtable;
+static cflare_hashtable* env_hashtable;
+static char**            args;
+static size_t            args_count;
+static char*             self;
 
 void cflare_options_load(int argc, char** argv)
 {

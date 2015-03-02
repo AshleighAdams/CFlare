@@ -12,7 +12,7 @@ typedef struct hook
 	hook_function* func;
 } hook;
 
-void free_hook(void* ptr, void* unused)
+static void free_hook(void* ptr, void* unused)
 {
 	hook* tbl = (hook*)ptr;
 	free(tbl->id);
@@ -24,16 +24,15 @@ typedef struct hook_table
 	cflare_linkedlist* funcs;
 } hook_table;
 
-cflare_hashtable* hook_tables;
+static cflare_hashtable* hook_tables = 0;
+static bool hook_loaded = false;
 
-void free_hooktable(void* ptr, void* unused)
+static void free_hooktable(void* ptr, void* unused)
 {
 	hook_table* tbl = (hook_table*)ptr;
 	free(tbl->name);
 	cflare_linkedlist_delete(tbl->funcs);
 }
-
-bool hook_loaded = false;
 
 void cflare_hook_load()
 {
@@ -150,7 +149,7 @@ bool cflare_hook_call(const char* name, const cflare_hookstack* args,
 
 // HookStack functions
 
-void free_element(void* data, void* context)
+static void free_element(void* data, void* context)
 {
 	cflare_hookstack_elm* elm = (cflare_hookstack_elm*)data;
 	
@@ -158,7 +157,7 @@ void free_element(void* data, void* context)
 		elm->deleter(elm->data.pointer, elm->deleter_context);
 }
 
-void free_string(void* data, void* context)
+static void free_string(void* data, void* context)
 {
 	free((char*)data);
 }
@@ -200,7 +199,7 @@ const char* cflare_hookstack_type_tostring(cflare_hookstack_type input)
 
 // push
 
-cflare_hookstack_elm* get_elm(const cflare_hookstack* stack, int32_t index, cflare_hookstack_type type)
+static cflare_hookstack_elm* get_elm(const cflare_hookstack* stack, int32_t index, cflare_hookstack_type type)
 {
 	if(!stack)
 		return 0;

@@ -6,7 +6,7 @@
 #include <math.h>
 #include <stdarg.h>
 
-void call_log_hook(const char* level, const char* str)
+static void call_log_hook(const char* level, const char* str)
 {
 	cflare_hookstack* args = cflare_hookstack_new();
 	cflare_hookstack* rets = 0;
@@ -54,7 +54,7 @@ void cflare_fatal_c(const char* str)
 	abort();
 }
 
-int64_t char_to_number(char x)
+static int64_t char_to_number(char x)
 {
 	if(x >= '0' && x <= '9')
 		return (int64_t)(x - '0');

@@ -13,12 +13,10 @@ typedef struct known_status
 	char* string;
 } known_status;
 
-known_status* known_statuses = 0;
+static cflare_hashtable* cache_code2string;
+static cflare_hashtable* cache_string2code;
 
-cflare_hashtable* cache_code2string;
-cflare_hashtable* cache_string2code;
-
-void free_knownstatus(void* data, void* ctx)
+static void free_knownstatus(void* data, void* ctx)
 {
 	known_status* status = (known_status*)data;
 	free(status->string);
@@ -27,7 +25,7 @@ void free_knownstatus(void* data, void* ctx)
 #define max_line_length 1024
 
 // returns new length
-size_t normalize_status(char* ptr)
+static size_t normalize_status(char* ptr)
 {
 	size_t pos = 0, curpos = 0;
 	while(true)
@@ -48,7 +46,7 @@ size_t normalize_status(char* ptr)
 	return pos;
 }
 
-void parse_line(char* line, const char* name)
+static void parse_line(char* line, const char* name)
 {
 	for(size_t i = 0; i < max_line_length; i++)
 	{
@@ -134,7 +132,7 @@ void parse_line(char* line, const char* name)
 	}
 }
 
-void parse_file(const char* path, const char* name)
+static void parse_file(const char* path, const char* name)
 {
 	cflare_debug("httpstatus: loading %s", name);
 	FILE* fp = fopen(path, "r");

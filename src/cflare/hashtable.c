@@ -3,9 +3,9 @@
 
 #include <math.h>
 
-const size_t start_size = 32;
+static const size_t start_size = 32;
 
-void free_container(void* data, void* hashtable)
+static void free_container(void* data, void* hashtable)
 {
 	cflare_hashtable_container* cont = (cflare_hashtable_container*)data;
 	cflare_hashtable* self = (cflare_hashtable*)hashtable;
@@ -123,7 +123,7 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 	cflare_rwmutex_write_unlock(map->mutex);
 }
 
-bool memory_equals(size_t len, const void* a, const void* b)
+static bool memory_equals(size_t len, const void* a, const void* b)
 {
 	if(a == b)
 		return true;
@@ -299,7 +299,7 @@ bool cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
 }
 
 
-void blockchar(double perc)
+static void blockchar(double perc)
 {
 	int count = round(perc * 8.0);
 	switch(count)

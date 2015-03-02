@@ -42,14 +42,14 @@ typedef struct lockinfo
 	size_t readlock_depth;
 } lockinfo;
 
-lockinfo* infos = 0;
-size_t infos_len = 0;
-size_t infos_free = 0;
-size_t infos_curpos = 0;
+static lockinfo* infos = 0;
+static size_t infos_len = 0;
+static size_t infos_free = 0;
+static size_t infos_curpos = 0;
 
-SRWLOCK infos_lock;
+static SRWLOCK infos_lock;
 
-void realloc_locks(size_t newsize)
+static void realloc_locks(size_t newsize)
 {
 	size_t oldsize = infos_len;
 	size_t newcount = newsize - infos_len;
@@ -72,7 +72,7 @@ void realloc_locks(size_t newsize)
 	}
 }
 
-size_t alloc_lock()
+static size_t alloc_lock()
 {
 	if (!infos)
 	{
@@ -105,7 +105,7 @@ size_t alloc_lock()
 	return info->position + 1; // so 0 is never used, and passes if checks
 }
 
-lockinfo* get_info(cflare_rwmutex* mtx)
+static lockinfo* get_info(cflare_rwmutex* mtx)
 {
 	size_t id = (size_t)mtx;
 	if (id == 0)
@@ -116,7 +116,7 @@ lockinfo* get_info(cflare_rwmutex* mtx)
 	return infos + id;
 }
 
-void free_lock(size_t lock)
+static void free_lock(size_t lock)
 {
 	AcquireSRWLockExclusive(&infos_lock);
 
