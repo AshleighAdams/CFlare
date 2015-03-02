@@ -58,7 +58,7 @@ void cflare_load(int argc, char** argv)
 void cflare_unload()
 {
 	cflare_httpstatus_unload();
-	clfare_options_unload();
+	cflare_options_unload();
 	cflare_hook_unload();
 	cflare_handle_unload();
 }

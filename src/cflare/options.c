@@ -80,7 +80,7 @@ void cflare_options_load(int argc, char** argv)
 	// TODO: load enviroment variables
 }
 
-void clfare_options_unload()
+void cflare_options_unload()
 {
 	cflare_hashtable_delete(opt_hashtable);
 	cflare_hashtable_delete(env_hashtable);

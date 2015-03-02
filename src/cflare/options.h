@@ -20,7 +20,7 @@ Everything after "--" will be interpreted as an argument, and not an option
 */
 
 CFLARE_API void cflare_options_load(int argc, char** argv);
-CFLARE_API void clfare_options_unload();
+CFLARE_API void cflare_options_unload();
 
 CFLARE_API bool cflare_options_boolean(const char* name, bool fallback);
 CFLARE_API int64_t cflare_options_integer(const char* name, int64_t fallback);
