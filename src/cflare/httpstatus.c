@@ -34,9 +34,9 @@ static size_t normalize_status(char* ptr)
 		if(x == '\0')
 			break;
 		
-		if(isalpha(x))
+		if(isalpha((unsigned char)x))
 		{
-			ptr[pos] = (char)tolower(x);
+			ptr[pos] = (char)tolower((unsigned char)x);
 			pos++;
 		}
 		
@@ -67,7 +67,7 @@ static void parse_line(char* line, const char* name)
 		char x = line[0];
 		if(x == '\0')
 			return;
-		else if(!isspace(x))
+		else if(!isspace((unsigned char)x))
 			break;
 		else
 			line++;
@@ -79,7 +79,7 @@ static void parse_line(char* line, const char* name)
 		char x = line[digit_end];
 		if(x == '\0')
 			return;
-		else if(isdigit(x))
+		else if(isdigit((unsigned char)x))
 			digit_end++;
 		else
 			break;
@@ -104,7 +104,7 @@ static void parse_line(char* line, const char* name)
 		char x = line[pos];
 		if(x == '\0')
 			break;
-		else if(!isspace(x))
+		else if(!isspace((unsigned char)x))
 			lastpos = pos;
 		pos++;
 	}
