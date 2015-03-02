@@ -26,7 +26,7 @@ test:
 
 test-exports:
 	@echo "checking all exports of lib$(TARGET).$(LIB_EXTENSION) are valid..."
-	! nm "lib$(TARGET).$(LIB_EXTENSION)" | grep -v " T cflare_" | egrep " T [a-zA-Z]"
+	! nm "lib$(TARGET).$(LIB_EXTENSION)" | grep -v " T cflare_" | grep " T [a-zA-Z]"
 
 test-headers:
 	@echo "checking all headers are self sufficient..."; \
