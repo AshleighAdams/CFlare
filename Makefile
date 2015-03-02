@@ -20,8 +20,13 @@ $(TARGET): lib$(TARGET) $(EXE_OBJECTS)
 clean:
 	-$(RM) "lib$(TARGET).$(LIB_EXTENSION)" "$(TARGET)" $(wildcard src/**.o) $(wildcard src/**/*.o)
 
-test: test-units test-memory test-tabs test-headers
+test: 
+	$(MAKE) -j1 test-units test-memory test-tabs test-headers test-exports
 	@echo "All tests passed for `./cflare --version`";
+
+test-exports:
+	@echo "checking all exports of lib$(TARGET).$(LIB_EXTENSION) are valid..."
+	! nm "lib$(TARGET).$(LIB_EXTENSION)" | grep -v " T cflare_" | egrep " T [a-zA-Z]"
 
 test-headers:
 	@echo "checking all headers are self sufficient..."; \
