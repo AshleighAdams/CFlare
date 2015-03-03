@@ -164,7 +164,11 @@ void cflare_headers_unload()
 cflare_header cflare_headers_get(const char* name)
 {
 	size_t len = strlen(name);
-	char* normal = alloca(len + 1);
+	#ifdef _MSC_VER
+	char* normal = _alloca(len + 1);
+	#else
+	char normal[len + 1];
+	#endif
 	
 	memcpy(normal, name, len + 1);
 	normalize_header(normal, len);
