@@ -5,7 +5,7 @@
 #include <cflare/hook.h>
 #include <cflare/options.h>
 #include <cflare/httpstatus.h>
-
+#include <cflare/headers.h>
 
 size_t cflare_version_major()
 {
@@ -53,10 +53,12 @@ void cflare_load(int argc, char** argv)
 	cflare_hook_load();
 	cflare_options_load(argc, argv);
 	cflare_httpstatus_load();
+	cflare_headers_load();
 }
 
 void cflare_unload()
 {
+	cflare_headers_unload();
 	cflare_httpstatus_unload();
 	cflare_options_unload();
 	cflare_hook_unload();

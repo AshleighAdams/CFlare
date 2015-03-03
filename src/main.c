@@ -11,7 +11,6 @@
 #include <cflare/hashtable.h>
 #include <cflare/filesystem.h>
 
-
 static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	cflare_debug("Inside Unload hook! args: %p; rets: %p", (void*)args, (void*)rets);

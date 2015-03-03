@@ -6,6 +6,7 @@
 #include <cflare/hook.h>
 #include <cflare/hashtable.h>
 #include <cflare/httpstatus.h>
+#include <cflare/headers.h>
 
 // if a test fails, it doesn't need to free memory.
 
@@ -196,6 +197,42 @@ static int test_httpstatus()
 	return 0;
 }
 
+static int test_headers()
+{
+	unit_test_part("Host");
+	cflare_header Host = cflare_headers_get("Host");
+	if(Host.id <= 0)
+		return 1;
+	
+	unit_test_part("Host == host");
+	cflare_header host = cflare_headers_get("host");
+	if(!cflare_headers_equals(Host, host))
+		return 1;
+	
+	
+	unit_test_part("Upgrade");
+	cflare_header Upgrade = cflare_headers_get("Upgrade");
+	if(Upgrade.id <= 0)
+		return 1;
+	
+	unit_test_part("Upgrade == upgrade");
+	cflare_header upgrade = cflare_headers_get("upgrade");
+	if(!cflare_headers_equals(Upgrade, upgrade))
+		return 1;
+	
+	if(cflare_headers_equals(host, upgrade))
+		return 1;
+	
+	unit_test_part("ensure");
+	cflare_header x_nope = cflare_headers_ensure("X-Nope");
+	if(x_nope.id <= 0)
+		return 1;
+	if(strcmp(x_nope.name, "X-Nope") != 0)
+		return 1;
+	
+	return 0;
+}
+
 
 static int test_failed;
 static const char* msg;
@@ -230,6 +267,7 @@ int unit_test()
 	test_function("hashtable", &test_hashtable);
 	test_function("util", &test_util);
 	test_function("httpstatus", &test_httpstatus);
+	test_function("headers", &test_headers);
 	
 	if(test_failed)
 		cflare_log("One or more unit tests failed.");
