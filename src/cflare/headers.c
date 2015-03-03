@@ -31,7 +31,11 @@ typedef struct loaded_header
 static void normalize_header(char* ptr, size_t length)
 {
 	for(size_t i = 0; i < length + 1; i++) // + 1 to include the null ptr
+	{
+		if(ptr[i] == '\0')
+			return;
 		ptr[i] = tolower((unsigned char)ptr[i]);
+	}
 }
 
 static void free_header(void* data, void* context)
@@ -162,7 +166,7 @@ cflare_header cflare_headers_get(const char* name)
 	size_t len = strlen(name);
 	char* normal = alloca(len + 1);
 	
-	memcpy(normal, name, len);
+	memcpy(normal, name, len + 1);
 	normalize_header(normal, len);
 	
 	loaded_header** header;
