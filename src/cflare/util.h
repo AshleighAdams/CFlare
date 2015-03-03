@@ -50,7 +50,9 @@ CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 #endif
 
 #define cflare_notimp() \
-	cflare_fatal("%s(): not implemented", __func__)
+	cflare_fatal("%s:%d: %s(): not implemented", __FILE__, __LINE__, __func__)
+#define cflare_notimpf(_FMT_, ...) \
+	cflare_fatal("%s:%d: %s(): not implemented: " _FMT_,  __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 #define cflare_debug(...) \
 	do \
