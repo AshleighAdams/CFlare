@@ -1,0 +1,77 @@
+#!/usr/bin/env ./process-definition
+
+Name: Util
+Header: cflare/util.h
+
+Type: void(cflare_deleter)(void* data, void* context); Generic deleter that also provides a context.
+
+Function: cflare_debug_c
+	Arg(const char*, str):
+	Info: Print debug information to stderr.
+Function: cflare_info_c
+	Arg(const char*, str):
+	Info: Print information to stdout.
+Function: cflare_log_c
+	Arg(const char*, str):
+	Info: Log to stdout.
+Function: cflare_warn_c
+	Arg(const char*, str):
+	Info: Print a warning to stderr.
+Function: cflare_fatal_c
+	Arg(const char*, str): 
+	Info: Print an error to stderr, and `abort()`.
+
+Function: cflare_debug
+	Arg(const char*, format):
+	Arg(...):
+	Info: Print a formatted debug string to stderr.
+Function: cflare_info
+	Arg(const char*, format):
+	Arg(...):
+	Info: Print formatted information to stdout.
+Function: cflare_log
+	Arg(const char*, format):
+	Arg(...):
+	Info: Print a formatted log to stdout.
+Function: cflare_warn
+	Arg(const char*, format):
+	Arg(...):
+	Info: Print a formatted warning to stderr.
+Function: cflare_debug
+	Arg(const char*, format):
+	Arg(...):
+	Info: Print a formatted error string to stderr, and `abort()`.
+
+Function: cflare_tointeger
+	Arg(const char*, str): The input string.
+	Out(int64_t*, out): The resulting integer if parsing is successful.
+	Ret(bool): Returns whether or not parsing succeeded.
+
+Function: cflare_string_concat
+	Arg(...): A list of null-terminated strings.
+	Ret(char*): A new pointer to the concatenated null-terminated string.
+	Info-Long:
+		Concatenate many strings together, and return the resulting string.
+		
+		This function is an alias to `cflare_string_concat_n_c(count, 0, ...)`.
+Function: cflare_string_concat_n
+	Out(size_t*, length): Set to the length of the string before returning.
+	Arg(...): A list of null-terminated strings.
+	Ret(char*): A new pointer to the concatenated null-terminated string.
+	Info-Long:
+		Concatenate many strings together, and return the resulting string.
+		
+		This function is an alias to `cflare_string_concat_n_c(count, &length, ...)`.
+Function: cflare_string_concat_n_c
+	Arg(size_t, count): The number of variable arguments.
+	Out(size_t*, length): Set to the length of the string before returning.
+	Arg(...): A list of null-terminated strings.
+	Ret(char*): A new pointer to the concatenated null-terminated string.
+	Info: Concatenate many strings together, and return the resulting string.
+
+Function: cflare_notimp
+	Info: Aborts the application with a message to stderr.
+Function: cflare_notimpf
+	Arg(const char*, format):
+	Arg(...):
+	Info: Aborts the application with a formatted message to stderr.

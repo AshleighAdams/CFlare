@@ -1,0 +1,308 @@
+#!/usr/bin/lua
+
+local printer = {}
+
+local function trim(str, what)
+	what = what or "%s"
+	return (str:match("^["..what.."]*(.-)["..what.."]*$")) or str
+end
+
+local function split(str, with)
+	local arr = {}
+	str:gsub("[^" .. with .. "]+", function(val)
+		table.insert(arr, val)
+	end)
+	return arr
+end
+
+function printer.prototype(func)
+	local args = {}
+	local returns = func.rets and func.rets[1] or "void"
+	
+	for _, arg in pairs(func.args) do
+		local argfmt = arg[1]
+		if arg[2] ~= "" then
+			argfmt = arg[1] .. " " .. arg[2]
+		end
+		table.insert(args, argfmt)
+	end
+	
+	return returns .. " " .. func.name .. "(" .. table.concat(args, ", ") .. ")"
+end
+
+function printer.print_lib(lib)
+	print("# CFlare " .. lib.name .. " Library")
+	print()
+	for _, header in pairs(lib.headers) do
+		print(("\t#include <%s>"):format(header))
+	end
+	print()
+	
+	if lib.defines and #lib.defines > 0 then
+		error("not imp")
+	end
+	
+	if lib.types and #lib.types > 0 then
+		print("## Types")
+		print()
+		for _, typ in pairs(lib.types) do
+			print("### `" .. typ[1] .. "`")
+			print()
+			print(typ[2])
+			print()
+		end
+	end
+	
+	if lib.globals and #lib.globals > 0 then
+		error("not imp")
+	end
+	
+	if lib.functions and #lib.functions > 0 then
+		print("## Functions")
+		for _, func in pairs(lib.functions) do
+			local args = {}
+			local outs = {}
+			
+			for _, arg in pairs(func.args) do
+				if arg.out then
+					table.insert(outs, arg)
+				else
+					if trim(arg[3]) ~= "" then
+						table.insert(args, arg)
+					end
+				end
+			end
+			
+			print()
+			print("### `" .. printer.prototype(func) .. "`")
+			print()
+			print(func.info)
+			print()
+			
+			if #args > 0 then
+				print("#### Arguments")
+				print()
+				for _, arg in pairs(args) do	
+					local name = arg[2] ~= "" and arg[2] or arg[1]
+					print(string.format(" - `%s`: %s", name, arg[3]))
+					print()
+				end
+			end
+			
+			if #outs > 0 then
+				print("#### Outputs")
+				print()
+				for _, out in pairs(outs) do
+					print(string.format(" - `%s`: %s", out[2], out[3]))
+					print()
+				end
+			end
+			if func.rets and func.rets[2] ~= "void" then
+				print("#### Returns")
+				print()
+				print(func.rets[2])
+			end
+		end
+	end
+end
+
+local lines = {}
+local lines_numbers = {}
+local line_n = 0
+
+local function get_line()
+	line_n = line_n + 1
+	return lines[line_n]
+end
+
+local function peek_line()
+	return lines[line_n + 1] or ""
+end
+
+do
+	local f = assert(io.open(arg[1]))
+	local i = 0
+	while true do
+		local l = f:read("*l")
+		i = i + 1
+		if not l then break end
+		
+		if not l:match("%s*#") then
+			table.insert(lines, l)
+			table.insert(lines_numbers, i)
+		end
+	end
+	f:close()
+end
+
+local lib = {
+	name = "N.A.",
+	headers = {},
+	defines = {},
+	globals = {},
+	types = {},
+	functions = {}
+}
+
+local function parse_error(why, ...)
+	local args = table.pack(...)
+	if args.n > 0 then
+		why = why:format(...)
+	end
+	
+	local n = lines_numbers[line_n] or lines_numbers[#lines_numbers]
+	io.stderr:write(string.format("%s:%d: %s\n", arg[0], n, why))
+	os.exit(1)
+end
+
+local directives = {}
+
+do
+	function directives.Name(value)
+		lib.name = trim(assert(value))
+	end
+	
+	function directives.Header(value)
+		table.insert(lib.headers, trim(value))
+	end
+	
+	function directives.Type(value)
+		local t, info = value:match("(.-);(.+)")
+		if not t or not info then parse_error("bad type line") end
+		t = trim(t)
+		info = trim(info)
+		
+		table.insert(lib.types, {t, info})
+	end
+	
+	function directives.Function(value)
+		local func = {
+			name = trim(value),
+			info = "",
+			args = {},
+			rets = nil,
+		}
+		
+		local func_directives = {}
+		function func_directives.Arg(typeinfo, info)
+			local arr = split(typeinfo, ",")
+			
+			local id = arr[2] or ""
+			local typename = arr[1]
+			
+			if not typename then parse_error("subkey: expected a type") end
+			table.insert(func.args, {trim(typename), trim(id), info})
+		end
+		function func_directives.Out(...)
+			func_directives.Arg(...)
+			func.args[#func.args].out = true
+		end
+		function func_directives.Ret(typeinfo, info)
+			func.rets = {typeinfo, info}
+		end
+		function func_directives.Info(typeinfo, info)
+			func.info = info
+		end
+		func_directives["Info-Long"] = function(typeinfo, info)
+			local info_lines = {}
+			while true do
+				local line = peek_line()
+				if not line:match("^\t\t.*") then break end
+			
+				line = get_line():match("\t\t(.*)")
+				table.insert(info_lines, line)
+			end
+		
+			func.info = table.concat(info_lines, "\n")
+		end
+		
+		-- read headers
+		while true do
+			local line = peek_line()
+			if not line then break end
+			
+			if not line:match("^\t.*$") then
+				break
+			end
+			
+			get_line()
+			
+			if line == "\t" then
+				break
+			end
+			
+			local key, value = line:match("^\t([^:]+): *(.*)")
+			if not key then
+				parse_error("bad line")
+			end
+			
+			local sub_key, sub_value = key:match("^(.-)%((.-)%)")
+			key = sub_key or key
+			
+			local f = func_directives[key]
+			if not f then parse_error("unknown function directive: %s", sub_key) end
+			
+			f(sub_value, value)
+		end
+		
+		table.insert(lib.functions, func)
+	end
+end
+
+while true do
+	line = get_line()
+	if not line then break end
+	local key, value = line:match("^([^:%s]+): *(.*)")
+	
+	if key then
+		local f = directives[key]
+		if not f then
+			parse_error("unknown directive: %s", key)
+		end
+		f(value)
+	end
+end
+
+printer.print_lib(lib)
+
+--[[
+require("lib-printer").print_lib {
+	name = "Util",
+	headers = {"cflare/util.h"},
+	defines = {},
+	globals = {},
+	types   = {},
+	functions = {
+		{
+			name = "cflare_string_concat",
+			info = table.concat(
+				{
+					"Concatenate many strings together and output the resulting length.",
+					"",
+					"This is a conveinence macro to `cflare_string_concat_n_c`."
+				}, "\n"),
+			args = {
+				{"...", "", "List of null-terminated strings."}
+			},
+			rets = {"char*", "A new pointer to the concatenated null-terminated string."},
+			outs = {
+			}
+		},
+		{
+			name = "cflare_string_concat_n",
+			info = table.concat(
+				{
+					"Concatenate many strings together and output the resulting length.",
+					"",
+					"This is a conveinence macro to `cflare_string_concat_n_c`."
+				}, "\n"),
+			args = {
+				{"size_t*", "length", "The resulting length of the string.", out=true},
+				{"...", "", "List of null-terminated strings."}
+			},
+			rets = {"char*", "return", "A new pointer to the concatenated null-terminated string."},
+		},
+		cflare_debug
+	},
+}
+-- ]]
