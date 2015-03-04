@@ -44,7 +44,17 @@ function printer.print_lib(lib)
 	end
 	
 	if lib.defines and #lib.defines > 0 then
-		error("not imp")
+		print("## Defines")
+		print()
+		
+		for _, define in pairs(lib.defines) do
+			print("### `" .. define[1] .. "`")
+			print()
+			if trim(define[2]) ~= "" then
+				print(define[2])
+				print()
+			end
+		end
 	end
 	
 	if lib.types and #lib.types > 0 then
@@ -153,7 +163,10 @@ function printer.print_lib(lib)
 					print()
 				end
 			end
-			if func.rets and func.rets[2] ~= "void" then
+			if func.rets
+			and func.rets[1] ~= "void"
+			and trim(func.rets[2]) ~= ""
+			then
 				print("#### Returns")
 				print()
 				print(func.rets[2])
@@ -284,6 +297,20 @@ do
 	
 	function directives.Header(kv, v, depth)
 		table.insert(lib.headers, trim(v))
+	end
+	
+	function directives.Define(kv, v, depth)
+		if not depth then parse_error("Define directive may not be long") end
+		
+		local define_directives = {}
+		local d = {trim(v), ""}
+		
+		function define_directives.Info(_, info)
+			d[2] = info
+		end
+		
+		read_directives("define", define_directives, depth)
+		table.insert(lib.defines, d)
 	end
 	
 	function directives.Type(_, name, depth)
