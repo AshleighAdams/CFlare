@@ -1,0 +1,49 @@
+#!/usr/bin/env ./process-definition
+
+Name: Filesystem Library
+Header: cflare/filesystem.h
+Info: Provides helper functions for interacting with the filesystem.
+
+Type: cflare_filesystem_entry_type
+	Definition::
+		typedef enum
+		{
+			CFLARE_FILESYSTEM_UNKNOWN = 0,
+			CFLARE_FILESYSTEM_FILE = 1,
+			CFLARE_FILESYSTEM_DIRECTORY = 2,
+			CFLARE_FILESYSTEM_FIFO = 3,
+			CFLARE_FILESYSTEM_SOCKET = 4,
+			CFLARE_FILESYSTEM_CHARDEV = 5,
+			CFLARE_FILESYSTEM_BLOCKDEV = 6,
+			CFLARE_FILESYSTEM_LINK = 7
+		} cflare_filesystem_entry_type;
+	Info: The types of a file.
+
+Type: cflare_filesystem_entry
+	Definition::
+		typedef struct cflare_filesystem_entry
+		{
+			char* path;
+			char* name;
+			cflare_filesystem_entry_type type;
+			size_t depth;
+		} cflare_filesystem_entry;
+	Info: An entry, usually contained in a linked list.
+
+Type: cflare_filesystem_listoptions
+	Definition::
+		typedef enum {
+			CFLARE_FILESYSTEM_LIST_RECURSIVE = 1 << 0,
+			CFLARE_FILESYSTEM_LIST_EXCLUDE_DIRECTORIES = 1 << 1,
+		} cflare_filesystem_listoptions;
+	Info::
+		 - `CFLARE_FILESYSTEM_LIST_RECURSIVE`:
+		 Will recurse into as many child directories as possible.
+		 - `CFLARE_FILESYSTEM_LIST_EXCLUDE_DIRECTORIES`:
+		 Will not include any directories in the list; may still recurse though.
+		 Similar to `find "$path" -type f`.
+
+Function: cflare_filesystem_list
+	Arg(const char*, path): The path to search.
+	Arg(cflare_filesystem_listoptions, opts): Search options.
+	Ret(cflare_linkedlist*): List of files that have been found.
