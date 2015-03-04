@@ -44,7 +44,7 @@ make_pdf () {
 	make_tex
 	pushd ./build
 	latexmk -pdf -synctex=1 ./cflare.tex
-	popd -
+	popd
 }
 
 make_epub () {
