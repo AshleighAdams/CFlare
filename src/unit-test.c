@@ -104,15 +104,15 @@ static int test_hashtable()
 		
 		cflare_hashtable_set(map, cflare_hash_compute(key, key_len), value, value_len);
 		unit_test_part("buckets set");
-		if(map->buckets_count == 0)
+		if(cflare_hashtable_bucketscount(map) == 0)
 			return 1;
 		unit_test_part("set");
-		if(map->count != 1)
+		if(cflare_hashtable_count(map) != 1)
 			return 1;
 		
 		cflare_hashtable_set(map, cflare_hash_compute(key, key_len), value, value_len);
 		unit_test_part("double set");
-		if(map->count != 1)
+		if(cflare_hashtable_count(map) != 1)
 			return 1;
 		
 		unit_test_part("locate 1");
@@ -127,7 +127,7 @@ static int test_hashtable()
 		
 		unit_test_part("rebuild");
 		cflare_hashtable_rebuild(map, 64);
-		if(map->buckets_count != 64)
+		if(cflare_hashtable_bucketscount(map) != 64)
 			return 1;
 		
 		unit_test_part("locate 2");
@@ -140,7 +140,7 @@ static int test_hashtable()
 		
 		unit_test_part("remove");
 		cflare_hashtable_set(map, cflare_hash_compute(key, key_len), 0, 0);
-		if(map->count != 0)
+		if(cflare_hashtable_count(map) != 0)
 			return 1;
 		
 	}

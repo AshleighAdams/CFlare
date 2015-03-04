@@ -5,6 +5,31 @@
 
 static const size_t start_size = 32;
 
+typedef struct cflare_hashtable_container
+{
+	uint32_t hash;
+	void* key;
+	size_t key_size;
+	void* data;
+	size_t data_size;
+} cflare_hashtable_container;
+
+typedef struct cflare_hashtable_bucket
+{
+	cflare_linkedlist* list;
+	cflare_rwmutex* mutex;
+} cflare_hashtable_bucket;
+
+typedef struct cflare_hashtable
+{
+	cflare_hashtable_bucket* buckets;
+	size_t buckets_count;
+	size_t count;
+	cflare_rwmutex* mutex;
+	cflare_deleter* deleter;
+	void* deleter_context;
+} cflare_hashtable;
+
 static void free_container(void* data, void* hashtable)
 {
 	cflare_hashtable_container* cont = (cflare_hashtable_container*)data;
@@ -257,7 +282,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 	cflare_rwmutex_write_unlock(map->mutex);
 }
 
-bool cflare_hashtable_get(cflare_hashtable* map, cflare_hash hash,
+bool cflare_hashtable_get(const cflare_hashtable* map, cflare_hash hash,
 	void** out, size_t* len)
 {
 	bool status = false;
@@ -325,7 +350,7 @@ static void blockchar(double perc)
 	}
 }
 
-void cflare_hashtable_printdebug(cflare_hashtable* map)
+void cflare_hashtable_printdebug(const cflare_hashtable* map)
 {
 	size_t avg_per_buck = 0;
 	size_t cols = 0;
@@ -386,4 +411,14 @@ void cflare_hashtable_printdebug(cflare_hashtable* map)
 			blockchar(count / total);
 	}
 	fprintf(stderr, "\n");
+}
+
+size_t cflare_hashtable_count(const cflare_hashtable* map)
+{
+	return map->count;
+}
+
+size_t cflare_hashtable_bucketscount(const cflare_hashtable* map)
+{
+	return map->buckets_count;
 }
