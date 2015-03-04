@@ -31,7 +31,7 @@ function printer.prototype(func)
 end
 
 function printer.print_lib(lib)
-	print("# CFlare " .. lib.name .. " Library")
+	print("# " .. lib.name)
 	print()
 	for _, header in pairs(lib.headers) do
 		print(("\t#include <%s>"):format(header))
@@ -46,9 +46,14 @@ function printer.print_lib(lib)
 		print("## Types")
 		print()
 		for _, typ in pairs(lib.types) do
-			print("### `" .. typ[1] .. "`")
+			print("### " .. typ[1])
 			print()
-			print(typ[2])
+			
+			local def = typ[2]:gsub("\n", "\n\t")
+			
+			print("\t" .. def)
+			print()
+			print(typ[3])
 			print()
 		end
 	end
@@ -116,7 +121,7 @@ local function get_line()
 end
 
 local function peek_line()
-	return lines[line_n + 1] or ""
+	return lines[line_n + 1] or "", line_n + 1 > #lines
 end
 
 do
@@ -151,33 +156,99 @@ local function parse_error(why, ...)
 	end
 	
 	local n = lines_numbers[line_n] or lines_numbers[#lines_numbers]
-	io.stderr:write(string.format("%s:%d: %s\n", arg[0], n, why))
+	io.stderr:write(string.format("%s:%d: %s\n", arg[1], n, why))
 	os.exit(1)
 end
 
 local directives = {}
 
-do
-	function directives.Name(value)
-		lib.name = trim(assert(value))
-	end
-	
-	function directives.Header(value)
-		table.insert(lib.headers, trim(value))
-	end
-	
-	function directives.Type(value)
-		local t, info = value:match("(.-);(.+)")
-		if not t or not info then parse_error("bad type line") end
-		t = trim(t)
-		info = trim(info)
+local function read_long_directive(depth)
+	local info_lines = {}
+	while true do
+		local line = peek_line()
+		if not line:match("^"..depth..".*") then break end
 		
-		table.insert(lib.types, {t, info})
+		line = get_line():match(depth.."(.*)")
+		table.insert(info_lines, line)
+	end
+	return table.concat(info_lines, "\n")
+end
+
+-- key, keyvalue, value[, depth]
+local function read_key(depth)
+	depth = depth or ""
+	local line, eof = peek_line()
+	if eof then return nil end
+	if not line:match("^"..depth..".*") then return nil end
+	
+	line = get_line():match(depth.."(.*)")
+	
+	if trim(line) == "" then
+		-- is a blank line, retry
+		return read_key(depth)
 	end
 	
-	function directives.Function(value)
+	local key, value = line:match("^([^:]+): *(.*)")
+	if not key then
+		parse_error("bad line")
+	end
+	
+	local sub_key, sub_value = key:match("^(.-)%((.-)%)")
+	key = sub_key or key
+	
+	if trim(value) == ":" then
+		value = read_long_directive(depth.."\t")
+		depth = nil -- long values can't have children
+	end
+	
+	return key, sub_value, value, (depth and depth.."\t")
+end
+
+local function read_directives(name, tbl, depth)
+	while true do
+		local k, kv, v, d = read_key(depth)
+	
+		if not k then break end
+	
+		local f = tbl[k]
+		if not f then
+			parse_error("unknown %s directive: %s", name, k)
+		end
+		f(kv, v, d)
+	end
+end
+
+do
+	function directives.Name(kv, v, depth)
+		lib.name = trim(assert(v))
+	end
+	
+	function directives.Header(kv, v, depth)
+		table.insert(lib.headers, trim(v))
+	end
+	
+	function directives.Type(_, name, depth)
+		if not depth then parse_error("Type directive may not be long") end
+		
+		name = trim(name)
+		local type_directives = {}
+		local t = {name, "void", ""}
+		
+		function type_directives.Definition(kv, v)
+			t[2] = trim(v)
+		end
+		
+		function type_directives.Info(kv, v)
+			t[3] = trim(v)
+		end
+		
+		read_directives("type", type_directives, depth)
+		table.insert(lib.types, t)
+	end
+	
+	function directives.Function(kv, v, depth)
 		local func = {
-			name = trim(value),
+			name = trim(v),
 			info = "",
 			args = {},
 			rets = nil,
@@ -203,65 +274,13 @@ do
 		function func_directives.Info(typeinfo, info)
 			func.info = info
 		end
-		func_directives["Info-Long"] = function(typeinfo, info)
-			local info_lines = {}
-			while true do
-				local line = peek_line()
-				if not line:match("^\t\t.*") then break end
-			
-				line = get_line():match("\t\t(.*)")
-				table.insert(info_lines, line)
-			end
 		
-			func.info = table.concat(info_lines, "\n")
-		end
-		
-		-- read headers
-		while true do
-			local line = peek_line()
-			if not line then break end
-			
-			if not line:match("^\t.*$") then
-				break
-			end
-			
-			get_line()
-			
-			if line == "\t" then
-				break
-			end
-			
-			local key, value = line:match("^\t([^:]+): *(.*)")
-			if not key then
-				parse_error("bad line")
-			end
-			
-			local sub_key, sub_value = key:match("^(.-)%((.-)%)")
-			key = sub_key or key
-			
-			local f = func_directives[key]
-			if not f then parse_error("unknown function directive: %s", sub_key) end
-			
-			f(sub_value, value)
-		end
-		
+		read_directives("function", func_directives, depth)
 		table.insert(lib.functions, func)
 	end
 end
 
-while true do
-	line = get_line()
-	if not line then break end
-	local key, value = line:match("^([^:%s]+): *(.*)")
-	
-	if key then
-		local f = directives[key]
-		if not f then
-			parse_error("unknown directive: %s", key)
-		end
-		f(value)
-	end
-end
+read_directives("global", directives)
 
 printer.print_lib(lib)
 

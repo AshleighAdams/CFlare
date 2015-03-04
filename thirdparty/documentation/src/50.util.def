@@ -1,9 +1,11 @@
 #!/usr/bin/env ./process-definition
 
-Name: Util
+Name: CFlare Util Library
 Header: cflare/util.h
 
-Type: void(cflare_deleter)(void* data, void* context); Generic deleter that also provides a context.
+Type: cflare_deleter
+	Definition: typedef void(cflare_deleter)(void* data, void* context);
+	Info: Generic deleter that also provides a context.
 
 Function: cflare_debug_c
 	Arg(const char*, str):
@@ -50,7 +52,7 @@ Function: cflare_tointeger
 Function: cflare_string_concat
 	Arg(...): A list of null-terminated strings.
 	Ret(char*): A new pointer to the concatenated null-terminated string.
-	Info-Long:
+	Info::
 		Concatenate many strings together, and return the resulting string.
 		
 		This function is an alias to `cflare_string_concat_n_c(count, 0, ...)`.
@@ -58,7 +60,7 @@ Function: cflare_string_concat_n
 	Out(size_t*, length): Set to the length of the string before returning.
 	Arg(...): A list of null-terminated strings.
 	Ret(char*): A new pointer to the concatenated null-terminated string.
-	Info-Long:
+	Info::
 		Concatenate many strings together, and return the resulting string.
 		
 		This function is an alias to `cflare_string_concat_n_c(count, &length, ...)`.
