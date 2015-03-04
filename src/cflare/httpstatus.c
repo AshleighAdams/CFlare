@@ -116,14 +116,20 @@ static void parse_line(char* line, const char* name)
 	size_t len = lastpos;
 	
 	{ // add to code2string cache
-		known_status status = { code, strdup(line) };
+		known_status status;
+		memset(&status, 0, sizeof(known_status)); // because compilers don't set the whole struct to 0, only it's fields...
+		status.code = code;
+		status.string = strdup(line);
 		
 		cflare_hash code_hash = cflare_hash_compute(&code, sizeof(uint32_t));
 		cflare_hashtable_set(cache_code2string, code_hash, &status, sizeof(known_status));
 	}
 	
 	{ // add to string2code cache
-		known_status status = { code, strdup(line) };
+		known_status status;
+		memset(&status, 0, sizeof(known_status));
+		status.code = code;
+		status.string = strdup(line);
 		
 		len = normalize_status(line); // modifies line
 		

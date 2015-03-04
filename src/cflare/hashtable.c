@@ -250,14 +250,29 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 			else
 			{
 				cflare_hashtable_container* container;
+				bool needs_copy = true;
+				
 				if(iter.value)
 				{
 					container = (cflare_hashtable_container*)iter.value->data;
 					// the detor is usually called via the linked list; here, the
 					// element is not removed, but updated.
-					if(map->deleter)
-						map->deleter(container->data, map->deleter_context);
-					free(container->data);
+					if(container->data && container->data_size == len &&
+						memcmp(container->data, value, len) == 0)
+					{
+						// the memory contents is EXACTLY the same, this is
+						// probably a double set, so we shouldn't call the
+						// deleter, and as an additional optimization, we don't
+						// need to reallocate and copy memory
+						needs_copy = false;
+					}
+					else
+					{
+						if(map->deleter)
+							map->deleter(container->data, map->deleter_context);
+						free(container->data);
+						container->data = 0;
+					}
 				}
 				else
 				{
@@ -266,14 +281,18 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 					container->key_size = hash.pointer_size;
 					container->key = malloc(hash.pointer_size);
 					memcpy(container->key, hash.pointer, hash.pointer_size);
-			
+					container->data = 0;
+					
 					// increase the count too
 					map->count += 1;
 				}
-		
-				container->data_size = len;
-				container->data = malloc(len);
-				memcpy(container->data, value, len);
+				
+				if(needs_copy)
+				{
+					container->data_size = len;
+					container->data = malloc(len);
+					memcpy(container->data, value, len);
+				}
 			}
 		}
 		cflare_rwmutex_write_unlock(bucket->mutex);
