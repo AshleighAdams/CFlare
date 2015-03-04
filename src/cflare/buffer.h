@@ -11,11 +11,6 @@ typedef enum
 	CFLARE_BUFFER_NULLCHAR = 1 << 2  // append to the end a null char on build
 } cflare_buffer_options;
 
-// forward declaration.
-struct cflare_buffer_part;
-typedef struct cflare_buffer_part cflare_buffer_part;
-
-struct cflare_buffer;
 typedef struct cflare_buffer cflare_buffer;
 
 CFLARE_API cflare_buffer* cflare_buffer_new(cflare_buffer_options opts);
