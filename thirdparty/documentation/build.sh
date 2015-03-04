@@ -42,15 +42,16 @@ make_tex () {
 
 make_pdf () {
 	make_tex
-	cd ./build
+	pushd ./build
 	latexmk -pdf -synctex=1 ./cflare.tex
-	cd -
+	popd -
 }
 
 make_epub () {
 	make_md
 	set -x # show the commands ran
-	cd ./build
+	pushd ./build
+	
 	ebook-convert ./cflare.md ./cflare.epub \
 		--title="CFlare Documentation" \
 		--authors="Kate Adams; Victor Meriqui" \
@@ -102,15 +103,15 @@ p {
 	
 	# now rebuild the epub
 	echo "repacking epub..."
-	cd ./cflare
+	pushd ./cflare
 		zip -X   ../cflare.epub mimetype      > /dev/null
 		zip -grX ../cflare.epub META-INF/ *.* > /dev/null
-	cd -
+	popd
 	
 	# now check that it's sane
 	epubcheck ./cflare.epub
 	
-	cd -
+	popd
 }
 
 make_$1
