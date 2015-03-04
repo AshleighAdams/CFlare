@@ -1,6 +1,6 @@
 #!/usr/bin/env ./process-definition
 
-Name: CFlare Util Library
+Name: Util Library
 Header: cflare/util.h
 Info: Provides helper functions that don't have a place in another library.
 
