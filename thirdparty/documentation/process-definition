@@ -357,7 +357,7 @@ do
 			table.insert(macro.args, {trim(typename), trim(id), info})
 		end
 		function macro_directives.Out(...)
-			mac_directives.Arg(...)
+			macro_directives.Arg(...)
 			macro.args[#macro.args].out = true
 		end
 		function macro_directives.Ret(typeinfo, info)

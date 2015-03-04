@@ -28,7 +28,7 @@ do
 	}
 	\hypersetup{
 		pdffitwindow=false,
-		pdftitle={LuaFlare Documentation},
+		pdftitle={CFlare Documentation},
 		pdfnewwindow=true,
 		colorlinks=false,
 	}
