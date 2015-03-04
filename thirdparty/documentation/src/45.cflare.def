@@ -27,8 +27,10 @@ Function: cflare_load
 	Arg(int):
 	Arg(char**):
 	Info: Load all subsystems in the correct order.
+	Flags: internal
 Function: cflare_unload
 	Info: Unload all subsystems in the reverse order they were loaded.
+	Flags: internal
 
 Function: cflare_cfgpath
 	Ret(const char*): The configuration path where sites and site's data is to be located.

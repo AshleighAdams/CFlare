@@ -91,8 +91,15 @@ function printer.print_lib(lib)
 			end
 			
 			print()
-			print("### `" .. printer.prototype(macro) .. "`")
-			print()
+			if macro.internal then
+				print("### *`" .. printer.prototype(macro) .. "`*")
+				print()
+				print("This is an internal macro; you probably shouldn't be using it unless you know what you're doing!")
+				print()
+			else
+				print("### `" .. printer.prototype(macro) .. "`")
+				print()
+			end
 			print(macro.info)
 			print()
 			
@@ -140,8 +147,15 @@ function printer.print_lib(lib)
 			end
 			
 			print()
-			print("### `" .. printer.prototype(func) .. "`")
-			print()
+			if func.internal then
+				print("### *`" .. printer.prototype(func) .. "`*")
+				print()
+				print("This is an internal function; you probably shouldn't be calling it unless you know what you're doing!")
+				print()
+			else
+				print("### `" .. printer.prototype(func) .. "`")
+				print()
+			end
 			print(func.info)
 			print()
 			
@@ -360,6 +374,12 @@ do
 		function func_directives.Info(typeinfo, info)
 			func.info = info
 		end
+		function func_directives.Flags(typeinfo, flags)
+			for k, flag in pairs(split(flags, ",")) do
+				func[trim(flag)] = true
+			end
+		end
+		
 		
 		read_directives("function", func_directives, depth)
 		table.insert(lib.functions, func)
@@ -393,7 +413,11 @@ do
 		function macro_directives.Info(typeinfo, info)
 			macro.info = info
 		end
-		
+		function macro_directives.Flags(typeinfo, flags)
+			for k, flag in pairs(split(flags, ",")) do
+				macro[trim(flag)] = true
+			end
+		end
 		read_directives("macro", macro_directives, depth)
 		table.insert(lib.macros, macro)
 	end
