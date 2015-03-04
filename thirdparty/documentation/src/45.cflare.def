@@ -1,0 +1,36 @@
+#!/usr/bin/env ./process-definition
+
+Name: CFlare Global Functions
+Header: cflare/cflare.h
+
+Define: CFLARE_API
+	Info::
+		Ensure the compiler exports this symbol.
+		
+		On GCC, Clang, and other Unix C compilers, this will be defined to nothing,
+		as by default, all functions are exported.
+		On Microsoft's VC compiler, it will be defined as `__declspec(dllexport)`
+		which will generate the necessary "libcflare.lib" for easy linking to
+		"libcflare.dll".
+
+Define: CFLARE_API_NORETURN
+	Info: Used to mark when a function will never return.
+
+Function: cflare_version_major
+	Ret(size_t):
+Function: cflare_version_minor
+	Ret(size_t):
+Function: cflare_version_patch
+	Ret(size_t):
+
+Function: cflare_load
+	Arg(int):
+	Arg(char**):
+	Info: Load all subsystems in the correct order.
+Function: cflare_unload
+	Info: Unload all subsystems in the reverse order they were loaded.
+
+Function: cflare_cfgpath
+	Ret(const char*): The configuration path where sites and site's data is to be located.
+Function: cflare_libpath
+	Ret(const char*): The path of where plugins and other non-site data may be found.
