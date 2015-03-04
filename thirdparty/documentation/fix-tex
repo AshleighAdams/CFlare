@@ -39,7 +39,7 @@ do
 		\begin{center}\large#1\end{center}
 		\vskip0.5em}%%
 	}
-	\title{LuaFlare Documentation}
+	\title{CFlare Documentation}
 	\subtitle{]]..version..[[}
 	\usepackage{graphicx}
 	\sloppy %% so that some \texttt's wrap
