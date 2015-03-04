@@ -1,0 +1,56 @@
+#!/usr/bin/env ./process-definition
+
+Name: Buffer Object
+Header: cflare/buffer.h
+
+Type: cflare_buffer_options
+	Definition::
+		typedef enum
+		{
+			CFLARE_BUFFER_NOCOPY   = 1 << 0, // no need to copy the data
+			CFLARE_BUFFER_REVERSE  = 1 << 1, // the buffer should be built in the reverse order
+			CFLARE_BUFFER_NULLCHAR = 1 << 2  // append to the end a null char on build
+		} cflare_buffer_options;
+	Info::
+		 - `CFLARE_BUFFER_NOCOPY`:
+		Don't copy appends to an internal buffer before building the result.
+		 - `CFLARE_BUFFER_REVERSE`:
+		Append to the begining rather than the end.
+		 - `CFLARE_BUFFER_NULLCHAR`:
+		Append a null char to the end when building the result.
+
+Type: cflare_buffer
+	Definition: typedef struct cflare_buffer cflare_buffer;
+
+Function: cflare_buffer_new
+	Arg(cflare_buffer_options, opts):
+	Ret(cflare_buffer*): A new empty buffer.
+
+Function: cflare_buffer_delete
+	Arg(cflare_buffer*, buffer):
+	Info: Free a buffer.
+
+Function: cflare_buffer_length
+	Arg(cflare_buffer*, buffer):
+	Ret(size_t): The sum of all internal buffer's lengths added up.
+
+Function: cflare_buffer_parts
+	Arg(cflare_buffer*, buffer):
+	Ret(size_t): The number of internal buffers.
+
+Function: cflare_buffer_append
+	Arg(cflare_buffer*, buffer):
+	Arg(const uint8_t*, data):
+	Arg(size_t, length):
+	Info::
+		Append to the internal buffers.
+		
+		Does not take ownership of the data.
+		If the data is not garunteed to exist when `build()` is called,
+		make sure you do not pass the `NOCOPY` flag when constructing the buffer.
+
+Function: cflare_buffer_parts
+	Arg(cflare_buffer*, buffer):
+	Ret(uint8_t)::
+		All internal buffers concatenated.
+		Caller has ownership of the returned pointer.
