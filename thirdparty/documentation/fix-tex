@@ -1,0 +1,65 @@
+#!/usr/bin/lua
+
+local version = assert(arg[2], "needs version")
+
+local f, tex
+
+f = assert(io.open(assert(arg[1], "needs filename"), "r"))
+tex = f:read("*a")
+
+do
+	tex = tex:gsub([[\begin{document}]], [[
+	\usepackage{titlesec}
+	\setcounter{secnumdepth}{4}
+	\titleformat{\paragraph}
+	{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+	\titlespacing*{\paragraph}
+	{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+	\usepackage[UKenglish]{isodate}
+	\usepackage{geometry}
+	\geometry{a4paper, margin=1in}
+	\usepackage{listings}
+	\lstset{
+		breaklines=true,
+		columns=fullflexible,
+		basicstyle=\ttfamily,
+		literate={--}{{-\,-}}1,
+		literate={-}{{-}}1,
+	}
+	\hypersetup{
+		pdffitwindow=false,
+		pdftitle={LuaFlare Documentation},
+		pdfnewwindow=true,
+		colorlinks=false,
+	}
+	\usepackage{titling}
+	\newcommand{\subtitle}[1]{%%
+	  \posttitle{%%
+		\par\end{center}
+		\begin{center}\large#1\end{center}
+		\vskip0.5em}%%
+	}
+	\title{LuaFlare Documentation}
+	\subtitle{]]..version..[[}
+	\usepackage{graphicx}
+	\sloppy %% so that some \texttt's wrap
+	\begin{document}
+	\maketitle
+	\begin{center}
+		\includegraphics[width=\textwidth]{images/logo.png}
+	\end{center}
+	\newpage
+	\tableofcontents
+	]])
+
+	tex = tex:gsub("\\begin{verbatim}", "\\begin{lstlisting}")
+	tex = tex:gsub("\\end{verbatim}", "\\end{lstlisting}")
+
+	tex = tex:gsub("\\section", "\\newpage\n\\section")
+
+	tex = tex:gsub("linkcolor=magenta,", "linkcolor=black,")
+end
+
+f = assert(io.open(arg[1], "w"))
+f:write(tex)
+f:close()

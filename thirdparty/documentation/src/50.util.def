@@ -2,10 +2,15 @@
 
 Name: CFlare Util Library
 Header: cflare/util.h
+Info: Provides helper functions that don't have a place in another library.
 
 Type: cflare_deleter
 	Definition: typedef void(cflare_deleter)(void* data, void* context);
 	Info: Generic deleter that also provides a context.
+
+Macro: CFLARE_VA_NUM_ARGS
+	Arg(...):
+	Ret(int): Number of arguments passed to it. For use with `__VA_ARGS__`.
 
 Function: cflare_debug_c
 	Arg(const char*, str):
@@ -55,7 +60,7 @@ Function: cflare_string_concat
 	Info::
 		Concatenate many strings together, and return the resulting string.
 		
-		This function is an alias to `cflare_string_concat_n_c(count, 0, ...)`.
+		This function is an alias to `cflare_string_concat_n_c(count(...), 0, ...)`.
 Function: cflare_string_concat_n
 	Out(size_t*, length): Set to the length of the string before returning.
 	Arg(...): A list of null-terminated strings.
@@ -63,7 +68,7 @@ Function: cflare_string_concat_n
 	Info::
 		Concatenate many strings together, and return the resulting string.
 		
-		This function is an alias to `cflare_string_concat_n_c(count, &length, ...)`.
+		This function is an alias to `cflare_string_concat_n_c(count(...), length, ...)`.
 Function: cflare_string_concat_n_c
 	Arg(size_t, count): The number of variable arguments.
 	Out(size_t*, length): Set to the length of the string before returning.
