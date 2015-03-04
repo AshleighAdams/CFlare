@@ -1,0 +1,30 @@
+#!/usr/bin/env ./process-definition
+
+Name: Handle Object
+Header: cflare/handle.h
+Info: Basically a shared pointer.
+
+Function: cflare_handle_load
+	Flags: internal
+Function: cflare_handle_unload
+	Flags: internal
+
+Function: cflare_handle_new
+	Arg(const char*, type): A type to prevent errors.
+	Arg(void*, data): The data we take ownership over.
+	Arg(cflare_deleter*, deleter): The deleter that will free `data`.
+	Arg(void*, context): The context to pass to the deleter.
+	Ret(cflare_handle):
+
+Function: cflare_handle_reference
+	Arg(cflare_handle, hd):
+	Info: Increase the reference counter.
+Function: cflare_handle_unreference
+	Arg(cflare_handle, hd):
+	Info::
+		Decrease the reference counter.
+		
+		The deleter will be called if the reference counter is at 0.
+Function: cflare_handle_data
+	Arg(cflare_handle, hd):
+	Ret(void*): The pointer this handle points to.
