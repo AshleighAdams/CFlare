@@ -23,7 +23,7 @@ static int test_buffer()
 	cflare_buffer_append(buff, (uint8_t*)c, strlen(c));
 	
 	unit_test_part("append");
-	if(buff->length != strlen(a) + strlen(b) + strlen(c))
+	if(cflare_buffer_length(buff) != strlen(a) + strlen(b) + strlen(c))
 		return 1;
 	
 	char* result = (char*)cflare_buffer_build(buff);

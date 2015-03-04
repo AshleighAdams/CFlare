@@ -1,6 +1,23 @@
 
 #include "cflare/buffer.h"
 
+typedef struct cflare_buffer_part
+{
+	size_t length;
+	const uint8_t* pointer;
+} cflare_buffer_part;
+
+typedef struct cflare_buffer
+{
+	bool needs_copy;
+	bool reversed;
+	bool nullchar;
+	size_t length; // total bytes
+	size_t count; // total parts
+	size_t alloc_count; // allocated parts
+	cflare_buffer_part* parts;
+} cflare_buffer;
+
 cflare_buffer* cflare_buffer_new(cflare_buffer_options opts)
 {
 	cflare_buffer* ret = malloc(sizeof(cflare_buffer));
@@ -28,6 +45,16 @@ void cflare_buffer_delete(cflare_buffer* buff)
 	
 	free(buff->parts);
 	free(buff);
+}
+
+size_t cflare_buffer_length(cflare_buffer* buff)
+{
+	return buff->length;
+}
+
+size_t cflare_buffer_parts(cflare_buffer* buff)
+{
+	return buff->count;
 }
 
 void cflare_buffer_append(cflare_buffer* buff, const uint8_t* data, size_t len)

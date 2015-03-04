@@ -11,26 +11,18 @@ typedef enum
 	CFLARE_BUFFER_NULLCHAR = 1 << 2  // append to the end a null char on build
 } cflare_buffer_options;
 
-typedef struct cflare_buffer_part
-{
-	size_t length;
-	const uint8_t* pointer;
-} cflare_buffer_part;
+// forward declaration.
+struct cflare_buffer_part;
+typedef struct cflare_buffer_part cflare_buffer_part;
 
-typedef struct cflare_buffer
-{
-	bool needs_copy;
-	bool reversed;
-	bool nullchar;
-	size_t length; // total bytes
-	size_t count; // total parts
-	size_t alloc_count; // allocated parts
-	cflare_buffer_part* parts;
-	
-} cflare_buffer;
+struct cflare_buffer;
+typedef struct cflare_buffer cflare_buffer;
 
 CFLARE_API cflare_buffer* cflare_buffer_new(cflare_buffer_options opts);
 CFLARE_API void cflare_buffer_delete(cflare_buffer* buff);
+
+CFLARE_API size_t cflare_buffer_length(cflare_buffer* buff);
+CFLARE_API size_t cflare_buffer_parts(cflare_buffer* buff);
 
 CFLARE_API void cflare_buffer_append(cflare_buffer* buff, const uint8_t* data, size_t len);
 CFLARE_API uint8_t* cflare_buffer_build(cflare_buffer* buff);
