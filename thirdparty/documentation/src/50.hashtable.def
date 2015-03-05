@@ -1,0 +1,53 @@
+#!/usr/bin/env ./process-definition
+
+Name: Hashtable Object
+Header: cflare/hashtable.h
+Info: Provides a key-value data structure with O(1) best case lookup performance.
+
+Type: cflare_hashtable
+	Definition: typedef struct cflare_hashtable cflare_hashtable;
+
+Function: cflare_hashtable_new
+	Ret(cflare_hashtable*):
+	Info: Creates a new hashtable.
+Function: cflare_hashtable_delete
+	Arg(cflare_hashtable*, table):
+	Info: Frees a hashtable.  Will call the deleter for each element.
+
+Function: cflare_hashtable_ondelete
+	Arg(cflare_hashtable*, table):
+	Arg(cflare_deleter*, deleter):
+	Arg(void*, context):
+	Info: Upon freeing an element, call the `deleter` with the element pointer and `context`.
+
+Function: cflare_hashtable_rebuild
+	Arg(cflare_hashtable*, table):
+	Arg(size_t, count):
+	Info: Shrink or grow a hashtable so that it has `count` buckets.
+
+Function: cflare_hashtable_set
+	Arg(cflare_hashtable*, table):
+	Arg(cflare_hash, key): The index to store it at.
+	Arg(const void*, value)::
+		The key where we wish to store the data.
+		
+		If this is null, then it removes the value held by the key.
+	Arg(size_t, length): The length of the data we wish to store.
+Function: cflare_hashtable_get
+	Arg(cflare_hashtable*, table):
+	Arg(cflare_hash, key): The key in which the data is located.
+	Out(void**, result): The pointer to the data is placed here if it exists.
+	Out(size_t*, length): The length of the data retrieved.
+	Ret(bool): Whether or not a key was found.
+
+Function: cflare_hashtable_printdebug
+	Arg(cflare_hashtable*, table):
+	Info: Prints useful debugging information.
+Function: cflare_hashtable_count
+	Arg(cflare_hashtable*, table):
+	Ret(size_t): The number of elements held.
+Function: cflare_hashtable_bucketscount
+	Arg(cflare_hashtable*, table):
+	Ret(size_t): The number of buckets.
+
+	

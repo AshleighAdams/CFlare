@@ -1,0 +1,34 @@
+#!/usr/bin/env ./process-definition
+
+Name: Headers
+Header: cflare/headers.h
+
+Type: cflare_header
+	Definition::
+		typedef struct cflare_header
+		{
+			int32_t id;
+			const char* name;
+		} cflare_header;
+	Info: An id <= 0 is an invalid header.
+
+Function: cflare_headers_load
+	Flags: internal
+Function: cflare_headers_unload
+	Flags: internal
+
+Function: cflare_headers_get
+	Arg(const char*, name):
+	Ret(cflare_header)::
+		The header if it exists.
+Function: cflare_headers_ensure
+	Arg(const char*, name):
+	Ret(cflare_header)::
+		The header if it exits, otherwise it will create it.
+Function: cflare_headers_valid
+	Arg(cflare_header, header):
+	Ret(bool): Whether or not the header is valid.
+Function: cflare_headers_equals
+	Arg(cflare_header, a):
+	Arg(cflare_header, b):
+	Ret(bool): Whether the 2 headers are the same.

@@ -1,0 +1,20 @@
+#!/usr/bin/env ./process-definition
+
+Name: Hash Object
+Header: cflare/hash.h
+Info: For use in hashtables.
+
+Type: cflare_hash
+	Definition::
+		typedef struct cflare_hash
+		{
+			const void* pointer;
+			size_t pointer_size;
+			uint32_t hash;
+		} cflare_hash;
+
+Function: cflare_hash_compute
+	Arg(const void*, data):
+	Arg(size_t, length):
+	Ret(cflare_hash):
+	Info: Compute the hash for a given memory location and length.
