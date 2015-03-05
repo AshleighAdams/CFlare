@@ -24,7 +24,7 @@ Function: cflare_headers_get
 Function: cflare_headers_ensure
 	Arg(const char*, name):
 	Ret(cflare_header)::
-		The header if it exits, otherwise it will create it.
+		Create the header if it does not yet exist, and return it.
 Function: cflare_headers_valid
 	Arg(cflare_header, header):
 	Ret(bool): Whether or not the header is valid.
