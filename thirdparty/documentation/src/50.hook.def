@@ -1,0 +1,90 @@
+#!/usr/bin/env ./process-definition
+
+Name: Hook Library
+Header: cflare/hook.h
+
+Type: cflare_hookstack
+	Definition: typedef struct cflare_hookstack cflare_hookstack;
+	Info: The stack of arguments passed to, and returned from, a hook.
+
+Type: cflare_hookfunction
+	Definition::
+		typedef bool(cflare_hookfunction)(const cflare_hookstack*, cflare_hookstack*, void* context);
+	Info: The function signature of a hook.
+
+Function: cflare_hook_load
+	Flags: internal
+Function: cflare_hook_unload
+	Flags: internal
+
+Function: cflare_hook_add
+	Arg(const char*, name): The name of the hook.
+	Arg(const char*, id)::
+		A unique ID, adding 2 hooks with the same ID will remove the previously added one.
+	Arg(double64_t, priority): Hooks are called in the order of priority, from low to high.
+	Arg(cflare_hookfunction*, func): The function to call.
+	Arg(void*, context): Some context to pass to the function upon call.
+Function: cflare_hook_remove
+	Arg(const char*, name): The name of the hook.
+	Arg(const char*, id): ID of the hook to remove.
+
+Function: cflare_hook_call
+	Arg(const char*, name):
+	Arg(const cflare_hookstack*, args):
+	Out(cflare_hookstack*, returns):
+
+
+# This is now hookstack stuffs
+
+Function: cflare_hookstack_new
+	Ret(cflare_hookstack*):
+Function: cflare_hookstack_delete
+	Arg(cflare_hookstack*, stack):
+
+Function: cflare_hookstack_push_integer
+	Arg(cflare_hookstack*, stack):
+	Arg(int64_t, value):
+Function: cflare_hookstack_get_integer
+	Arg(cflare_hookstack*, stack):
+	Arg(size_t, position):
+	Out(int64_t*, out):
+	Ret(bool):
+
+Function: cflare_hookstack_push_number
+	Arg(cflare_hookstack*, stack):
+	Arg(double64_t, value):
+Function: cflare_hookstack_get_number
+	Arg(cflare_hookstack*, stack):
+	Arg(size_t, position):
+	Out(double64_t*, out):
+	Ret(bool):
+
+Function: cflare_hookstack_push_string
+	Arg(cflare_hookstack*, stack):
+	Arg(const char*, value):
+Function: cflare_hookstack_get_string
+	Arg(cflare_hookstack*, stack):
+	Arg(size_t, position):
+	Out(const char**, out):
+	Ret(bool):
+
+Function: cflare_hookstack_push_pointer
+	Arg(cflare_hookstack*, stack):
+	Arg(const char*, type):
+	Arg(void*, value):
+Function: cflare_hookstack_get_pointer
+	Arg(cflare_hookstack*, stack):
+	Arg(size_t, position):
+	Arg(const char* type):
+	Out(void**, out):
+	Ret(bool):
+
+Function: cflare_hookstack_push_handle
+	Arg(cflare_hookstack*, stack):
+	Arg(cflare_handle, value):
+Function: cflare_hookstack_get_handle
+	Arg(cflare_hookstack*, stack):
+	Arg(size_t, position):
+	Out(cflare_handle*, out):
+	Ret(bool):
+
