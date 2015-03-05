@@ -137,10 +137,10 @@ function printer.print_lib(lib)
 			local outs = {}
 			
 			for _, arg in pairs(func.args) do
-				if arg.out then
-					table.insert(outs, arg)
-				else
-					if trim(arg[3]) ~= "" then
+				if trim(arg[3]) ~= "" then
+					if arg.out then
+						table.insert(outs, arg)
+					else
 						table.insert(args, arg)
 					end
 				end
