@@ -52,20 +52,22 @@ make_epub () {
 	set -x # show the commands ran
 	pushd ./build
 	
+	# --chapter="//*[(name()='h1' or name()='h2' or name()='h3')]"
+	# --use-auto-toc
+	
 	ebook-convert ./cflare.md ./cflare.epub \
 		--title="CFlare Documentation" \
 		--authors="Kate Adams; Victor Meriqui" \
 		--cover images/cover.png --preserve-cover-aspect-ratio \
 		--chapter-mark=none \
-		--use-auto-toc \
-		--chapter="//*[((name()='h1' or name()='h2'or name()='h3')]" \
+		--chapter="//*[(name()='h1')]" \
 		--page-breaks-before="//*[name()='h1']" \
 		--change-justification=justify \
 		--epub-inline-toc \
 		--level1-toc="//*[name()='h1']" \
 		--level2-toc="//*[name()='h2']" \
 		--level3-toc="//*[name()='h3']" \
-	#	--verbose
+		--verbose
 	set +x
 	
 	# we need to fix up some stuff that ebook-convert does wrong/we don't like.
