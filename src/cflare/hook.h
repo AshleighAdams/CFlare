@@ -16,26 +16,9 @@ typedef enum
 	
 } cflare_hookstack_type;
 
+typedef struct cflare_hookstack cflare_hookstack;
+
 const char* cflare_hookstack_type_tostring(cflare_hookstack_type input);
-
-typedef struct cflare_hookstack_elm
-{
-	cflare_hookstack_type type;
-	union {
-		int64_t integer;
-		double64_t number;
-		char* string;
-		void* pointer;
-		size_t handle;
-	} data;
-	cflare_deleter* deleter;
-	void* deleter_context;
-} cflare_hookstack_elm;
-
-typedef struct cflare_hookstack
-{
-	cflare_linkedlist* elements;
-} cflare_hookstack;
 
 typedef bool(hook_function)(const cflare_hookstack*, cflare_hookstack*,
 	void* context);

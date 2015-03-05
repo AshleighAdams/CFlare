@@ -12,6 +12,26 @@ typedef struct hook
 	hook_function* func;
 } hook;
 
+typedef struct cflare_hookstack_elm
+{
+	cflare_hookstack_type type;
+	union {
+		int64_t integer;
+		double64_t number;
+		char* string;
+		void* pointer;
+		size_t handle;
+	} data;
+	cflare_deleter* deleter;
+	void* deleter_context;
+} cflare_hookstack_elm;
+
+typedef struct cflare_hookstack
+{
+	cflare_linkedlist* elements;
+} cflare_hookstack;
+
+
 static void free_hook(void* ptr, void* unused)
 {
 	hook* tbl = (hook*)ptr;
