@@ -2,9 +2,8 @@
 #define CFLARE_HASHMAP_H
 
 #include <cflare/cflare.h>
-#include <cflare/linkedlist.h>
 #include <cflare/hash.h>
-#include <cflare/mutex.h>
+
 
 typedef struct cflare_hashtable cflare_hashtable;
 

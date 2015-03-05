@@ -1,6 +1,9 @@
 
 #include "cflare/hashtable.h"
 
+#include "cflare/mutex.h"
+#include "cflare/linkedlist.h"
+
 #include <math.h>
 
 static const size_t start_size = 32;
