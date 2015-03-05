@@ -9,7 +9,7 @@ typedef struct hook
 	char* id;
 	double32_t priority;
 	void* context;
-	hook_function* func;
+	cflare_hookfunction* func;
 } hook;
 
 typedef struct cflare_hookstack_elm
@@ -75,7 +75,7 @@ void cflare_hook_unload()
 }
 
 void cflare_hook_add(const char* name, const char* id, double64_t priority,
-	hook_function* func, void* context)
+	cflare_hookfunction* func, void* context)
 {
 	if(!hook_loaded)
 		cflare_fatal("hook_add(): hook system not yet loaded!");

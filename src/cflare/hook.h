@@ -20,13 +20,13 @@ typedef struct cflare_hookstack cflare_hookstack;
 
 const char* cflare_hookstack_type_tostring(cflare_hookstack_type input);
 
-typedef bool(hook_function)(const cflare_hookstack*, cflare_hookstack*,
+typedef bool(cflare_hookfunction)(const cflare_hookstack*, cflare_hookstack*,
 	void* context);
 
 CFLARE_API void cflare_hook_load();
 CFLARE_API void cflare_hook_unload();
 CFLARE_API void cflare_hook_add(const char* name, const char* id, double64_t priority,
-	hook_function* func, void* context);
+	cflare_hookfunction* func, void* context);
 CFLARE_API void cflare_hook_remove(const char* name, const char* id);
 CFLARE_API bool cflare_hook_call(const char* name, const cflare_hookstack* args,
 	cflare_hookstack* returns);
