@@ -3,6 +3,14 @@
 #include "cflare/util.h"
 #include <Windows.h>
 
+typedef struct cflare_mutex
+{
+	size_t id;
+} cflare_mutex;
+
+typedef cflare_mutex cflare_rwmutex;
+
+
 /*
 Some code taken from the windows pthreads
 wrapper, found at: http://locklessinc.com/articles/pthreads_on_windows/
@@ -105,9 +113,8 @@ static size_t alloc_lock()
 	return info->position + 1; // so 0 is never used, and passes if checks
 }
 
-static lockinfo* get_info(cflare_rwmutex* mtx)
+static lockinfo* get_info(size_t id)
 {
-	size_t id = (size_t)mtx;
 	if (id == 0)
 		cflare_fatal("mutex: is null.");
 	id -= 1; // 'cause we +1'ed on alloc
@@ -120,7 +127,7 @@ static void free_lock(size_t lock)
 {
 	AcquireSRWLockExclusive(&infos_lock);
 
-	lockinfo* info = get_info((cflare_mutex*)lock);
+	lockinfo* info = get_info(lock);
 	if (!info->is_used)
 		cflare_fatal("mutex: freeing already free mutex.");
 
@@ -132,20 +139,22 @@ static void free_lock(size_t lock)
 
 cflare_rwmutex* cflare_rwmutex_new(cflare_mutex_type type)
 {
-	cflare_rwmutex* mutex = (cflare_rwmutex*)alloc_lock();
+	cflare_rwmutex* mutex = malloc(sizeof(cflare_rwmutex))
+	mutex->id = alloc_lock();
 	cflare_debug("mutex: +1: %lu/%lu", infos_len - infos_free, infos_len);
 	return mutex;
 }
 
 void cflare_rwmutex_delete(cflare_rwmutex* mtx)
 {
-	free_lock((size_t)mtx);
+	free_lock(mtx->id);
+	free(mtx);
 	cflare_debug("mutex: -1: %lu/%lu", infos_len - infos_free, infos_len);
 }
 
 void cflare_rwmutex_read_lock(cflare_rwmutex* mtx)
 {
-	lockinfo* mutex = get_info(mtx);
+	lockinfo* mutex = get_info(mtx->id);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread()) // so READ locks don't block under the same WRITE lock
 	{
@@ -160,7 +169,7 @@ void cflare_rwmutex_read_lock(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_read_unlock(cflare_rwmutex* mtx)
 {
-	lockinfo* mutex = get_info(mtx);
+	lockinfo* mutex = get_info(mtx->id);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread())
 	{
@@ -175,7 +184,7 @@ void cflare_rwmutex_read_unlock(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_write_lock(cflare_rwmutex* mtx)
 {
-	lockinfo* mutex = get_info(mtx);
+	lockinfo* mutex = get_info(mtx->id);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread())
 	{
@@ -194,7 +203,7 @@ void cflare_rwmutex_write_lock(cflare_rwmutex* mtx)
 
 void cflare_rwmutex_write_unlock(cflare_rwmutex* mtx)
 {
-	lockinfo* mutex = get_info(mtx);
+	lockinfo* mutex = get_info(mtx->id);
 	AcquireSRWLockExclusive(&mutex->internallock);
 	if (mutex->write_thread == GetCurrentThread())
 	{

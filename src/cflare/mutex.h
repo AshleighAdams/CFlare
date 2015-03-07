@@ -3,8 +3,8 @@
 
 #include <cflare/cflare.h>
 
-typedef void* cflare_mutex;
-typedef void* cflare_rwmutex;
+typedef struct cflare_mutex cflare_mutex;
+typedef struct cflare_rwmutex cflare_rwmutex;
 
 typedef enum
 {
