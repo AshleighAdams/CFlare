@@ -12,7 +12,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <assert.h>
-#include <alloca.h>
 
 #define max_line_length 1024
 #define max_header_length 64

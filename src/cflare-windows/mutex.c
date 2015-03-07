@@ -8,8 +8,10 @@ typedef struct cflare_mutex
 	size_t id;
 } cflare_mutex;
 
-typedef cflare_mutex cflare_rwmutex;
-
+typedef struct cflare_rwmutex
+{
+	size_t id;
+} cflare_rwmutex;
 
 /*
 Some code taken from the windows pthreads
@@ -18,22 +20,22 @@ wrapper, found at: http://locklessinc.com/articles/pthreads_on_windows/
 
 cflare_mutex* cflare_mutex_new(cflare_mutex_type type)
 {
-	return cflare_rwmutex_new(type);
+	return (cflare_mutex*)cflare_rwmutex_new(type);
 }
 
 void cflare_mutex_delete(cflare_mutex* mtx)
 {
-	cflare_rwmutex_delete(mtx);
+	cflare_rwmutex_delete((cflare_mutex*)mtx);
 }
 
 void cflare_mutex_lock(cflare_mutex* mtx)
 {
-	cflare_rwmutex_write_lock(mtx);
+	cflare_rwmutex_write_lock((cflare_mutex*)mtx);
 }
 
 void cflare_mutex_unlock(cflare_mutex* mtx)
 {
-	cflare_rwmutex_write_unlock(mtx);
+	cflare_rwmutex_write_unlock((cflare_mutex*)mtx);
 }
 
 // for when I add trylock
@@ -139,7 +141,7 @@ static void free_lock(size_t lock)
 
 cflare_rwmutex* cflare_rwmutex_new(cflare_mutex_type type)
 {
-	cflare_rwmutex* mutex = malloc(sizeof(cflare_rwmutex))
+	cflare_rwmutex* mutex = malloc(sizeof(cflare_rwmutex));
 	mutex->id = alloc_lock();
 	cflare_debug("mutex: +1: %lu/%lu", infos_len - infos_free, infos_len);
 	return mutex;
@@ -220,4 +222,5 @@ void cflare_rwmutex_write_unlock(cflare_rwmutex* mtx)
 	ReleaseSRWLockExclusive(&mutex->lock);
 	ReleaseSRWLockExclusive(&mutex->internallock);
 }
+
 
