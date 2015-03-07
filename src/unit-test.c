@@ -7,6 +7,7 @@
 #include <cflare/hashtable.h>
 #include <cflare/httpstatus.h>
 #include <cflare/headers.h>
+#include <cflare/thread.h>
 
 // if a test fails, it doesn't need to free memory.
 
@@ -233,6 +234,38 @@ static int test_headers()
 	return 0;
 }
 
+bool inside = false;
+void* test_threads_thread(void* context)
+{
+	inside = true;
+	char** selfptr = (char**)context;
+	*selfptr = strdup("Hello, context!");
+	return strdup("Hello, return!");
+}
+
+int test_threads()
+{
+	char* ctx = 0;
+	char* ret = 0;
+	
+	cflare_thread* t = cflare_thread_new(&test_threads_thread, &ctx);
+	ret = cflare_thread_join(t);
+	
+	unit_test_part("entered");
+	if(!inside)
+		return 1;
+	
+	unit_test_part("context");
+	if(!ctx || strcmp(ctx, "Hello, context!") != 0)
+		return 1;
+	
+	unit_test_part("return");
+	if(!ret || strcmp(ret, "Hello, return!") != 0)
+		return 1;
+	
+	return 0;
+}
+
 
 static int test_failed;
 static const char* msg;
@@ -268,6 +301,7 @@ int unit_test()
 	test_function("util", &test_util);
 	test_function("httpstatus", &test_httpstatus);
 	test_function("headers", &test_headers);
+	test_function("threads", &test_threads);
 	
 	if(test_failed)
 		cflare_log("One or more unit tests failed.");

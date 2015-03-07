@@ -272,6 +272,22 @@ do
 					windows_nt6 = 0.75 -- the posix one is better, if we can use it
 				}
 			}
+		},
+		["cflare/thread.h"] = {
+			{
+				name = "pthread",
+				src = { "cflare-posix/thread.c" },
+				platforms = {
+					posix5 = 1
+				}
+			},
+			{
+				name = "CreateThread",
+				src = { "cflare-windows/thread.c" },
+				platforms = {
+					windows_nt5_1 = 0.75 -- Windows XP and up (NT 5.1)
+				}
+			}
 		}
 	}
 
