@@ -250,6 +250,7 @@ int test_threads()
 	
 	cflare_thread* t = cflare_thread_new(&test_threads_thread, &ctx);
 	ret = cflare_thread_join(t);
+	cflare_thread_delete(t);
 	
 	unit_test_part("entered");
 	if(!inside)
