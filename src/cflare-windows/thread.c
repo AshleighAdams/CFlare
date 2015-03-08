@@ -19,6 +19,11 @@ void* cflare_thread_join(cflare_thread* thread)
 	return 0;
 }
 
+void cflare_thread_detach(cflare_thread* thread)
+{
+	cflare_notimp();
+}
+
 size_t cflare_thread_id(cflare_thread* thread)
 {
 	cflare_notimp();
