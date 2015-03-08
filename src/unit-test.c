@@ -250,7 +250,6 @@ int test_threads()
 	
 	cflare_thread* t = cflare_thread_new(&test_threads_thread, &ctx);
 	ret = cflare_thread_join(t);
-	cflare_thread_delete(t);
 	
 	unit_test_part("entered");
 	if(!inside)
@@ -263,6 +262,10 @@ int test_threads()
 	unit_test_part("return");
 	if(!ret || strcmp(ret, "Hello, return!") != 0)
 		return 1;
+	
+	cflare_thread_delete(t);
+	free(ctx);
+	free(ret);
 	
 	return 0;
 }
