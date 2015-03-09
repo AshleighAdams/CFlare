@@ -66,7 +66,7 @@ void cflare_thread_sleep(double64_t seconds)
 {
 	struct timespec t = {0, 0};
 	t.tv_sec = (time_t)seconds;
-	t.tv_nsec = (long)((t.tv_sec - seconds) * 1000.0 /*ms*/ * 1000.0 /*us*/ * 1000.0 /*ns*/);
+	t.tv_nsec = (long)((seconds - t.tv_sec) * 1000.0 /*ms*/ * 1000.0 /*us*/ * 1000.0 /*ns*/);
 	
 	nanosleep(&t, 0);
 }
