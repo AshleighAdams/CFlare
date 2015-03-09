@@ -8,6 +8,7 @@
 #include <cflare/httpstatus.h>
 #include <cflare/headers.h>
 #include <cflare/thread.h>
+#include <cflare/mutex.h>
 
 // if a test fails, it doesn't need to free memory.
 
@@ -238,7 +239,7 @@ bool inside = false;
 void* test_threads_thread(void* context)
 {
 	inside = true;
-	char** selfptr = (char**)context;
+	char** selfptr = context;
 	*selfptr = strdup("Hello, context!");
 	return strdup("Hello, return!");
 }
@@ -270,6 +271,168 @@ int test_threads()
 	return 0;
 }
 
+typedef struct test_mutex_container
+{
+	cflare_mutex* mutex;
+	cflare_thread* thread;
+	int64_t* value;
+	int64_t add;
+} test_mutex_container;
+void* test_mutex_adder(void* val)
+{
+	test_mutex_container* container = val;
+	
+	for(int64_t i = 0; i < container->add; i++)
+	{
+		cflare_mutex_lock(container->mutex);
+		*container->value += 1;
+		cflare_mutex_unlock(container->mutex);
+	}
+	return 0;
+}
+bool test_mutexes_normal()
+{
+	#define num_threads 10
+	#define num_add 5000
+	test_mutex_container containers[num_threads];
+	
+	// this will cause a LOT of cache misses (via writes to the same cache line
+	// from different threads/cores), but allows us to test that the mutex works.
+	// to avoid the cache miss, avoid mutating memory shared by multipul threads.
+	// In other words, add the result at the end of the worker thread from a
+	// local thread-specific variable.
+	int64_t result = 0;
+	cflare_mutex* mutex = cflare_mutex_new(CFLARE_MUTEX_PLAIN);
+	
+	for(size_t i = 0; i < num_threads; i++)
+	{
+		test_mutex_container* container = containers + i;
+		container->add = num_add;
+		container->value = &result;
+		container->mutex = mutex;
+		container->thread = cflare_thread_new(&test_mutex_adder, container);
+	}
+	
+	for(size_t i = 0; i < num_threads; i++)
+	{
+		test_mutex_container* container = containers + i;
+		cflare_thread_join(container->thread);
+		cflare_thread_delete(container->thread);
+	}
+	
+	cflare_mutex_delete(mutex);
+	
+	
+		
+	if(result != num_threads * num_add)
+		return false;
+	
+	return true;
+}
+typedef struct test_mutexesrw_container
+{
+	cflare_rwmutex* mutex;
+	int64_t value;
+	size_t reads, writes;
+	bool running;
+} test_mutexesrw_container;
+void* test_mutexes_reader(void* arg)
+{
+	test_mutexesrw_container* data = arg;
+	bool okay = true;
+	size_t reads = 0;
+	while(data->running && okay)
+	{
+		cflare_rwmutex_read_lock(data->mutex);
+		if(data->value == 0) // we failed.
+			okay = false;
+		cflare_rwmutex_read_unlock(data->mutex);
+		reads += 1;
+	}
+	
+	cflare_rwmutex_write_lock(data->mutex);
+	data->reads += reads;
+	cflare_rwmutex_write_unlock(data->mutex);
+	return (void*)okay;
+}
+void* test_mutexes_writer(void* arg)
+{
+	test_mutexesrw_container* data = arg;
+	bool okay = true;
+	size_t writes = 0;
+	
+	while(data->running && okay)
+	{
+		cflare_rwmutex_write_lock(data->mutex);
+		if(data->value == 0)
+			okay = false;
+		data->value = 0;
+		data->value = (int64_t)&okay;
+		cflare_rwmutex_write_unlock(data->mutex);
+		writes += 1;
+	}
+	
+	cflare_rwmutex_write_lock(data->mutex);
+	data->writes += writes;
+	cflare_rwmutex_write_unlock(data->mutex);
+	return (void*)okay;
+}
+bool test_mutexes_rw()
+{
+	#define num_readers 10
+	#define num_writers 2
+	test_mutexesrw_container container;
+	cflare_thread* readers[num_readers];
+	cflare_thread* writers[num_writers];
+	
+	container.mutex = cflare_rwmutex_new(CFLARE_MUTEX_PLAIN);
+	container.value = 1;
+	container.reads = 0;
+	container.writes = 0;
+	container.running = true;
+	
+	for(size_t i = 0; i < num_readers; i++)
+		readers[i] = cflare_thread_new(&test_mutexes_reader, &container);
+	for(size_t i = 0; i < num_writers; i++)
+		writers[i] = cflare_thread_new(&test_mutexes_writer, &container);
+	
+	cflare_thread_sleep(0.25);
+	container.running = false;
+	
+	bool rerr = false, werr = false;
+	
+	for(size_t i = 0; i < num_readers; i++)
+	{
+		cflare_thread* t = readers[i];
+		if(!(bool)cflare_thread_join(t))
+			rerr = true;
+		cflare_thread_delete(t);
+	}
+	
+	for(size_t i = 0; i < num_writers; i++)
+	{
+		cflare_thread* t = writers[i];
+		if(!(bool)cflare_thread_join(t))
+			werr = true;
+		cflare_thread_delete(t);
+	}
+	
+	cflare_rwmutex_delete(container.mutex);
+	
+	double perc = (double)container.writes / (double)container.reads * 100.0;
+	cflare_log("\t\treads: %lu; writes: %lu; writes (%%): %.2lf%%", container.reads, container.writes, perc);
+	return !rerr && !werr;
+}
+int test_mutexes()
+{
+	unit_test_part("normal");
+	if(!test_mutexes_normal())
+		return 1;
+	unit_test_part("readwrite");
+	if(!test_mutexes_rw())
+		return 1;
+	return 0;
+}
 
 static int test_failed;
 static const char* msg;
@@ -306,6 +469,7 @@ int unit_test()
 	test_function("httpstatus", &test_httpstatus);
 	test_function("headers", &test_headers);
 	test_function("threads", &test_threads);
+	test_function("mutexes", &test_mutexes);
 	
 	if(test_failed)
 		cflare_log("One or more unit tests failed.");
