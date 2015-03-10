@@ -346,8 +346,10 @@ void* test_mutexes_reader(void* arg)
 		cflare_rwmutex_read_lock(data->mutex);
 		if(data->value == 0) // we failed.
 			okay = false;
+		//fputc('-', stdout); fflush(stdout);
 		cflare_rwmutex_read_unlock(data->mutex);
 		reads += 1;
+		cflare_thread_sleep(0.01);
 	}
 	
 	cflare_rwmutex_write_lock(data->mutex);
@@ -367,9 +369,12 @@ void* test_mutexes_writer(void* arg)
 		if(data->value == 0)
 			okay = false;
 		data->value = 0;
+		cflare_thread_sleep(0.01);
 		data->value = (int64_t)&okay;
+		//fputc('#', stdout); fflush(stdout);
 		cflare_rwmutex_write_unlock(data->mutex);
 		writes += 1;
+		cflare_thread_sleep(0.1);
 	}
 	
 	cflare_rwmutex_write_lock(data->mutex);
@@ -380,7 +385,7 @@ void* test_mutexes_writer(void* arg)
 bool test_mutexes_rw()
 {
 	#define num_readers 10
-	#define num_writers 2
+	#define num_writers 10
 	test_mutexesrw_container container;
 	cflare_thread* readers[num_readers];
 	cflare_thread* writers[num_writers];
@@ -396,7 +401,7 @@ bool test_mutexes_rw()
 	for(size_t i = 0; i < num_writers; i++)
 		writers[i] = cflare_thread_new(&test_mutexes_writer, &container);
 	
-	cflare_thread_sleep(0.25);
+	cflare_thread_sleep(1);
 	container.running = false;
 	
 	bool rerr = false, werr = false;
