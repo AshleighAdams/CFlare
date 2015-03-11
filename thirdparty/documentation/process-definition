@@ -92,14 +92,16 @@ function printer.print_lib(lib)
 			
 			print()
 			if macro.internal then
-				print("### *`" .. printer.prototype(macro) .. "`*")
+				print("### *`" .. macro.name .. "`*")
 				print()
 				print("This is an internal macro; you probably shouldn't be using it unless you know what you're doing!")
 				print()
 			else
-				print("### `" .. printer.prototype(macro) .. "`")
+				print("### `" .. macro.name .. "`")
 				print()
 			end
+			print("\t"..printer.prototype(macro))
+			print()
 			print(macro.info)
 			print()
 			
@@ -148,14 +150,16 @@ function printer.print_lib(lib)
 			
 			print()
 			if func.internal then
-				print("### *`" .. printer.prototype(func) .. "`*")
+				print("### *`" .. func.name .. "`*")
 				print()
-				print("This is an internal function; you probably shouldn't be calling it unless you know what you're doing!")
+				print("This is an internal function; you probably shouldn't be using it unless you know what you're doing!")
 				print()
 			else
-				print("### `" .. printer.prototype(func) .. "`")
+				print("### `" .. func.name .. "`")
 				print()
 			end
+			print("\t"..printer.prototype(func))
+			print()
 			print(func.info)
 			print()
 			
