@@ -75,7 +75,7 @@ static int test_linkedlist()
 		strncpy(ptr, "how're you?", 32);
 		
 		unit_test_part("add");
-		if(list->count != 3)
+		if(cflare_linkedlist_count(list) != 3)
 		{
 			cflare_linkedlist_delete(list);
 			return 1;
@@ -83,9 +83,12 @@ static int test_linkedlist()
 		
 		unit_test_part("remove");
 		// remove the 2nd one
-		cflare_linkedlist_remove(list, list->first->next);
+		cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
+		cflare_linkedlist_iterator_next(&iter);
+		cflare_linkedlist_iterator_next(&iter);
+		cflare_linkedlist_remove(list, iter.value);
 		
-		if(list->count != 2)
+		if(cflare_linkedlist_count(list) != 2)
 		{
 			cflare_linkedlist_delete(list);
 			return 1;

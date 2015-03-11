@@ -315,7 +315,7 @@ bool cflare_hashtable_get(const cflare_hashtable* map, cflare_hash hash,
 		uint32_t pos = hash.hash % map->buckets_count;
 		cflare_hashtable_bucket* bucket = map->buckets + pos;
 		
-		if(bucket->list && bucket->list->count > 0)
+		if(bucket->list && cflare_linkedlist_count(bucket->list) > 0)
 		{
 			cflare_linkedlist* list = bucket->list;
 			
@@ -387,7 +387,7 @@ void cflare_hashtable_printdebug(const cflare_hashtable* map)
 	if(layout) fprintf(stderr, "[");
 	for(size_t i = 0; i < map->buckets_count; i++)
 	{
-		size_t count = map->buckets[i].list ? map->buckets[i].list->count : 0;
+		size_t count = map->buckets[i].list ? cflare_linkedlist_count(map->buckets[i].list) : 0;
 		avg_per_buck += count;
 		if(count > 1)
 			cols += count - 1;

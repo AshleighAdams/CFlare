@@ -1,6 +1,16 @@
 
 #include "cflare/linkedlist.h"
 
+typedef struct cflare_linkedlist
+{
+	uint64_t count;
+	size_t element_size;
+	cflare_deleter* deleter;
+	void* deleter_context;
+	cflare_linkedlist_node* first;
+	cflare_linkedlist_node* last;
+} cflare_linkedlist;
+
 cflare_linkedlist* cflare_linkedlist_new(size_t element_size)
 {
 	cflare_linkedlist* ret = malloc(sizeof(cflare_linkedlist));
@@ -91,6 +101,11 @@ void cflare_linkedlist_remove(cflare_linkedlist* list,
 	free(node->data);
 	free(node);
 	list->count -= 1;
+}
+
+size_t cflare_linkedlist_count(cflare_linkedlist* list)
+{
+	return list->count;
 }
 
 cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list)
