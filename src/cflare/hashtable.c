@@ -118,7 +118,7 @@ void cflare_hashtable_rebuild(cflare_hashtable* map, size_t count)
 			cflare_linkedlist_ondelete(b->list, 0, 0);
 			
 			// copy to the new one
-			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(b->list);
+			cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(b->list);
 			while(cflare_linkedlist_iterator_next(&iter))
 			{
 				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
@@ -230,7 +230,7 @@ void cflare_hashtable_set(cflare_hashtable* map, cflare_hash hash, const void* v
 	{
 		cflare_rwmutex_write_lock(bucket->mutex);
 		{
-			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
+			cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(list);
 			while(cflare_linkedlist_iterator_next(&iter))
 			{
 				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;
@@ -321,7 +321,7 @@ bool cflare_hashtable_get(const cflare_hashtable* map, cflare_hash hash,
 			
 			cflare_rwmutex_read_lock(bucket->mutex);
 			
-			cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
+			cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(list);
 			while(cflare_linkedlist_iterator_next(&iter))
 			{
 				cflare_hashtable_container* cont = (cflare_hashtable_container*)iter.value->data;

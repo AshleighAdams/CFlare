@@ -167,7 +167,7 @@ void cflare_httpstatus_load()
 	char* path =  cflare_string_concat(cflare_cfgpath(), "http/statuses");
 	cflare_linkedlist* list = cflare_filesystem_list(path, 0);
 	
-	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
+	cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(list);
 	while(cflare_linkedlist_iterator_next(&iter))
 	{
 		cflare_filesystem_entry* ent = (cflare_filesystem_entry*)iter.value->data;

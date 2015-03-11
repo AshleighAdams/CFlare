@@ -108,9 +108,9 @@ size_t cflare_linkedlist_count(cflare_linkedlist* list)
 	return list->count;
 }
 
-cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list)
+cflare_linkedlist_iterator cflare_linkedlist_get_iterator(cflare_linkedlist* list)
 {
-	cflare_linkedlist_iter ret;
+	cflare_linkedlist_iterator ret;
 	ret.started = false;
 	ret.list = list;
 	ret.prev = 0;
@@ -119,7 +119,7 @@ cflare_linkedlist_iter cflare_linkedlist_iterator(cflare_linkedlist* list)
 	return ret;
 }
 
-cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* iter)
+cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iterator* iter)
 {
 	if(!iter->started)
 	{
@@ -142,7 +142,7 @@ cflare_linkedlist_node* cflare_linkedlist_iterator_next(cflare_linkedlist_iter* 
 	return ret;
 }
 
-cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iter* iter)
+cflare_linkedlist_node* cflare_linkedlist_iterator_prev(cflare_linkedlist_iterator* iter)
 {
 	if(!iter->started)
 	{

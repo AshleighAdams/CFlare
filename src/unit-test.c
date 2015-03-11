@@ -83,7 +83,7 @@ static int test_linkedlist()
 		
 		unit_test_part("remove");
 		// remove the 2nd one
-		cflare_linkedlist_iter iter = cflare_linkedlist_iterator(list);
+		cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(list);
 		cflare_linkedlist_iterator_next(&iter);
 		cflare_linkedlist_iterator_next(&iter);
 		cflare_linkedlist_remove(list, iter.value);

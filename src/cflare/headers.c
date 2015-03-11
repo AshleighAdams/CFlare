@@ -143,7 +143,7 @@ void cflare_headers_load()
 	char* path = cflare_string_concat(cflare_cfgpath(), "http/headers");
 	cflare_linkedlist* files = cflare_filesystem_list(path, 0);
 	
-	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(files);
+	cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(files);
 	while(cflare_linkedlist_iterator_next(&iter))
 	{
 		cflare_filesystem_entry* ent = (cflare_filesystem_entry*)iter.value->data;

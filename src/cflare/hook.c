@@ -100,7 +100,7 @@ void cflare_hook_add(const char* name, const char* id, double64_t priority,
 		assert(cflare_hashtable_get(hook_tables, hash, (void**)&tbl, &len));
 	}
 	
-	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(tbl->funcs);
+	cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(tbl->funcs);
 	while(cflare_linkedlist_iterator_next(&iter))
 	{
 		hook* val = (hook*)iter.value->data;
@@ -129,7 +129,7 @@ void cflare_hook_remove(const char* name, const char* id)
 	if(!cflare_hashtable_get(hook_tables, cflare_hash_compute(name, strlen(name)), (void**)&tbl, &len))
 		return;
 	
-	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(tbl->funcs);
+	cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(tbl->funcs);
 	while(cflare_linkedlist_iterator_next(&iter))
 	{
 		hook* val = (hook*)iter.value->data;
@@ -153,7 +153,7 @@ bool cflare_hook_call(const char* name, const cflare_hookstack* args,
 		return 0;
 	
 	
-	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(tbl->funcs);
+	cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(tbl->funcs);
 	while(cflare_linkedlist_iterator_next(&iter))
 	{
 		hook* val = (hook*)iter.value->data;
@@ -224,7 +224,7 @@ static cflare_hookstack_elm* get_elm(const cflare_hookstack* stack, int32_t inde
 	if(!stack)
 		return 0;
 	
-	cflare_linkedlist_iter iter = cflare_linkedlist_iterator(stack->elements);
+	cflare_linkedlist_iterator iter = cflare_linkedlist_get_iterator(stack->elements);
 	
 	if(index >= 0)
 	{
