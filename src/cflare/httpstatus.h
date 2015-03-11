@@ -2,7 +2,6 @@
 #define CFLARE_HTTPSTATUS_H
 
 #include "cflare/cflare.h"
-#include "cflare/cflare.h"
 #include "cflare/util.h"
 
 CFLARE_API void cflare_httpstatus_load();
