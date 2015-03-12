@@ -36,7 +36,7 @@ make_md () {
 make_tex () {
 	make_md
 	set -x # show the commands ran
-	pandoc -s -t latex ./build/cflare.md -o ./build/cflare.tex
+	pandoc --standalone --to=latex ./build/cflare.md --output=./build/cflare.tex
 	./fix-tex ./build/cflare.tex $VERSION
 }
 
@@ -47,10 +47,55 @@ make_pdf () {
 	popd
 }
 
-make_epub () {
+# this one isn't the default [yet] because'f an artifact where a
+# blank page apears at the beggining.
+make_epub_pandoc () {
+	make_md
+	pushd ./build
+	
+	echo "---
+title: CFlare Documentation
+creator:
+- role: author
+  text: Kate Adams <self@kateadams.eu>
+- role: author
+  text: Victor Meriqui <victormeriqui@sapo.pt>
+language: en
+..." > ./title.txt
+	
+	echo "
+pre { white-space: pre-wrap; }
+code { white-space: pre-wrap; text-align: left; }
+h1, h2, h3, h4, h5, h6 {
+	text-align: left;
+	text-indent: -1em;
+	padding-left: 1em;
+}
+" > ./additional-style.css
+	
+	set -x
+	
+	pandoc ./title.txt ./cflare.md --output="./cflare.epub" --to=epub  \
+		--standalone \
+		--epub-cover-image=./images/cover.png \
+		--epub-style=./additional-style.css \
+		--toc \
+		--toc-depth=3 \
+	
+	epubcheck ./cflare.epub
+	
+	popd
+}
+
+make_epub_calibre () {
 	make_md
 	set -x # show the commands ran
 	pushd ./build
+	
+	
+	# ebook-convert does not support ^sup^ and ~sub~ notation, so let's fix that...
+	sed -i "s|\^\([^ ]*\)\^|\<sup\>\1\</sup\>|g" ./cflare.md
+	sed -i "s|\~\([^ ]*\)\~|\<sub\>\1\</sub\>|g" ./cflare.md
 	
 	# --chapter="//*[(name()='h1' or name()='h2' or name()='h3')]"
 	# --use-auto-toc
@@ -116,4 +161,12 @@ p {
 	popd
 }
 
-make_$1
+make_epub () {
+	local GEN="calibre"
+	[[ "$1" != "" ]] && GEN=$1
+	shift || true
+	make_epub_$GEN $@
+}
+
+TYPE="$1"; shift;
+make_$TYPE $@
