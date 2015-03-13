@@ -1,0 +1,89 @@
+#!/usr/bin/env ./process-definition
+
+Name: Linked List Object
+Header: cflare/linkedlist.h
+Info:: Provides a doubly linked list.  Is not thread-safe.
+
+Type: cflare_linkedlist
+	Definition: typedef struct cflare_linkedlist cflare_linkedlist;
+	Info: The main linked list object.
+Type: cflare_linkedlist_node
+	Definition::
+		typedef struct cflare_linkedlist_node
+		{
+			void* data;
+			cflare_linkedlist_node*  next;
+			cflare_linkedlist_node*  prev;
+		} cflare_linkedlist_node;
+	Info: The nodes that the linked list stores internally.
+Type: cflare_linkedlist_iterator
+	Definition::
+		typedef struct cflare_linkedlist_iterator
+		{
+			uint16_t version;
+			bool started;
+			cflare_linkedlist* list;
+			cflare_linkedlist_node* prev;
+			cflare_linkedlist_node* value;
+			cflare_linkedlist_node* next;
+		} cflare_linkedlist_iterator;
+	Info: Position information for iterators to use for traversing a list.
+
+Function: cflare_linkedlist_new
+	Arg(size_t, element_size): The size of each element.
+	Ret(cflare_linkedlist*):
+Function: cflare_linkedlist_delete
+	Arg(cflare_linkedlist*, list):
+	Info: Will deconstruct the linked list, calling the deleter for all existing elements.
+
+Function: cflare_linkedlist_ondelete
+	Arg(cflare_linkedlist*, list):
+	Arg(cflare_deleter*, deleter):
+	Arg(void*, context):
+	Info: Upon an element being removed, call `deleter` with `element_data, context`.
+
+Function: cflare_linkedlist_insert_before
+	Arg(cflare_linkedlist*, list):
+	Arg(cflare_linkedlist_node*, node): The node to insert before.  If null, then it's placed at the beginning of the list.
+	Out(void**, output): A void pointer; has the size of each element obtained from the constructor.
+
+Function: cflare_linkedlist_insert_after
+	Arg(cflare_linkedlist*, list):
+	Arg(cflare_linkedlist_node*, node): The node to insert after.  If null, then it's placed at the end of the list.
+	Out(void**, output): A void pointer; has the size of each element obtained from the constructor.
+
+Function: cflare_linkedlist_insert_first
+	Arg(cflare_linkedlist*, list):
+	Out(void**, output): A void pointer; has the size of each element obtained from the constructor.
+	Info: Essentially an alias to `cflare_linkedlist_insert_before(list, NULL, output)`.
+Function: cflare_linkedlist_insert_last
+	Arg(cflare_linkedlist*, list):
+	Out(void**, output): A void pointer; has the size of each element obtained from the constructor.
+	Info: Essentially an alias to `cflare_linkedlist_insert_after(list, NULL, output)`.
+
+Function: cflare_linkedlist_remove
+	Arg(cflare_linkedlist*, list):
+	Arg(cflare_linkedlist_node*, node): The node to remove.
+
+Function: cflare_linkedlist_count
+	Arg(cflare_linkedlist*, list):
+	Ret(size_t): The number of elements in the list.
+
+Function: cflare_linkedlist_get_iterator
+	Arg(cflare_linkedlist*, list):
+	Ret(cflare_linkedlist_iterator):
+	Info::
+		Iterates over a list.
+		
+		When iterating with this, it is safe to remove an iterator's
+		current--and traversed--value(s),
+		as the continuing node is stored.
+
+Function: cflare_linkedlist_iterator_next
+	Arg(cflare_linkedlist_iterator*, iter):
+	Ret(cflare_linkedlist_node*): Pointer to the node, null if reached the end.
+	Info: Gets the next value for the iterator.
+Function: cflare_linkedlist_iterator_prev
+	Arg(cflare_linkedlist_iterator*, iter):
+	Ret(cflare_linkedlist_node*): Pointer to the node, null if reached the end.
+	Info: Gets the previous value for the iterator.
