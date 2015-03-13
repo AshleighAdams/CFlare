@@ -1,0 +1,25 @@
+#!/usr/bin/env ./process-definition
+
+Name: HTTP Status Library
+Header: cflare/httpstatus.h
+
+Function: cflare_httpstatus_load
+	Flags: internal
+	Info: Loads the HTTP statuses into memory, from `$config/http/statuses/*`.
+Function: cflare_httpstatus_unload
+	Flags: internal
+	Info: Frees all loaded HTTP statuses.
+
+Function: cflare_httpstatus_tostring
+	Arg(uint32_t, code):
+	Ret(const char*)::
+		The status line that represents `code`.  `NULL` if not found.
+		
+		The returned value should be it's canonical form.
+		For example, "Content-Length" rather than "content-length".
+
+Function: cflare_httpstatus_fromstring
+	Arg(const char*, status)::
+		What to look for;
+		will be normalized--taking only alpha characters--before doing the lookup.
+	Ret(uint32_t): The code that matches a particular status line. `0` if not found.
