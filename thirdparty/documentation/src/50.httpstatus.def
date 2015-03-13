@@ -21,5 +21,5 @@ Function: cflare_httpstatus_tostring
 Function: cflare_httpstatus_fromstring
 	Arg(const char*, status)::
 		What to look for;
-		will be normalized--taking only alpha characters--before doing the lookup.
+		will be normalized---taking only alpha characters---before doing the lookup.
 	Ret(uint32_t): The code that matches a particular status line. `0` if not found.

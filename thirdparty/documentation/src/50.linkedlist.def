@@ -76,7 +76,7 @@ Function: cflare_linkedlist_get_iterator
 		Iterates over a list.
 		
 		When iterating with this, it is safe to remove an iterator's
-		current--and traversed--value(s),
+		current---and traversed---value(s),
 		as the continuing node is stored.
 
 Function: cflare_linkedlist_iterator_next

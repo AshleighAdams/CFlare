@@ -13,7 +13,7 @@ Type: cflare_rwmutex
 	Definition: typedef struct cflare_rwmutex cflare_rwmutex;
 	Info::
 		A mutex where many readers can have it locked (shared),
-		but only one writer (exclusive) may have it locked--including readers.
+		but only one writer (exclusive) may have it locked---including readers.
 
 Type: cflare_mutex_type
 	Definition::
