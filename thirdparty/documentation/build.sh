@@ -2,7 +2,7 @@
 
 set -e
 
-cd `dirname "$0"`
+pushd `dirname "$0"`
 
 [[ -d ./build ]] && rm -rf ./build/*
 
@@ -25,7 +25,7 @@ make_md () {
 			"./$DOC" >> ./build/cflare.md
 		else
 			echo "copy $DOC ..."
-			cat $DOC >> ./build/cflare.md
+			cat "$DOC" >> ./build/cflare.md
 		fi
 	
 		# ensure a newline is placed between the files...
@@ -36,8 +36,10 @@ make_md () {
 make_tex () {
 	make_md
 	set -x # show the commands ran
-	pandoc --standalone --to=latex ./build/cflare.md --output=./build/cflare.tex
+	pandoc --to=latex ./build/cflare.md --output=./build/cflare.tex \
+		--standalone
 	./fix-tex ./build/cflare.tex $VERSION
+	set +x
 }
 
 make_pdf () {
@@ -84,14 +86,14 @@ h1, h2, h3, h4, h5, h6 {
 	
 	epubcheck ./cflare.epub
 	
+	set +x
+	
 	popd
 }
 
 make_epub_calibre () {
 	make_md
-	set -x # show the commands ran
 	pushd ./build
-	
 	
 	# ebook-convert does not support ^sup^ and ~sub~ notation, so let's fix that...
 	sed -i "s|\^\([^ ]*\)\^|\<sup\>\1\</sup\>|g" ./cflare.md
@@ -100,6 +102,7 @@ make_epub_calibre () {
 	# --chapter="//*[(name()='h1' or name()='h2' or name()='h3')]"
 	# --use-auto-toc
 	
+	set -x # show the commands ran
 	ebook-convert ./cflare.md ./cflare.epub \
 		--title="CFlare Documentation" \
 		--authors="Kate Adams; Victor Meriqui" \
@@ -170,3 +173,5 @@ make_epub () {
 
 TYPE="$1"; shift;
 make_$TYPE $@
+
+popd
