@@ -215,7 +215,7 @@ do
 		i = i + 1
 		if not l then break end
 		
-		if not l:match("%s*#") then
+		if not l:match("^%s*#") then
 			table.insert(lines, l)
 			table.insert(lines_numbers, i)
 		end
