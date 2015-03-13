@@ -2,6 +2,7 @@
 
 Name: Hook Library
 Header: cflare/hook.h
+Info: For when a method is expected to be extended or detoured.  Is thread-safe.
 
 Type: cflare_hookstack
 	Definition: typedef struct cflare_hookstack cflare_hookstack;
