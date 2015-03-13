@@ -1,0 +1,42 @@
+#!/usr/bin/env ./process-definition
+
+Name: Options Library
+Header: cflare/options.h
+
+Info::
+	Options are loaded from command line in the form of `--opt-name[=value]`,
+	and enviroment variables in the form `OPT_NAME=[value]`.
+	
+	Command-line arguments take precedence over enviroment variables.
+
+Function: cflare_options_load
+	Flags: internal
+	Arg(int, argc):
+	Arg(char**, argv):
+Function: cflare_options_unload
+	Flags: internal
+
+Function: cflare_options_boolean
+	Arg(const char*, name): Name of the option to get.
+	Arg(bool, fallback): The option to fall back to if none is found.
+	Ret(bool):
+Function: cflare_options_integer
+	Arg(const char*, name): Name of the option to get.
+	Arg(int64_t, fallback): The option to fall back to if none is found.
+	Ret(int64_t):
+Function: cflare_options_number
+	Arg(const char*, name): Name of the option to get.
+	Arg(double64_t, fallback): The option to fall back to if none is found.
+	Ret(double64_t):
+Function: cflare_options_string
+	Arg(const char*, name): Name of the option to get.
+	Arg(const char*, fallback): The option to fall back to if none is found.
+	Ret(const char*):
+
+Function: cflare_options_argument_count
+	Ret(size_t): The number of arguments passed to the executable (no options).
+Function: cflare_options_executable
+	Ret(const char*): The name of the executable.
+Function: cflare_options_argument
+	Arg(size_t, position):
+	Ret(const char*): Gets the n^th^ argument.
