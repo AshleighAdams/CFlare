@@ -37,6 +37,7 @@ make_tex () {
 	make_md
 	set -x # show the commands ran
 	pandoc --to=latex ./build/cflare.md --output=./build/cflare.tex \
+		--smart \
 		--standalone
 	./fix-tex ./build/cflare.tex $VERSION
 	set +x
@@ -77,7 +78,9 @@ h1, h2, h3, h4, h5, h6 {
 	
 	set -x
 	
+	# --smart makes things like --- em dashes, ... to elipses, etc...
 	pandoc ./title.txt ./cflare.md --output="./cflare.epub" --to=epub  \
+		--smart \
 		--standalone \
 		--epub-cover-image=./images/cover.png \
 		--epub-style=./additional-style.css \
@@ -95,15 +98,16 @@ make_epub_calibre () {
 	make_md
 	pushd ./build
 	
-	# ebook-convert does not support ^sup^ and ~sub~ notation, so let's fix that...
-	sed -i "s|\^\([^ ]*\)\^|\<sup\>\1\</sup\>|g" ./cflare.md
-	sed -i "s|\~\([^ ]*\)\~|\<sub\>\1\</sub\>|g" ./cflare.md
+	# ebook-convert does not support ^sup^, ~sub~, ---, ... notation, so let's fix that...
+	pandoc --to=markdown_strict ./cflare.md --output=./cflare-strict.md \
+		--smart \
+		--standalone
 	
 	# --chapter="//*[(name()='h1' or name()='h2' or name()='h3')]"
 	# --use-auto-toc
-	
+		
 	set -x # show the commands ran
-	ebook-convert ./cflare.md ./cflare.epub \
+	ebook-convert ./cflare-strict.md ./cflare.epub \
 		--title="CFlare Documentation" \
 		--authors="Kate Adams; Victor Meriqui" \
 		--cover images/cover.png --preserve-cover-aspect-ratio \
