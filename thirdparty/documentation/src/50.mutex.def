@@ -1,0 +1,65 @@
+#!/usr/bin/env ./process-definition
+
+Name: Mutex Object
+Header: cflare/mutex.h
+Info: Provides a simple cross-platform mutex and shared (many read, one write) mutex.
+
+Type: cflare_mutex
+	Definition: typedef struct cflare_mutex cflare_mutex;
+	Info::
+		A traditional mutex, only one thread may have it locked at any one time.
+
+Type: cflare_rwmutex
+	Definition: typedef struct cflare_rwmutex cflare_rwmutex;
+	Info::
+		A mutex where many readers can have it locked (shared),
+		but only one writer (exclusive) may have it locked--including readers.
+
+Type: cflare_mutex_type
+	Definition::
+		typedef enum
+		{
+			CFLARE_MUTEX_PLAIN      = 1 << 0,
+			CFLARE_MUTEX_RECURSIVE  = 1 << 1,
+			CFLARE_MUTEX_TIMED      = 1 << 2,
+			CFLARE_MUTEX_TRY        = 1 << 3
+		} cflare_mutex_type;
+
+Function: cflare_mutex_new
+	Arg(cflare_mutex_type, type):
+	Ret(cflare_mutex*):
+	Info: Create a new mutex, with `type` capabilities.
+Function: cflare_mutex_delete
+	Arg(cflare_mutex*):
+	Info: Delete a mutex.
+
+Function: cflare_mutex_lock
+	Arg(cflare_mutex*):
+	Info: Provide exclusive access to an assumed resource.
+Function: cflare_mutex_unlock
+	Arg(cflare_mutex*):
+	Info: Relinquish our exclusive access to an assumed resource.
+
+
+Function: cflare_rwmutex_new
+	Arg(cflare_mutex_type, type):
+	Ret(cflare_mutex*):
+	Info: Create a new shared mutex, with `type` capabilities.
+Function: cflare_rwmutex_delete
+	Arg(cflare_mutex*):
+	Info: Delete a shared mutex.
+
+Function: cflare_rwmutex_read_lock
+	Arg(cflare_mutex*):
+	Info: Provide shared access to an assumed resource.
+Function: cflare_rwmutex_read_unlock
+	Arg(cflare_mutex*):
+	Info: Relinquish our shared access to an assumed resource.
+
+Function: cflare_rwmutex_write_lock
+	Arg(cflare_mutex*):
+	Info: Provide exclusive access to an assumed resource.
+Function: cflare_rwmutex_write_unlock
+	Arg(cflare_mutex*):
+	Info: Relinquish our exclusive access to an assumed resource.
+
