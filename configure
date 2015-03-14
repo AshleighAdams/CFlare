@@ -140,6 +140,7 @@ prefix = find_arg("prefix", "/usr/local")
 release = find_arg("release")
 cc = find_arg("cc", os.getenv("CC") or "cc")
 pic = "-fPIC"
+additinal_tests = {}
 
 detect_platform()
 
@@ -151,6 +152,18 @@ if release then
 	table.insert(cflags, "-O2")
 else
 	table.insert(cflags, "-g")
+	
+	-- for testing coverage with gcovr -r src/
+	local p = io.popen(cc.." -v 2> /dev/stdout | grep 'gcc version'")
+	p:read("*a")
+	if p:close() then
+		table.insert(cflags, "-fprofile-arcs")
+		table.insert(cflags, "-ftest-coverage")
+		table.insert(additinal_tests, "test-coverage")
+		print("added profiling flags")
+	else
+		print("profiling flags not supported")
+	end
 end
 
 if platform.linux then -- make sure gcc looks for libs in current dir when running
@@ -230,7 +243,8 @@ local config = {
 	"VERSION_MAJOR = " .. version_major,
 	"VERSION_MINOR = " .. version_minor,
 	"VERSION_PATCH = " .. version_patch,
-	"PIC           = " .. pic
+	"PIC           = " .. pic,
+	"tests-additional: " .. table.concat(additinal_tests, " ")
 }
 
 do

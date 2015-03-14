@@ -3,6 +3,7 @@
 
 #include "cflare/options.h"
 
+/*
 static uint32_t murmur3_32(const void* buff, uint32_t len)
 {
 	const char* key = (const char*)buff;
@@ -113,7 +114,7 @@ static uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
     rem = len & 3;
     len >>= 2;
 
-    /* Main loop */
+    // Main loop
     for (;len > 0; len--)
     {
         hash  += get16bits (data);
@@ -123,7 +124,7 @@ static uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
         hash  += hash >> 11;
     }
 
-    /* Handle end cases */
+    // Handle end cases
     switch (rem)
     {
         case 3: hash += get16bits (data);
@@ -140,7 +141,7 @@ static uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
                 hash += hash >> 1;
     }
 
-    /* Force "avalanching" of final 127 bits */
+    // Force "avalanching" of final 127 bits
     hash ^= hash << 3;
     hash += hash >> 5;
     hash ^= hash << 4;
@@ -150,6 +151,7 @@ static uint32_t SuperFastHash(const void* arg_data, size_t arg_len)
 
     return hash;
 }
+*/
 
 static uint32_t fnv_hash_1a_32(const void *key, size_t len)
 {

@@ -28,4 +28,10 @@
 *.x86_64
 *.hex
 /cflare
+
+# Makefile config
 /config
+
+# Profiling and coverage information
+*.gcda
+*.gcno

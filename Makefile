@@ -1,7 +1,8 @@
+default:
 
 include config
 
-.PHONY: default all clean run test
+.PHONY: default all clean run test test-additional
 
 default: $(TARGET)
 all: $(TARGET)
@@ -18,10 +19,13 @@ $(TARGET): lib$(TARGET) $(EXE_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -l$(TARGET) $(LFLAGS) $(LIBS) $(EXE_OBJECTS) -o "$@"
 
 clean:
-	-$(RM) "lib$(TARGET).$(LIB_EXTENSION)" "$(TARGET)" $(wildcard src/**.o) $(wildcard src/**/*.o)
+	-$(RM) "lib$(TARGET).$(LIB_EXTENSION)" "$(TARGET)" \
+		$(wildcard src/**.o) $(wildcard src/**/*.o) \
+		$(wildcard src/**.gcda) $(wildcard src/**/*.gcda) \
+		$(wildcard src/**.gcno) $(wildcard src/**/*.gcno) \
 
 test: 
-	$(MAKE) -j1 test-units test-memory test-tabs test-headers test-exports
+	$(MAKE) -j1 test-units test-memory test-tabs test-headers test-exports tests-additional
 	@echo "All tests passed for `./cflare --version`";
 
 test-exports:
@@ -62,3 +66,7 @@ test-memory:
 test-units:
 	@echo "performing unit tests..."; \
 	./cflare unit-test;
+
+test-coverage:
+	@echo "coverage information:"
+	gcovr -r src/
