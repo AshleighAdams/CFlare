@@ -1,0 +1,55 @@
+#!/usr/bin/env ./process-definition
+
+Name: Thread Object
+Header: cflare/thread.h
+Info::
+	Provides a simple cross-platform threading API.
+	
+	For mutexes, see the [mutex object](#mutex-object).
+
+Type: cflare_thread
+	Definition: typedef struct cflare_thread cflare_thread;
+	Info::
+		The thread object that may be manipulated.
+
+Type: cflare_thread_entrypoint
+	Definition: typedef void*(cflare_thread_entrypoint)(void* context);
+	Info::
+		The function prototype for a thread entrypoint.
+
+Function: cflare_thread_new
+	Arg(cflare_thread_entrypoint*, function):
+	Arg(void*, context):
+	Info: Create a new thread.
+Function: cflare_thread_delete
+	Arg(cflare_thread*, thread):
+	Info::
+		Deletes a thread.
+		
+		Before this function is called, the thread must either
+		be [joined](#cflare_thread_join)
+		or [detached](#cflare_thread_detach).
+		If neither of these conditions has been satisfied, the implementation
+		should spew a warning---and *may* call `detatch()`.
+
+
+Function: cflare_thread_join
+	Arg(cflare_thread*, thread):
+	Ret(void*): The return value of the entrypoint.
+	Info: Waits for the thread to finish executing.
+Function: cflare_thread_detach
+	Arg(cflare_thread*, thread):
+	Info::
+		Disown the thread, allow the operating system to clean it's resources.
+		
+		The [delete](#cflare_thread_delete) method still needs to be called to
+		free information regarding the thread.
+
+Function: cflare_thread_id
+	Arg(cflare_thread*, thread):
+	Ret(size_t): Get a unique ID for the thread.
+
+Function: cflare_thread_sleep
+	Arg(cflare_thread*, thread):
+	Arg(double64_t, seconds):
+	Info: Pause a thread for specified number of seconds.
