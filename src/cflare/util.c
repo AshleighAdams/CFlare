@@ -113,7 +113,8 @@ bool cflare_tointeger(const char* str, int64_t* out)
 	for(int64_t i = 0, b = len - 1; i < len; i++, b--)
 	{
 		int64_t n = char_to_number(ptr[i]);
-		if(i < 0 || n >= base) // check if it's outside our base range
+		assert(n >= 0);
+		if(n >= base) // check if it's outside our base range
 			return false;
 		ret += pow(base, b) * n;
 	}
