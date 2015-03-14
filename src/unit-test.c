@@ -173,6 +173,41 @@ static int test_util()
 	if(!cflare_tointeger("-0x100", &val) || val != -0x100)
 		return 1;
 	
+	unit_test_part("tointeger: base2");
+	if(!cflare_tointeger("0b11", &val) || val != 3)
+		return 1;
+	if(!cflare_tointeger("+0b101", &val) || val != 5)
+		return 1;
+	if(!cflare_tointeger("-0b100", &val) || val != -4)
+		return 1;
+	
+	unit_test_part("tointeger: not octal");
+	if(!cflare_tointeger("012", &val) || val != 12)
+		return 1;
+	if(!cflare_tointeger("+034", &val) || val != 34)
+		return 1;
+	if(!cflare_tointeger("-56", &val) || val != -56)
+		return 1;
+	
+	unit_test_part("tointeger: empty fails");
+	if(cflare_tointeger("", &val))
+		return 1;
+	unit_test_part("tointeger: empty fails: base");
+	if(cflare_tointeger("0x", &val))
+		return 1;
+	
+	unit_test_part("tointeger: 0");
+	if(!cflare_tointeger("0", &val) || val != 0)
+		return 1;
+	
+	unit_test_part("tointeger: outside base");
+	if(cflare_tointeger("0xfg", &val))
+		return 1;
+	if(cflare_tointeger("99a", &val))
+		return 1;
+	if(cflare_tointeger("0b102", &val))
+		return 1;
+	
 	return 0;
 }
 
