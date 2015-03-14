@@ -85,7 +85,7 @@ bool cflare_tointeger(const char* str, int64_t* out)
 	}
 	
 	// find the base
-	if(len > 2 && ptr[0] == '0') // posible for a base denotion (0x... 0b... 0o...)
+	if(len >= 2 && ptr[0] == '0') // posible for a base denotion (0x... 0b... 0o...)
 	{
 		char cb = ptr[1];
 		switch(cb)
@@ -106,7 +106,7 @@ bool cflare_tointeger(const char* str, int64_t* out)
 	}
 	
 	if(!len)
-		return true;
+		return false;
 	
 	int64_t ret = 0;
 	
