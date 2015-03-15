@@ -48,6 +48,10 @@ Function: cflare_thread_detach
 Function: cflare_thread_id
 	Arg(cflare_thread*, thread):
 	Ret(size_t): Get a unique ID for the thread.
+Function: cflare_thread_running
+	Arg(cflare_thread*, thread):
+	Ret(bool): Whether or not the thread is still executing.
+
 
 Function: cflare_thread_sleep
 	Arg(cflare_thread*, thread):

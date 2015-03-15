@@ -4,6 +4,7 @@
 #include "cflare/util.h"
 
 #include <pthread.h>
+#include <signal.h> // for pthread_kill
 #include <time.h> // for sleep
 
 typedef struct cflare_thread
@@ -60,6 +61,14 @@ void cflare_thread_detach(cflare_thread* thread)
 size_t cflare_thread_id(cflare_thread* thread)
 {
 	return (size_t)thread->native;
+}
+
+bool cflare_thread_running(cflare_thread* thread)
+{
+	if(!thread->owns)
+		return false;
+	else
+		return pthread_kill(thread->native, 0) == 0;
 }
 
 void cflare_thread_sleep(double64_t seconds)
