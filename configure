@@ -303,6 +303,22 @@ do
 					windows_nt5_1 = 0.75 -- Windows XP and up (NT 5.1)
 				}
 			}
+		},
+		["cflare/socket.h"] = {
+			{
+				name = "posix sockets",
+				src = { "cflare-posix/socket.c" },
+				platforms = {
+					posix6 = 1
+				}
+			},
+			{
+				name = "WinSock",
+				src = { "cflare-windows/socket.c" },
+				platforms = {
+					windows_nt = 0.75 -- earlier than NT 5.0
+				}
+			},
 		}
 	}
 
