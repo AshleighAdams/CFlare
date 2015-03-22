@@ -113,7 +113,6 @@ static void parse_line(char* line, const char* name)
 		return;
 	
 	line[lastpos + 1] = '\0';
-	size_t len = lastpos;
 	
 	{ // add to code2string cache
 		known_status status;
@@ -131,7 +130,7 @@ static void parse_line(char* line, const char* name)
 		status.code = code;
 		status.string = strdup(line);
 		
-		len = normalize_status(line); // modifies line
+		size_t len = normalize_status(line); // modifies line
 		
 		cflare_hash string_hash = cflare_hash_compute(line, sizeof(char) * len);
 		cflare_hashtable_set(cache_string2code, string_hash, &status, sizeof(known_status));

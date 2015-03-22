@@ -17,7 +17,7 @@ void cflare_options_load(int argc, char** argv)
 	self = argv[0];
 	
 	args_count = 0;
-	args = malloc(sizeof(char**) * argc); // this is the abs max
+	args = malloc(sizeof(char*) * argc); // this is the abs max
 	
 	bool parsing_options = true;
 	
