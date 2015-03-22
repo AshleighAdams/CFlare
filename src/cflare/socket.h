@@ -34,6 +34,7 @@ CFLARE_API void cflare_socket_close(cflare_socket* socket);
 // set a timeout for all operations
 // -1 = forever, 0 = no delay, >0 = seconds
 CFLARE_API void cflare_socket_timeout(cflare_socket* socket, double64_t timeout);
+CFLARE_API void cflare_listener_timeout(cflare_listener* listener, double64_t timeout);
 
 #endif /* CFLARE_SOCKET_H */
 

@@ -107,3 +107,8 @@ void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
 {
 	cflare_notimp();
 }
+
+void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
+{
+	cflare_notimp();
+}

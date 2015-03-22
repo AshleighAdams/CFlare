@@ -268,3 +268,8 @@ void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
 {
 	 set_socket_timeout(socket->fd, timeout);
 }
+
+void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
+{
+	set_socket_timeout(listener->fd, timeout);
+}
