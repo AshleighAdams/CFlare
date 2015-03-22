@@ -149,6 +149,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 void cflare_listener_delete(cflare_listener* listener)
 {
 	cflare_listener_close(listener);
+	free(listener->addr);
 	free(listener);
 }
 
