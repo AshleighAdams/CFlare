@@ -35,6 +35,10 @@ const char* cflare_listener_address(cflare_listener* listener)
 	return 0;
 }
 
+void cflare_listener_close(cflare_listener* listener)
+{
+	cflare_notimp();
+}
 
 cflare_socket* cflare_socket_connect(const char* host, uint16_t port)
 {
