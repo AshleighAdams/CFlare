@@ -204,6 +204,7 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t
 void cflare_socket_delete(cflare_socket* socket)
 {
 	cflare_socket_close(socket);
+	free(socket->ip);
 	free(socket);
 }
 
@@ -267,9 +268,4 @@ void cflare_socket_close(cflare_socket* socket)
 void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
 {
 	 set_socket_timeout(socket->fd, timeout);
-}
-
-void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
-{
-	set_socket_timeout(listener->fd, timeout);
 }
