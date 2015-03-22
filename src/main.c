@@ -11,6 +11,8 @@
 #include <cflare/hashtable.h>
 #include <cflare/filesystem.h>
 
+#include <cflare/socket.h>
+
 static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	cflare_debug("Inside Unload hook! args: %p; rets: %p", (void*)args, (void*)rets);
@@ -53,6 +55,15 @@ int main(int argc, char** argv)
 					cflare_debug("Unload: return 0: (nil)");
 			cflare_hookstack_delete(args);
 			cflare_hookstack_delete(rets);
+		}
+		
+		{ // socket test
+			cflare_listener* listener = cflare_socket_listen("*", 1025);
+			if(listener)
+			{
+				cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
+				cflare_listener_delete(listener);
+			}
 		}
 		
 		/*{
