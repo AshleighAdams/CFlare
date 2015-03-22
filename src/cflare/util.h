@@ -104,5 +104,8 @@ CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 		free(__fmt_string); \
 	} while(0)
 
+
+CFLARE_API char* cflare_format(const char* str, ...);
+
 #endif /* CFLARE_UTIL_H */
 

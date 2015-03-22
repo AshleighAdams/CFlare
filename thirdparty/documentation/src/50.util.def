@@ -12,6 +12,11 @@ Macro: CFLARE_VA_NUM_ARGS
 	Arg(...):
 	Ret(int): Number of arguments passed to it. For use with `__VA_ARGS__`.
 
+Function: cflare_format
+	Arg(const char*, format):
+	Arg(...):
+	Ret(char*): A new formatted string.
+
 Function: cflare_debug_c
 	Arg(const char*, str):
 	Info: Print debug information to stderr.

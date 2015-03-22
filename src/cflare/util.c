@@ -175,3 +175,17 @@ char* cflare_string_concat_n_c(size_t count, size_t* length, ...)
 		*length = total_size;
 	return ret;
 }
+
+char* cflare_format(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	
+	int len = vsnprintf(0, 0, fmt, args) + 1;
+	
+	char* ret = malloc(len);
+	vsnprintf(ret, len, fmt, args);
+	
+	va_end(args);
+	return ret;
+}
