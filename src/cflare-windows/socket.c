@@ -24,7 +24,7 @@ cflare_socket* cflare_listener_accept(cflare_listener* listener)
 	cflare_notimp();
 	return 0;
 }
-uint64_t cflare_listener_port(cflare_listener* listener)
+uint16_t cflare_listener_port(cflare_listener* listener)
 {
 	cflare_notimp();
 	return 0;

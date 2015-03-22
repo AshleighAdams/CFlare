@@ -158,7 +158,7 @@ cflare_socket* cflare_listener_accept(cflare_listener* listener)
 	cflare_notimp();
 	return 0;
 }
-uint64_t cflare_listener_port(cflare_listener* listener)
+uint16_t cflare_listener_port(cflare_listener* listener)
 {
 	return listener->port;
 }
@@ -185,7 +185,7 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	fstat(fd, &statbuf);
 	assert(S_ISSOCK(statbuf.st_mode));
 	
-	// attempt to do some default socket options	
+	// attempt to do some default socket options
 	set_socket_timeout(fd, -1); // block forever by default
 	
 	cflare_socket* sock = malloc(sizeof(cflare_socket));
