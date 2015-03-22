@@ -15,7 +15,7 @@ CFLARE_API uint16_t cflare_listener_port(cflare_listener* listener);
 CFLARE_API const char* cflare_listener_address(cflare_listener* listener);
 CFLARE_API void cflare_listener_close(cflare_listener* listener);
 
-CFLARE_API cflare_socket* cflare_socket_connect(const char* host, uint16_t port);
+CFLARE_API cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout);
 CFLARE_API void cflare_socket_delete(cflare_socket* socket);
 
 CFLARE_API const char* cflare_socket_ip(cflare_socket* socket);

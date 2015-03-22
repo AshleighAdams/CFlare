@@ -40,9 +40,10 @@ void cflare_listener_close(cflare_listener* listener)
 }
 
 
-cflare_socket* cflare_socket_connect(const char* host, uint16_t port)
+cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout)
 {
 	cflare_notimp();
+	return 0x0;
 }
 void cflare_socket_delete(cflare_socket* socket)
 {

@@ -196,7 +196,7 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	return sock;
 }
 
-cflare_socket* cflare_socket_connect(const char* host, uint16_t port)
+cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout)
 {
 	cflare_notimp();
 	return 0;
