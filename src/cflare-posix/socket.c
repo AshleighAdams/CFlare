@@ -75,9 +75,13 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = AF_UNSPEC; // ipv4 or ipv6
 	
+	/*
+		In future, could possibly use a scheme to pass into serv, such as "http" from "http://blah.com", via transforming addr to:
+		"http\0//"(address now points here)
+	*/
 	int error = 0;
-	char strport[10]; // 65k max, so "65535\0"
-	snprintf(strport, 10, "%hu", port);
+	char strport[6];
+	snprintf(strport, 6, "%hu", port);
 	
 	if((error = getaddrinfo(address, strport, &hints, &resv)))
 	{
@@ -110,7 +114,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	
 	if(!addr)
 	{
-		cflare_warn("listen(): no suitable address found", address);
+		cflare_warn("listen(): no suitable address found for %s", address);
 		freeaddrinfo(resv);
 		return 0x0;
 	}
