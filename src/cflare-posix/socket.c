@@ -288,6 +288,10 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t
 	
 	if(connect(fd, resv->ai_addr, resv->ai_addrlen) != 0)
 	{
+		// connect() should always block, so this error is a timeout...
+		if(errno == EINPROGRESS)
+			errno = ETIMEDOUT;
+		
 		int _errno = errno;
 		cflare_warn("connect(): connect: %s", strerror(errno));
 		freeaddrinfo(resv);
