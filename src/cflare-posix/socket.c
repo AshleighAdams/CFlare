@@ -62,6 +62,36 @@ static void set_socket_timeout(int fd, double64_t timeout)
 	setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to));
 }
 
+static int gaierr_to_errno(int error)
+{
+	switch(error)
+	{
+	case EAI_ADDRFAMILY:
+		return EHOSTUNREACH;
+	case EAI_AGAIN:
+		return EAGAIN;
+	case EAI_BADFLAGS:
+		return EIO;
+	case EAI_FAIL:
+		return ENXIO;
+	case EAI_FAMILY:
+		return EAFNOSUPPORT;
+	case EAI_MEMORY:
+		return ENOMEM;
+	case EAI_NODATA:
+		return ENODATA;
+	case EAI_SERVICE:
+		return EPROTONOSUPPORT;
+	case EAI_SOCKTYPE:
+		return ESOCKTNOSUPPORT;
+	case EAI_SYSTEM:
+		return errno;
+	case EAI_NONAME: // when port input is invalid?
+	default:
+		return 0;
+	}
+}
+
 cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 {
 	struct addrinfo* resv = 0x0;
@@ -86,6 +116,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	if((error = getaddrinfo(address, strport, &hints, &resv)))
 	{
 		cflare_warn("listen(): getaddrinfo: %s", gai_strerror(error));
+		errno = gaierr_to_errno(error);
 		if(resv)
 			freeaddrinfo(resv);
 		return 0;
@@ -115,6 +146,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	if(!addr)
 	{
 		cflare_warn("listen(): no suitable address found for %s", address);
+		errno = EHOSTUNREACH;
 		freeaddrinfo(resv);
 		return 0x0;
 	}
@@ -125,6 +157,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 		if((error = getnameinfo(addr->ai_addr, addr->ai_addrlen, ip, sizeof(ip), 0, 0, NI_NUMERICHOST)))
 		{
 			cflare_warn("listen(): failed to get IP: %s", gai_strerror(error));
+			errno = gaierr_to_errno(error);
 			freeaddrinfo(resv);
 			close(fd);
 			return 0x0;
