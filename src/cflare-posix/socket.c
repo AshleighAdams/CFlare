@@ -35,8 +35,8 @@ static void set_blocking(int fd, bool block)
 	assert(flags != -1);
 	
 	int newflags = block
-		? flags | O_NONBLOCK
-		: flags & ~O_NONBLOCK;
+		? flags & ~O_NONBLOCK
+		: flags | O_NONBLOCK;
 	
 	if(newflags != flags) // we can avoid a syscall
 	{
