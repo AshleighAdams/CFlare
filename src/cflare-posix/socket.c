@@ -115,8 +115,8 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 		"http\0//"(address now points here)
 	*/
 	int error = 0;
-	char strport[6];
-	snprintf(strport, 6, "%hu", port);
+	char strport[NI_MAXSERV];
+	snprintf(strport, NI_MAXSERV, "%hu", port);
 	
 	if((error = getaddrinfo(address, strport, &hints, &resv)))
 	{
@@ -157,7 +157,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	}
 	
 	
-	char ip[INET6_ADDRSTRLEN];
+	char ip[NI_MAXHOST];
 	{ // get the IP address into a string
 		if((error = getnameinfo(addr->ai_addr, addr->ai_addrlen, ip, sizeof(ip), 0, 0, NI_NUMERICHOST)))
 		{
@@ -253,8 +253,8 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t
 	hints.ai_family = AF_UNSPEC; // ipv4 or ipv6
 	
 	int error = 0;
-	char strport[6];
-	snprintf(strport, 6, "%hu", port);
+	char strport[NI_MAXSERV];
+	snprintf(strport, NI_MAXSERV, "%hu", port);
 	
 	if((error = getaddrinfo(host, strport, &hints, &resv)))
 	{
@@ -265,7 +265,7 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t
 		return 0;
 	}
 	
-	char ip[INET6_ADDRSTRLEN];
+	char ip[NI_MAXHOST];
 	{ // get the IP address into a string
 		if((error = getnameinfo(resv->ai_addr, resv->ai_addrlen, ip, sizeof(ip), 0, 0, NI_NUMERICHOST)))
 		{
