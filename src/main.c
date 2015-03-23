@@ -60,18 +60,23 @@ int main(int argc, char** argv)
 		}
 		
 		{ // socket test
+			cflare_socket* sock;
+			if(!(sock = cflare_socket_connect("kateadams.eu", 80, -1)))
+				cflare_log("failed to connect: %s", strerror(errno));
+			else
+			{
+				cflare_log("socket: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
+				cflare_socket_delete(sock);
+			}
+			
 			cflare_listener* listener = cflare_socket_listen("*", 1025);
 			assert(listener);
 			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
+			
+			sock = cflare_listener_accept(listener);
+				assert(sock);
+				cflare_log("socket: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
 			cflare_listener_delete(listener);
-			
-			cflare_socket* sock = cflare_socket_connect("nope.kateadams.eu", 80, -1);
-			if(!sock)
-				cflare_log("failed to connect: %s", strerror(errno));
-			assert(sock);
-			cflare_log("socket: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
-			cflare_socket_delete(sock);
-			
 		}
 		
 		/*{

@@ -199,10 +199,36 @@ void cflare_listener_delete(cflare_listener* listener)
 	free(listener);
 }
 
+cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port);
 cflare_socket* cflare_listener_accept(cflare_listener* listener)
 {
-	cflare_notimp();
-	return 0;
+	struct sockaddr_storage remote_addr;
+	socklen_t remote_addrlen = sizeof(remote_addr);
+	
+	int remote_fd, error;
+	
+	if((remote_fd = accept(listener->fd, (struct sockaddr*)&remote_addr, &remote_addrlen)) < 0)
+	{
+		cflare_warn("accept(): accept: %s", strerror(errno));
+		return 0x0; // error is left in errno
+	}
+	
+	char ip[NI_MAXHOST];
+	char strport[NI_MAXSERV];
+	{ // get the IP address into a string
+		if((error = getnameinfo((struct sockaddr*)&remote_addr, remote_addrlen, ip, sizeof(ip), strport, sizeof(strport), NI_NUMERICHOST | NI_NUMERICSERV)))
+		{
+			cflare_warn("accept(): failed to get IP/port: %s", gai_strerror(error));
+			errno = gaierr_to_errno(error);
+			return 0x0;
+		}
+	}
+	
+	int port = 0;
+	sscanf(strport, "%d", &port);
+	assert(port >= 0/*UINT16_MIN*/ && port <= UINT16_MAX);
+	
+	return cflare_socket_new(remote_fd, ip, (uint16_t)port);
 }
 uint16_t cflare_listener_port(cflare_listener* listener)
 {
