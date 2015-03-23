@@ -73,7 +73,13 @@ static int gaierr_to_errno(int error)
 	case EAI_BADFLAGS:
 		return EIO;
 	case EAI_FAIL:
-		return ENXIO;
+	case EAI_NONAME:
+		#ifdef EHOSTNOTFOUND
+		return EHOSTNOTFOUND;
+		#else
+		return ENXIO; // device or address not found
+		//return EHOSTUNREACH; // no route to host
+		#endif
 	case EAI_FAMILY:
 		return EAFNOSUPPORT;
 	case EAI_MEMORY:
@@ -86,7 +92,6 @@ static int gaierr_to_errno(int error)
 		return ESOCKTNOSUPPORT;
 	case EAI_SYSTEM:
 		return errno;
-	case EAI_NONAME: // when port input is invalid?
 	default:
 		return 0;
 	}

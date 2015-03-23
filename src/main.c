@@ -13,6 +13,8 @@
 
 #include <cflare/socket.h>
 
+#include <errno.h>
+
 static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	cflare_debug("Inside Unload hook! args: %p; rets: %p", (void*)args, (void*)rets);
@@ -63,10 +65,13 @@ int main(int argc, char** argv)
 			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
 			cflare_listener_delete(listener);
 			
-			cflare_socket* sock = cflare_socket_connect("kateadams.eu", 80, -1);
+			cflare_socket* sock = cflare_socket_connect("nope.kateadams.eu", 80, -1);
+			if(!sock)
+				cflare_log("failed to connect: %s", strerror(errno));
 			assert(sock);
 			cflare_log("socket: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
 			cflare_socket_delete(sock);
+			
 		}
 		
 		/*{
