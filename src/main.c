@@ -59,11 +59,14 @@ int main(int argc, char** argv)
 		
 		{ // socket test
 			cflare_listener* listener = cflare_socket_listen("*", 1025);
-			if(listener)
-			{
-				cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
-				cflare_listener_delete(listener);
-			}
+			assert(listener);
+			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
+			cflare_listener_delete(listener);
+			
+			cflare_socket* sock = cflare_socket_connect("kateadams.eu", 80, -1);
+			assert(sock);
+			cflare_log("socket: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
+			cflare_socket_delete(sock);
 		}
 		
 		/*{

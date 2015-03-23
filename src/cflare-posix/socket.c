@@ -158,8 +158,10 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 		{
 			cflare_warn("listen(): failed to get IP: %s", gai_strerror(error));
 			errno = gaierr_to_errno(error);
+			int _errno = errno;
 			freeaddrinfo(resv);
 			close(fd);
+			errno = _errno;
 			return 0x0;
 		}
 	}
@@ -169,7 +171,9 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 		if(listen(fd, 0) != 0)
 		{
 			cflare_warn("listen(): listen: %s", strerror(errno));
+			int _errno = errno;
 			close(fd);
+			errno = _errno;
 			return 0x0;
 		}
 	}
@@ -235,9 +239,63 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 
 cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout)
 {
-	cflare_notimp();
-	return 0;
+	struct addrinfo* resv = 0x0;
+	
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_NUMERICSERV /*to pass a port*/;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = AF_UNSPEC; // ipv4 or ipv6
+	
+	int error = 0;
+	char strport[6];
+	snprintf(strport, 6, "%hu", port);
+	
+	if((error = getaddrinfo(host, strport, &hints, &resv)))
+	{
+		cflare_warn("connect(): getaddrinfo: %s", gai_strerror(error));
+		errno = gaierr_to_errno(error);
+		if(resv)
+			freeaddrinfo(resv);
+		return 0;
+	}
+	
+	char ip[INET6_ADDRSTRLEN];
+	{ // get the IP address into a string
+		if((error = getnameinfo(resv->ai_addr, resv->ai_addrlen, ip, sizeof(ip), 0, 0, NI_NUMERICHOST)))
+		{
+			cflare_warn("connect(): failed to get IP: %s", gai_strerror(error));
+			errno = gaierr_to_errno(error);
+			freeaddrinfo(resv);
+			return 0x0;
+		}
+	}
+	
+	int fd;
+	if((fd = socket(resv->ai_family, resv->ai_socktype, 0)) < 0)
+	{
+		cflare_warn("connect(): socket: %s", strerror(errno));
+		freeaddrinfo(resv);
+		return 0x0;
+	}
+	
+	set_socket_timeout(fd, timeout);
+	
+	if(connect(fd, resv->ai_addr, resv->ai_addrlen) != 0)
+	{
+		int _errno = errno;
+		cflare_warn("connect(): connect: %s", strerror(errno));
+		freeaddrinfo(resv);
+		close(fd);
+		errno = _errno;
+		return 0x0;
+	}
+	
+	freeaddrinfo(resv);
+	
+	return cflare_socket_new(fd, ip, port);
 }
+
 void cflare_socket_delete(cflare_socket* socket)
 {
 	cflare_socket_close(socket);
@@ -305,4 +363,9 @@ void cflare_socket_close(cflare_socket* socket)
 void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
 {
 	 set_socket_timeout(socket->fd, timeout);
+}
+
+void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
+{
+	set_socket_timeout(listener->fd, timeout);
 }
