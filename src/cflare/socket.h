@@ -13,12 +13,17 @@ enum
 	CFLARE_SOCKET_TIMEOUT_NOBLOCK = 0
 };
 
+#define CFLARE_SOCKET_HOST_ANY "*"
+#define CFLARE_SOCKET_PORT_ANY 0
+
+
 CFLARE_API cflare_listener* cflare_socket_listen(const char* addr, uint16_t port);
 CFLARE_API void cflare_listener_delete(cflare_listener* listener);
 
 CFLARE_API cflare_socket* cflare_listener_accept(cflare_listener* listener);
 CFLARE_API uint16_t cflare_listener_port(cflare_listener* listener);
 CFLARE_API const char* cflare_listener_address(cflare_listener* listener);
+CFLARE_API void cflare_listener_timeout(cflare_listener* listener, double64_t timeout);
 CFLARE_API void cflare_listener_close(cflare_listener* listener);
 
 CFLARE_API cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout);
@@ -30,21 +35,17 @@ CFLARE_API bool cflare_socket_connected(cflare_socket* socket);
 
 // these will return false on either connection error, or timeout; if it's a timeout and a read, the partial data will should still be readable.
 CFLARE_API bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_length, size_t* read_length);
+CFLARE_API bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length);
+
+// same as write, but also appends \n.  Does not stop at a null-byte.
+CFLARE_API bool cflare_socket_writeline(cflare_socket* socket, const char* buffer, size_t buffer_length);
 // getting to the end of a buffer is considered partial data, and should return false. should ignore '\r's, \n is the char to look for.
 // does not stop at a null byte.
 CFLARE_API bool cflare_socket_readline(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read_length);
 
-CFLARE_API bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length);
-// same as write, but also appends \n.  Does not stop at a null-byte.
-CFLARE_API bool cflare_socket_writeline(cflare_socket* socket, const char* buffer, size_t buffer_length);
-
 CFLARE_API void cflare_socket_flush(cflare_socket* socket);
-CFLARE_API void cflare_socket_close(cflare_socket* socket);
-
-// set a timeout for all operations
-// -1 = forever, 0 = no delay, >0 = seconds
 CFLARE_API void cflare_socket_timeout(cflare_socket* socket, double64_t timeout);
-CFLARE_API void cflare_listener_timeout(cflare_listener* listener, double64_t timeout);
+CFLARE_API void cflare_socket_close(cflare_socket* socket);
 
 #endif /* CFLARE_SOCKET_H */
 
