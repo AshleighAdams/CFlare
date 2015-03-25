@@ -156,10 +156,9 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 		return 0x0;
 	}
 	
-	
 	char ip[NI_MAXHOST];
 	{ // get the IP address into a string
-		if((error = getnameinfo(addr->ai_addr, addr->ai_addrlen, ip, sizeof(ip), 0, 0, NI_NUMERICHOST)))
+		if((error = getnameinfo(addr->ai_addr, addr->ai_addrlen, ip, sizeof(ip), strport, sizeof(strport), NI_NUMERICHOST | NI_NUMERICSERV)))
 		{
 			cflare_warn("listen(): failed to get IP: %s", gai_strerror(error));
 			errno = gaierr_to_errno(error);
@@ -169,6 +168,9 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 			errno = _errno;
 			return 0x0;
 		}
+		int iport = port;
+		sscanf(strport, "%d", &iport);
+		port = iport;
 	}
 	freeaddrinfo(resv);
 	

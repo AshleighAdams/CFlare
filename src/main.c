@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 		
 		{ // socket test
 			cflare_socket* sock;
-			if(!(sock = cflare_socket_connect("kateadams.eu", 80, CFLARE_SOCKET_TIMEOUT_FOREVER)))
+			if(!(sock = cflare_socket_connect("kateadams.eu", 0, CFLARE_SOCKET_TIMEOUT_FOREVER)))
 				cflare_log("failed to connect: %s", strerror(errno));
 			else
 			{
@@ -69,10 +69,9 @@ int main(int argc, char** argv)
 				
 				const char* request = 
 					"GET / HTTP/1.1\n"
-					"Host: kateadams.eu\n"
-					"\n";
+					"Host: kateadams.eu\n";
 				
-				cflare_socket_write(sock, request, strlen(request));
+				cflare_socket_writeline(sock, request, strlen(request));
 				
 				char linebuff[1024];
 				while(true)
@@ -88,7 +87,7 @@ int main(int argc, char** argv)
 				cflare_socket_delete(sock);
 			}
 			
-			cflare_listener* listener = cflare_socket_listen("*", 1025);
+			cflare_listener* listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025);
 			assert(listener);
 			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
 			
