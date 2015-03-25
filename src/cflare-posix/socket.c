@@ -288,7 +288,7 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t
 		errno = gaierr_to_errno(error);
 		if(resv)
 			freeaddrinfo(resv);
-		return 0;
+		return 0x0;
 	}
 	
 	char ip[NI_MAXHOST];
@@ -354,28 +354,102 @@ bool cflare_socket_connected(cflare_socket* socket)
 
 bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_length, size_t* read)
 {
-	cflare_notimp();
-	*read = 0;
-	return false;
+	if(!socket->connected)
+	{
+		if(read) *read = 0;
+		errno = ENOTCONN;
+		return false;
+	}
+	ssize_t read_count = recv(socket->fd, buffer, buffer_length, 0);
+	
+	if(read_count < 0)
+	{
+		// these 2 just mean a timeout
+		if(errno != EAGAIN && errno != EWOULDBLOCK)
+			socket->connected = false;
+		if(read) *read = 0;
+		// errno from recv is kept
+		return false;
+	}
+	
+	*read = read_count;
+	return true;
 }
 
+// this is very inefficient, need to do it in blocks with peak in the future, rather than reading char by char...
 bool cflare_socket_readline(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
 {
-	cflare_notimp();
-	*read = 0;
-	return false;
+	assert(socket && buffer && buffer_length > 0);
+	if(!socket->connected)
+	{
+		if(read) *read = 0;
+		errno = ENOTCONN;
+		return false;
+	}
+	
+	char* ptr = buffer;
+	size_t len = 0;
+	errno = 0;
+	
+	while(true)
+	{
+		ssize_t read_count = recv(socket->fd, ptr, 1, 0);
+		if(read_count < 0)
+		{
+			if(errno != EAGAIN && errno != EWOULDBLOCK)
+				socket->connected = false;
+			break;
+		}
+		
+		if(ptr[0] == '\n')
+			break;
+		else if(ptr[0] == '\r') // this char is ignored
+			continue;
+		
+		len           += 1;
+		ptr           += 1;
+		buffer_length -= 1;
+		
+		if(buffer_length <= 1) // we need at least 1 for the null-char
+		{
+			errno = ENOBUFS;
+			break;
+		}
+	}
+	
+	*read = len; // don't include the null-pointer
+	buffer[len] = '\0';
+	return errno == 0;
 }
 
 bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length)
 {
-	cflare_notimp();
-	return false;
+	assert(socket && buffer);
+	if(!socket->connected)
+	{
+		errno = ENOTCONN;
+		return false;
+	}
+	
+	// todo track this
+	send(socket->fd, buffer, buffer_length, 0);
+	return true;
 }
 
 bool cflare_socket_writeline(cflare_socket* socket, const char* buffer, size_t buffer_length)
 {
-	cflare_notimp();
-	return false;
+	assert(socket && buffer);
+	if(!socket->connected)
+	{
+		errno = ENOTCONN;
+		return false;
+	}
+	// should we error if a \n is in the buffer?
+	
+	char newline = {'\n'};
+	send(socket->fd, buffer, buffer_length, MSG_MORE);
+	send(socket->fd, &newline, sizeof(newline), 0);
+	return true;
 }
 
 void cflare_socket_flush(cflare_socket* socket)

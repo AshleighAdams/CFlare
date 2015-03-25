@@ -66,6 +66,25 @@ int main(int argc, char** argv)
 			else
 			{
 				cflare_log("socket: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
+				
+				const char* request = 
+					"GET / HTTP/1.1\n"
+					"Host: kateadams.eu\n"
+					"\n";
+				
+				cflare_socket_write(sock, request, strlen(request));
+				
+				char linebuff[1024];
+				while(true)
+				{
+					size_t read = 0;
+					if(!cflare_socket_readline(sock, linebuff, sizeof(linebuff), &read))
+						break;
+					if(read == 0)
+						break;
+					cflare_log("%s", linebuff);
+				}
+				
 				cflare_socket_delete(sock);
 			}
 			
