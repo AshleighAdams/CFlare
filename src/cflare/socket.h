@@ -38,10 +38,10 @@ CFLARE_API bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_
 CFLARE_API bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length);
 
 // same as write, but also appends \n.  Does not stop at a null-byte.
-CFLARE_API bool cflare_socket_writeline(cflare_socket* socket, const char* buffer, size_t buffer_length);
+CFLARE_API bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t buffer_length);
 // getting to the end of a buffer is considered partial data, and should return false. should ignore '\r's, \n is the char to look for.
 // does not stop at a null byte.
-CFLARE_API bool cflare_socket_readline(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read_length);
+CFLARE_API bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read_length);
 
 CFLARE_API void cflare_socket_flush(cflare_socket* socket);
 CFLARE_API void cflare_socket_timeout(cflare_socket* socket, double64_t timeout);

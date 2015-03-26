@@ -377,7 +377,7 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 }
 
 // this is very inefficient, need to do it in blocks with peak in the future, rather than reading char by char...
-bool cflare_socket_readline(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
+bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
 {
 	assert(socket && buffer && buffer_length > 0);
 	if(!socket->connected)
@@ -436,7 +436,7 @@ bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t bu
 	return true;
 }
 
-bool cflare_socket_writeline(cflare_socket* socket, const char* buffer, size_t buffer_length)
+bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t buffer_length)
 {
 	assert(socket && buffer);
 	if(!socket->connected)

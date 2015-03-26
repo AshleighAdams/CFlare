@@ -74,20 +74,20 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 	return false;
 }
 
-bool cflare_socket_readline(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
-{
-	cflare_notimp();
-	*read = 0;
-	return false;
-}
-
 bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length)
 {
 	cflare_notimp();
 	return false;
 }
 
-bool cflare_socket_writeline(cflare_socket* socket, const char* buffer, size_t buffer_length)
+bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
+{
+	cflare_notimp();
+	*read = 0;
+	return false;
+}
+
+bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t buffer_length)
 {
 	cflare_notimp();
 	return false;

@@ -82,13 +82,13 @@ Function: cflare_socket_write
 	Arg(const uint8_t*, buffer):
 	Arg(size_t, buffer_length):
 	Ret(bool): Whether or not the data was sent.
-Function: cflare_socket_readline
+Function: cflare_socket_read_line
 	Arg(cflare_socket*, socket):
 	Arg(char*, buffer):
 	Arg(size_t, buffer_length):
 	Out(size_t*, read_count): The number of chars read.
 	Ret(bool): Reads until new line; return carriages are ignored.
-Function: cflare_socket_writeline
+Function: cflare_socket_write_line
 	Arg(cflare_socket*, socket):
 	Arg(const char*, buffer):
 	Arg(size_t, buffer_length):

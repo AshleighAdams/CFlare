@@ -71,13 +71,13 @@ int main(int argc, char** argv)
 					"GET / HTTP/1.1\n"
 					"Host: kateadams.eu\n";
 				
-				cflare_socket_writeline(sock, request, strlen(request));
+				cflare_socket_write_line(sock, request, strlen(request));
 				
 				char linebuff[1024];
 				while(true)
 				{
 					size_t read = 0;
-					if(!cflare_socket_readline(sock, linebuff, sizeof(linebuff), &read))
+					if(!cflare_socket_read_line(sock, linebuff, sizeof(linebuff), &read))
 						break;
 					if(read == 0)
 						break;
