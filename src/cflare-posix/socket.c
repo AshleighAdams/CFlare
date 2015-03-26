@@ -104,7 +104,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	if(address && address[0] == '*' && address[1] == '\0')
 		address = 0;
 	
-	struct addrinfo hints = {};
+	struct addrinfo hints = {0};
 	hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV /*to pass a port*/;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = AF_UNSPEC; // ipv4 or ipv6
@@ -273,7 +273,7 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t
 {
 	struct addrinfo* resv = 0x0;
 	
-	struct addrinfo hints = {};
+	struct addrinfo hints = {0};
 	hints.ai_flags = AI_NUMERICSERV /*to pass a port*/;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = AF_UNSPEC; // ipv4 or ipv6
