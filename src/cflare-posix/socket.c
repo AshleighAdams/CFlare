@@ -19,6 +19,7 @@ typedef struct cflare_socket
 	bool connected;
 	char* ip;
 	int16_t port;
+	double64_t timeout;
 } cflare_socket;
 
 typedef struct cflare_listener
@@ -271,6 +272,7 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	sock->ip = strdup(ip);
 	sock->port = port;
 	sock->connected = true;
+	sock->timeout = -1;
 	return sock;
 }
 
@@ -395,8 +397,6 @@ bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t bu
 	return true;
 }
 
-
-// this is very inefficient, need to do it in blocks with peak in the future, rather than reading char by char...
 bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
 {
 	assert(socket && buffer && buffer_length > 0);
@@ -407,39 +407,87 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 		return false;
 	}
 	
+	static const int chunksize = 128; // read in 128byte chunks
 	char* ptr = buffer;
 	size_t len = 0;
 	errno = 0;
+	bool gotnewline = false;
+	double64_t to = cflare_time() + socket->timeout;
+	double64_t timeout = socket->timeout;
 	
-	while(true)
+	while(!gotnewline)
 	{
-		ssize_t read_count = recv(socket->fd, ptr, 1, 0);
-		if(read_count < 0)
+		#ifndef MIN
+		#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+		#endif
+		ssize_t got = recv(socket->fd, ptr, MIN(buffer_length, chunksize), MSG_PEEK | MSG_DONTWAIT);
+		
+		if(got < 0)
 		{
-			if(errno != EAGAIN && errno != EWOULDBLOCK)
+			if(errno == EAGAIN || errno == EWOULDBLOCK)
+			{
+				if(timeout < 0) // wait for ever
+					continue;
+				else if(timeout == 0) // simulate non-blocking behavoir
+				{
+					errno = EWOULDBLOCK;
+					break;
+				}
+				else if(cflare_time() > to)
+				{
+					errno = ETIMEDOUT;
+					break;
+				}
+				else // we've not timed out
+					continue;
+			}
+			else // another kind of error, lets mark this connection as dead
+			{
 				socket->connected = false;
-			break;
+				break;
+			}
+		}
+		else if(socket->timeout < 0) // we have some acivity on the socket, update the inactivity to
+			to = cflare_time() + socket->timeout;
+		
+		ssize_t i;
+		for(i = 0; i < got; i++)
+		{
+			if(ptr[i] == '\n')
+			{
+				gotnewline = true;
+				break;
+			}
 		}
 		
-		if(ptr[0] == '\n')
-			break;
-		else if(ptr[0] == '\r') // this char is ignored
-			continue;
+		recv(socket->fd, ptr, i, 0); // dequeue the data valid data;
+		len           += i;
+		ptr           += i;
+		buffer_length -= i;
 		
-		len           += 1;
-		ptr           += 1;
-		buffer_length -= 1;
-		
-		if(buffer_length <= 1) // we need at least 1 for the null-char
+		if(buffer_length <= 1 && !gotnewline) // allow at least 1 char for the null byte
 		{
 			errno = ENOBUFS;
 			break;
 		}
 	}
 	
-	*read = len; // don't include the null-pointer
-	buffer[len] = '\0';
-	return errno == 0;
+	if(gotnewline) // so future calls dont read this char
+		recv(socket->fd, ptr, 1, 0);
+	
+	// now fix the buffer to remove all \r s
+	size_t src, dst;
+	for(src = 0, dst = 0; src < len; src++)
+	{
+		if(buffer[src] == '\r')
+			continue;
+		buffer[dst] = buffer[src];
+		dst++;
+	}
+	
+	buffer[dst] = '\0';
+	if(read) *read = dst;
+	return gotnewline;
 }
 
 bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t buffer_length)
@@ -469,6 +517,7 @@ void cflare_socket_flush(cflare_socket* socket)
 void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
 {
 	 set_socket_timeout(socket->fd, timeout);
+	 socket->timeout = timeout;
 }
 
 void cflare_socket_close(cflare_socket* socket)
