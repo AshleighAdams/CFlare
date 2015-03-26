@@ -1,0 +1,106 @@
+#!/usr/bin/env ./process-definition
+
+Name: Socket Library & Object
+Header: cflare/socket.h
+
+Info::
+	Simple, easy-to-use, cross-platform socket API.
+
+Type: cflare_socket
+	Definition: typedef struct cflare_socket cflare_socket;
+	Info: Represents a connection.
+Type: cflare_listener
+	Definition: typedef struct cflare_listener cflare_listener;
+	Info: A listener object that can accept sockets.
+
+Define: CFLARE_SOCKET_TIMEOUT_FOREVER -1
+	Info: Possibly wait forever for an operation to complete.
+Define: CFLARE_SOCKET_TIMEOUT_NOBLOCK 0
+	Info: Use non-blocking behaviour.
+Define: CFLARE_SOCKET_HOST_ANY "*"
+	Info: Listen on all addresses.
+Define: CFLARE_SOCKET_PORT_ANY 0
+	Info: The OS will give us a port.
+
+Function: cflare_socket_listen
+	Arg(const char*, address):
+	Arg(uint16_t, port):
+	Ret(cflare_listener*):
+	Info::
+		Starts listening for connections.
+		
+		Use [`accept`](#cflare_socket_accept) to dequeue a socket.
+Function: cflare_socket_connect
+	Arg(const char*, host):
+	Arg(uint16_t, port):
+	Arg(double64_t, timeout):
+	Ret(cflare_socket*): A socket.  Null if the connection failed, along with `errno` being set.
+	Info::
+		Attempt to connect to `host`.
+		The implementation should do a DNS lookup if needed.
+
+Function: cflare_listener_delete
+	Arg(cflare_listener*, listener):
+	Info: Free the socket; will also close the connection.
+Function: cflare_listener_accept
+	Arg(cflare_listener*, listener):
+	Ret(cflare_socket*): Dequeues a client and returns it.  Null on error, along with `errno` being set.
+Function: cflare_listener_port
+	Arg(cflare_listener*, listener):
+	Ret(uint16_t): The port we're listening on.
+Function: cflare_listener_address
+	Arg(cflare_listener*, listener):
+	Ret(const char*): The address we're listening on.
+Function: cflare_listener_close
+	Arg(cflare_listener*, listener):
+	Info: Stop listening.
+Function: cflare_listener_timeout
+	Arg(cflare_listener*, listener):
+	Arg(double64_t, timeout):
+	Info: The timeout value used on any appropriate operations.
+
+Function: cflare_socket_delete
+	Arg(cflare_socket*, socket):
+	Info: Close the socket, and release its resources.
+Function: cflare_socket_ip
+	Arg(cflare_socket*, socket):
+	Ret(const char*): The IP address of the remote client.
+Function: cflare_socket_port
+	Arg(cflare_socket*, socket):
+	Ret(uint16_t): The port of the remote client.
+Function: cflare_socket_connected
+	Arg(cflare_socket*, socket):
+	Ret(bool): Whether or not data may be transmitted or received.
+Function: cflare_socket_read
+	Arg(cflare_socket*, socket):
+	Arg(uint8_t*, buffer):
+	Arg(size_t, buffer_length):
+	Out(size_t*, read_count):
+	Ret(bool): True if all data had been read, else false.  Partial data still may be read if applicable.
+Function: cflare_socket_write
+	Arg(cflare_socket*, socket):
+	Arg(const uint8_t*, buffer):
+	Arg(size_t, buffer_length):
+	Ret(bool): Whether or not the data was sent.
+Function: cflare_socket_readline
+	Arg(cflare_socket*, socket):
+	Arg(char*, buffer):
+	Arg(size_t, buffer_length):
+	Out(size_t*, read_count): The number of chars read.
+	Ret(bool): Reads until new line; return carriages are ignored.
+Function: cflare_socket_writeline
+	Arg(cflare_socket*, socket):
+	Arg(const char*, buffer):
+	Arg(size_t, buffer_length):
+	Ret(bool):
+	Info: Writes the buffer to the socket, and appends a newline.
+Function: cflare_socket_flush
+	Arg(cflare_socket*, socket):
+	Info: Ensure that the socket has sent all data.
+Function: cflare_socket_close
+	Arg(cflare_socket*, socket):
+	Info: Close the socket.
+Function: cflare_socket_timeout
+	Arg(cflare_socket*, socket):
+	Arg(double64_t, timeout):
+	Info: Set the timeout for all applicable operations.
