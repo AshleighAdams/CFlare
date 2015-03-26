@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 		
 		{ // socket test
 			cflare_socket* sock;
-			if(!(sock = cflare_socket_connect("kateadams.eu", 0, CFLARE_SOCKET_TIMEOUT_FOREVER)))
+			if(!(sock = cflare_socket_connect("kateadams.eu", 80, CFLARE_SOCKET_TIMEOUT_FOREVER)))
 				cflare_log("failed to connect: %s", strerror(errno));
 			else
 			{
