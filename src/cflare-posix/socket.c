@@ -240,6 +240,11 @@ const char* cflare_listener_address(cflare_listener* listener)
 	return listener->addr;
 }
 
+void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
+{
+	set_socket_timeout(listener->fd, timeout);
+}
+
 void cflare_listener_close(cflare_listener* listener)
 {
 	if(!listener->listening)
@@ -376,6 +381,21 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 	return true;
 }
 
+bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length)
+{
+	assert(socket && buffer);
+	if(!socket->connected)
+	{
+		errno = ENOTCONN;
+		return false;
+	}
+	
+	// todo track this
+	send(socket->fd, buffer, buffer_length, 0);
+	return true;
+}
+
+
 // this is very inefficient, need to do it in blocks with peak in the future, rather than reading char by char...
 bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read)
 {
@@ -422,20 +442,6 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 	return errno == 0;
 }
 
-bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length)
-{
-	assert(socket && buffer);
-	if(!socket->connected)
-	{
-		errno = ENOTCONN;
-		return false;
-	}
-	
-	// todo track this
-	send(socket->fd, buffer, buffer_length, 0);
-	return true;
-}
-
 bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t buffer_length)
 {
 	assert(socket && buffer);
@@ -460,6 +466,11 @@ void cflare_socket_flush(cflare_socket* socket)
 	setsockopt(socket->fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
 }
 
+void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
+{
+	 set_socket_timeout(socket->fd, timeout);
+}
+
 void cflare_socket_close(cflare_socket* socket)
 {
 	if(socket->connected)
@@ -467,14 +478,4 @@ void cflare_socket_close(cflare_socket* socket)
 	close(socket->fd);
 	socket->connected = false;
 	socket->fd = -1;
-}
-
-void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
-{
-	 set_socket_timeout(socket->fd, timeout);
-}
-
-void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
-{
-	set_socket_timeout(listener->fd, timeout);
 }
