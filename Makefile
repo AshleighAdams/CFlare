@@ -37,7 +37,7 @@ test-headers:
 	for HEADER in $$(find ./src/ -name "*.h"); do \
 		echo "#include \"$$HEADER\"\nint main(){return 0;}" > ./.tmp.c; \
 		echo "\t$$HEADER...\033[s"; \
-		$(CC) -I./src ./.tmp.c -o /dev/null; \
+		$(CC) -std=c11 -I./src ./.tmp.c -o /dev/null; \
 		if [ "$$?" != "0" ]; then \
 			rm ./.tmp.c; \
 			exit 1; \
