@@ -26,6 +26,8 @@ CFLARE_API CFLARE_API_NORETURN void cflare_fatal_c(const char* str);
 CFLARE_API bool cflare_tointeger(const char* str, int64_t* out);
 CFLARE_API bool cflare_tonumber(const char* str, double64_t* out);
 
+CFLARE_API double64_t cflare_time();
+
 CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 
 // from 0 to 8 args

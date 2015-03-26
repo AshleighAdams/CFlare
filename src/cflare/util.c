@@ -129,6 +129,18 @@ bool cflare_tonumber(const char* str, double64_t* out)
 	return false;
 }
 
+#include <time.h>
+double64_t cflare_time()
+{
+	struct timespec ts;
+	#ifdef CLOCK_MONOTONIC
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	#else
+	timespec_get(&ts, TIME_UTC);
+	#endif
+	return (double64_t)ts.tv_sec + (double64_t)ts.tv_nsec / 1000.0 / 1000.0 / 1000.0;
+}
+
 char* cflare_string_concat_n_c(size_t count, size_t* length, ...)
 {
 	va_list ap;
