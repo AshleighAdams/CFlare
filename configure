@@ -135,7 +135,7 @@ defines = {}
 cflags = {"-Wall", "-Wpedantic", "-std=c11", "-I./src", "-frandom-seed=cflare"}
 lflags = {}
 ldflags = {"-L."}
-libs = {"m"}
+libs = {"m", "rt"}
 prefix = find_arg("prefix", "/usr/local")
 release = find_arg("release")
 cc = find_arg("cc", os.getenv("CC") or "cc")
