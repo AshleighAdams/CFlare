@@ -15,7 +15,7 @@ before_install:
 
 install:
   # valgrind and lua
-  - sudo apt-get install valgrind lua5.2
+  - sudo apt-get install valgrind lua5.2 cppcheck
 
   # g++4.9
   - if [ "$CC" = "gcc" ]; then sudo apt-get install -qq gcc-4.9; fi

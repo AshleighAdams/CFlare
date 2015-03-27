@@ -25,7 +25,7 @@ clean:
 		$(wildcard src/**.gcno) $(wildcard src/**/*.gcno) \
 
 test: 
-	$(MAKE) -j1 test-units test-memory test-tabs test-headers test-exports tests-additional
+	$(MAKE) -j1 test-units test-memory test-tabs test-headers test-exports test-static-analysis tests-additional
 	@echo "All tests passed for `./cflare --version`";
 
 test-exports:
@@ -62,6 +62,14 @@ test-tabs:
 test-memory:
 	@echo "testing for memory leaks..."; \
 	valgrind --leak-check=full --error-exitcode=1 ./cflare unit-test > /dev/null
+
+test-static-analysis:
+	@ if whatis cppcheck 1> /dev/null 2> /dev/null; then \
+		echo "performing static analysis..."; \
+		cppcheck --std=c11 --quiet --inconclusive --enable=all -I src/ src/; \
+	else \
+		echo "can't do static analysis: cppcheck not found."; \
+	fi;
 
 test-units:
 	@echo "performing unit tests..."; \
