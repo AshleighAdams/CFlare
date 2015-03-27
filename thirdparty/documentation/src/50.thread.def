@@ -55,5 +55,5 @@ Function: cflare_thread_running
 
 Function: cflare_thread_sleep
 	Arg(cflare_thread*, thread):
-	Arg(double64_t, seconds):
+	Arg(float64_t, seconds):
 	Info: Pause a thread for specified number of seconds.

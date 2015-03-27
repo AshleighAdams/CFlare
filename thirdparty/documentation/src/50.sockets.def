@@ -33,7 +33,7 @@ Function: cflare_socket_listen
 Function: cflare_socket_connect
 	Arg(const char*, host):
 	Arg(uint16_t, port):
-	Arg(double64_t, timeout):
+	Arg(float64_t, timeout):
 	Ret(cflare_socket*): A socket.  Null if the connection failed, along with `errno` being set.
 	Info::
 		Attempt to connect to `host`.
@@ -56,7 +56,7 @@ Function: cflare_listener_close
 	Info: Stop listening.
 Function: cflare_listener_timeout
 	Arg(cflare_listener*, listener):
-	Arg(double64_t, timeout):
+	Arg(float64_t, timeout):
 	Info: The timeout value used on any appropriate operations.
 
 Function: cflare_socket_delete
@@ -102,5 +102,5 @@ Function: cflare_socket_close
 	Info: Close the socket.
 Function: cflare_socket_timeout
 	Arg(cflare_socket*, socket):
-	Arg(double64_t, timeout):
+	Arg(float64_t, timeout):
 	Info: Set the timeout for all applicable operations.

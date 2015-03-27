@@ -60,7 +60,7 @@ Function: cflare_tointeger
 	Ret(bool): Returns whether or not parsing succeeded.
 
 Function: cflare_time
-	Ret(double64_t): A monotonic time that always grows.
+	Ret(float64_t): A monotonic time that always grows.
 
 Macro: cflare_string_concat
 	Arg(...): A list of null-terminated strings.

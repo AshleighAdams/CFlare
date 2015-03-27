@@ -26,8 +26,8 @@ Function: cflare_options_integer
 	Ret(int64_t):
 Function: cflare_options_number
 	Arg(const char*, name): Name of the option to get.
-	Arg(double64_t, fallback): The option to fall back to if none is found.
-	Ret(double64_t):
+	Arg(float64_t, fallback): The option to fall back to if none is found.
+	Ret(float64_t):
 Function: cflare_options_string
 	Arg(const char*, name): Name of the option to get.
 	Arg(const char*, fallback): The option to fall back to if none is found.
