@@ -154,15 +154,17 @@ else
 	table.insert(cflags, "-g")
 	
 	-- for testing coverage with gcovr -r src/
-	local p = io.popen(cc.." -v 2> /dev/stdout | grep 'gcc version'")
-	p:read("*a")
-	if p:close() then
-		table.insert(cflags, "-fprofile-arcs")
-		table.insert(cflags, "-ftest-coverage")
-		table.insert(additinal_tests, "test-coverage")
-		print("added profiling flags")
-	else
-		print("profiling flags not supported")
+	if find_arg("coverage") then
+		local p = io.popen(cc.." -v 2> /dev/stdout | grep 'gcc version'")
+		p:read("*a")
+		if p:close() then
+			table.insert(cflags, "-fprofile-arcs")
+			table.insert(cflags, "-ftest-coverage")
+			table.insert(additinal_tests, "test-coverage")
+			print("added profiling flags")
+		else
+			print("profiling flags not supported")
+		end
 	end
 end
 
