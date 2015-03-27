@@ -11,9 +11,9 @@
 #include <string.h>
 #include <assert.h>
 
-typedef float double32_t;
-typedef double double64_t;
-typedef long double double128_t;
+typedef float float32_t;
+typedef double float64_t;
+typedef long double float128_t;
 
 typedef void(cflare_deleter)(void* data, void* context);
 
@@ -24,9 +24,9 @@ CFLARE_API void cflare_warn_c(const char* str);
 CFLARE_API CFLARE_API_NORETURN void cflare_fatal_c(const char* str);
 
 CFLARE_API bool cflare_tointeger(const char* str, int64_t* out);
-CFLARE_API bool cflare_tonumber(const char* str, double64_t* out);
+CFLARE_API bool cflare_tonumber(const char* str, float64_t* out);
 
-CFLARE_API double64_t cflare_time();
+CFLARE_API float64_t cflare_time();
 
 CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 

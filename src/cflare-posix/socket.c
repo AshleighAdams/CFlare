@@ -19,7 +19,7 @@ typedef struct cflare_socket
 	bool connected;
 	char* ip;
 	int16_t port;
-	double64_t timeout;
+	float64_t timeout;
 } cflare_socket;
 
 typedef struct cflare_listener
@@ -46,7 +46,7 @@ static void set_blocking(int fd, bool block)
 	}
 }
 
-static void set_socket_timeout(int fd, double64_t timeout)
+static void set_socket_timeout(int fd, float64_t timeout)
 {
 	struct timeval to;
 	to.tv_sec = 0;
@@ -57,7 +57,7 @@ static void set_socket_timeout(int fd, double64_t timeout)
 	if(timeout > 0.0)
 	{
 		to.tv_sec = floor(timeout);
-		to.tv_usec = (timeout - (double64_t)to.tv_sec) * 1000.0 /*ms*/ * 1000.0 /*us*/;
+		to.tv_usec = (timeout - (float64_t)to.tv_sec) * 1000.0 /*ms*/ * 1000.0 /*us*/;
 	}
 	setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to));
 	setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to));
@@ -241,7 +241,7 @@ const char* cflare_listener_address(cflare_listener* listener)
 	return listener->addr;
 }
 
-void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
+void cflare_listener_timeout(cflare_listener* listener, float64_t timeout)
 {
 	set_socket_timeout(listener->fd, timeout);
 }
@@ -276,7 +276,7 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	return sock;
 }
 
-cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout)
+cflare_socket* cflare_socket_connect(const char* host, uint16_t port, float64_t timeout)
 {
 	struct addrinfo* resv = 0x0;
 	
@@ -412,8 +412,8 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 	size_t len = 0;
 	errno = 0;
 	bool gotnewline = false;
-	double64_t to = cflare_time() + socket->timeout;
-	double64_t timeout = socket->timeout;
+	float64_t to = cflare_time() + socket->timeout;
+	float64_t timeout = socket->timeout;
 	
 	while(!gotnewline)
 	{
@@ -514,7 +514,7 @@ void cflare_socket_flush(cflare_socket* socket)
 	setsockopt(socket->fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
 }
 
-void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
+void cflare_socket_timeout(cflare_socket* socket, float64_t timeout)
 {
 	 set_socket_timeout(socket->fd, timeout);
 	 socket->timeout = timeout;

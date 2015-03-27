@@ -71,7 +71,7 @@ bool cflare_thread_running(cflare_thread* thread)
 		return pthread_kill(thread->native, 0) == 0;
 }
 
-void cflare_thread_sleep(double64_t seconds)
+void cflare_thread_sleep(float64_t seconds)
 {
 	struct timespec t = {0, 0};
 	t.tv_sec = (time_t)seconds;

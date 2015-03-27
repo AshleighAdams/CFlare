@@ -134,7 +134,7 @@ int64_t cflare_options_integer(const char* name, int64_t fallback)
 	return ret;
 }
 
-double64_t cflare_options_number(const char* name, double64_t fallback)
+float64_t cflare_options_number(const char* name, float64_t fallback)
 {
 	const char* value;
 	size_t len;
@@ -145,7 +145,7 @@ double64_t cflare_options_number(const char* name, double64_t fallback)
 		return fallback;
 	}
 	
-	double64_t ret;
+	float64_t ret;
 	
 	if(!cflare_tonumber(value, &ret))
 		return fallback;

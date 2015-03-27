@@ -23,10 +23,10 @@ CFLARE_API void cflare_listener_delete(cflare_listener* listener);
 CFLARE_API cflare_socket* cflare_listener_accept(cflare_listener* listener);
 CFLARE_API uint16_t cflare_listener_port(cflare_listener* listener);
 CFLARE_API const char* cflare_listener_address(cflare_listener* listener);
-CFLARE_API void cflare_listener_timeout(cflare_listener* listener, double64_t timeout);
+CFLARE_API void cflare_listener_timeout(cflare_listener* listener, float64_t timeout);
 CFLARE_API void cflare_listener_close(cflare_listener* listener);
 
-CFLARE_API cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout);
+CFLARE_API cflare_socket* cflare_socket_connect(const char* host, uint16_t port, float64_t timeout);
 CFLARE_API void cflare_socket_delete(cflare_socket* socket);
 
 CFLARE_API const char* cflare_socket_ip(cflare_socket* socket);
@@ -44,7 +44,7 @@ CFLARE_API bool cflare_socket_write_line(cflare_socket* socket, const char* buff
 CFLARE_API bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read_length);
 
 CFLARE_API void cflare_socket_flush(cflare_socket* socket);
-CFLARE_API void cflare_socket_timeout(cflare_socket* socket, double64_t timeout);
+CFLARE_API void cflare_socket_timeout(cflare_socket* socket, float64_t timeout);
 CFLARE_API void cflare_socket_close(cflare_socket* socket);
 
 #endif /* CFLARE_SOCKET_H */

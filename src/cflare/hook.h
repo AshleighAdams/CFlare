@@ -25,7 +25,7 @@ typedef bool(cflare_hookfunction)(const cflare_hookstack*, cflare_hookstack*,
 
 CFLARE_API void cflare_hook_load();
 CFLARE_API void cflare_hook_unload();
-CFLARE_API void cflare_hook_add(const char* name, const char* id, double64_t priority,
+CFLARE_API void cflare_hook_add(const char* name, const char* id, float64_t priority,
 	cflare_hookfunction* func, void* context);
 CFLARE_API void cflare_hook_remove(const char* name, const char* id);
 CFLARE_API bool cflare_hook_call(const char* name, const cflare_hookstack* args,
@@ -38,9 +38,9 @@ CFLARE_API void cflare_hookstack_push_integer(cflare_hookstack* stack, int64_t v
 CFLARE_API bool cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t index,
 	int64_t* out);
 
-CFLARE_API void cflare_hookstack_push_number(cflare_hookstack* stack, double64_t value);
+CFLARE_API void cflare_hookstack_push_number(cflare_hookstack* stack, float64_t value);
 CFLARE_API bool cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index,
-	double64_t* out);
+	float64_t* out);
 
 CFLARE_API void cflare_hookstack_push_string(cflare_hookstack* stack, const char* value);
 CFLARE_API bool cflare_hookstack_get_string(const cflare_hookstack* stack, int32_t index,

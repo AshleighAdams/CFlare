@@ -16,7 +16,7 @@ CFLARE_API void cflare_thread_detach(cflare_thread* thread);
 CFLARE_API size_t cflare_thread_id(cflare_thread* thread);
 CFLARE_API bool cflare_thread_running(cflare_thread* thread);
 
-CFLARE_API void cflare_thread_sleep(double64_t seconds);
+CFLARE_API void cflare_thread_sleep(float64_t seconds);
 
 #endif /* CFLARE_THREAD_H */
 

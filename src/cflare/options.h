@@ -24,7 +24,7 @@ CFLARE_API void cflare_options_unload();
 
 CFLARE_API bool cflare_options_boolean(const char* name, bool fallback);
 CFLARE_API int64_t cflare_options_integer(const char* name, int64_t fallback);
-CFLARE_API double64_t cflare_options_number(const char* name, double64_t fallback);
+CFLARE_API float64_t cflare_options_number(const char* name, float64_t fallback);
 CFLARE_API const char* cflare_options_string(const char* name, const char* fallback);
 
 CFLARE_API size_t cflare_options_argument_count();

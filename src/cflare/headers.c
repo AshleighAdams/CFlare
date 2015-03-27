@@ -23,7 +23,7 @@ typedef struct loaded_header
 {
 	int32_t id;
 	char name[max_header_length + 1];
-	double64_t last_used;
+	float64_t last_used;
 	bool on_disk;
 } loaded_header;
 

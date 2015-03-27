@@ -7,7 +7,7 @@
 typedef struct hook
 {
 	char* id;
-	double32_t priority;
+	float32_t priority;
 	void* context;
 	cflare_hookfunction* func;
 } hook;
@@ -17,7 +17,7 @@ typedef struct cflare_hookstack_elm
 	cflare_hookstack_type type;
 	union {
 		int64_t integer;
-		double64_t number;
+		float64_t number;
 		char* string;
 		void* pointer;
 		size_t handle;
@@ -74,7 +74,7 @@ void cflare_hook_unload()
 	cflare_hashtable_delete(hook_tables);
 }
 
-void cflare_hook_add(const char* name, const char* id, double64_t priority,
+void cflare_hook_add(const char* name, const char* id, float64_t priority,
 	cflare_hookfunction* func, void* context)
 {
 	if(!hook_loaded)
@@ -278,7 +278,7 @@ bool cflare_hookstack_get_integer(const cflare_hookstack* stack, int32_t index,
 }
 
 
-void cflare_hookstack_push_number(cflare_hookstack* stack, double64_t value)
+void cflare_hookstack_push_number(cflare_hookstack* stack, float64_t value)
 {
 	if(!stack)
 		return;
@@ -292,7 +292,7 @@ void cflare_hookstack_push_number(cflare_hookstack* stack, double64_t value)
 	elm->deleter_context = 0;
 }
 bool cflare_hookstack_get_number(const cflare_hookstack* stack, int32_t index,
-	double64_t* out)
+	float64_t* out)
 {
 	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_NUMBER);
 	if(!elm)

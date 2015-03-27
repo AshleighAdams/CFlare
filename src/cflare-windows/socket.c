@@ -40,7 +40,7 @@ void cflare_listener_close(cflare_listener* listener)
 }
 
 
-cflare_socket* cflare_socket_connect(const char* host, uint16_t port, double64_t timeout)
+cflare_socket* cflare_socket_connect(const char* host, uint16_t port, float64_t timeout)
 {
 	cflare_notimp();
 	return 0x0;
@@ -103,12 +103,12 @@ void cflare_socket_close(cflare_socket* socket)
 	cflare_notimp();
 }
 
-void cflare_socket_timeout(cflare_socket* socket, double64_t timeout)
+void cflare_socket_timeout(cflare_socket* socket, float64_t timeout)
 {
 	cflare_notimp();
 }
 
-void cflare_listener_timeout(cflare_listener* listener, double64_t timeout)
+void cflare_listener_timeout(cflare_listener* listener, float64_t timeout)
 {
 	cflare_notimp();
 }
