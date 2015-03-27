@@ -66,7 +66,7 @@ test-memory:
 test-static-analysis:
 	@ if whatis cppcheck 1> /dev/null 2> /dev/null; then \
 		echo "performing static analysis..."; \
-		cppcheck --std=c11 --quiet --inconclusive --enable=all -I src/ src/; \
+		cppcheck --std=c11 --quiet --inconclusive --enable=all -I src/ src/ || true; \
 	else \
 		echo "can't do static analysis: cppcheck not found."; \
 	fi;
