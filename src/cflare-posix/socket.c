@@ -500,6 +500,11 @@ bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t 
 	}
 	// should we error if a \n is in the buffer?
 	
+	#ifndef MSG_MORE
+	// Cygwin's doesn't have this flag, it's not vital either...
+	#define MSG_MORE 0
+	#endif
+	
 	char newline = {'\n'};
 	send(socket->fd, buffer, buffer_length, MSG_MORE);
 	send(socket->fd, &newline, sizeof(newline), 0);
