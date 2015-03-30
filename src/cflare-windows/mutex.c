@@ -64,7 +64,10 @@ static void realloc_locks(size_t newsize)
 	size_t oldsize = infos_len;
 	size_t newcount = newsize - infos_len;
 
-	infos = realloc(infos, sizeof(lockinfo) * newsize);
+	void* new_infos = realloc(infos, sizeof(lockinfo) * newsize);
+	assert(new_infos);
+	infos = new_infos;
+	
 	infos_len = newsize;
 	infos_free += newcount; // keep track of how many are free
 
