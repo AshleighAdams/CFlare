@@ -263,6 +263,22 @@ do
 	table.insert(config, "# platform specific")
 	
 	local platform_sources = {
+		["cflare/util.h"] = {
+			{
+				name = "posix",
+				src = { "cflare-posix/util.c" },
+				platforms = {
+					posix4 = 1
+				}
+			},
+			{
+				name = "win32",
+				src = { "cflare-windows/util.c" },
+				platforms = {
+					windows_nt = 0.75
+				}
+			}
+		},
 		["cflare/filesystem.h"] = {
 			{
 				name = "dirent",

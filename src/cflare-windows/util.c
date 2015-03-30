@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
+
+#include <windows.h>
 
 #ifdef CFLARE_ASPRINTF_NEEDS_IMPLIMENT_WINDOWS
 int vasprintf(char** strp, const char* format, va_list ap)
@@ -43,3 +46,21 @@ int asprintf(char** strp, const char* format, ...)
 	return count;
 }
 #endif
+
+static LARGE_INTEGER freq, start;
+static bool time_first = true;
+
+float64_t cflare_time()
+{
+	LARGE_INTEGER count;
+	if(!QueryPerformanceCounter(&count))
+		cflare_fatal("QueryPerformanceCounter");
+	if(time_first)
+	{
+		time_first = false;
+		if (!QueryPerformanceFrequency(&freq))
+			cflare_fatal("QueryPerformanceFrequency");
+		start = count;
+	}
+	return (float64_t)(count.QuadPart - start.QuadPart) / freq.QuadPart;
+}
