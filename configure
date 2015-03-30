@@ -270,6 +270,13 @@ do
 				platforms = {
 					posix2 = 1
 				}
+			},
+			{
+				name = "win32",
+				src = { "cflare-windows/filesystem.c" },
+				platforms = {
+					windows_nt = 0.75
+				}
 			}
 		},
 		["cflare/mutex.h"] = {
