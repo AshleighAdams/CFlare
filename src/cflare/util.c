@@ -132,13 +132,17 @@ bool cflare_tonumber(const char* str, float64_t* out)
 #include <time.h>
 float64_t cflare_time()
 {
-	struct timespec ts;
-	#ifdef CLOCK_MONOTONIC
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	#else
-	timespec_get(&ts, TIME_UTC);
-	#endif
-	return (float64_t)ts.tv_sec + (float64_t)ts.tv_nsec / 1000.0 / 1000.0 / 1000.0;
+#	ifdef TIME_UTC
+		struct timespec ts;
+#		ifdef CLOCK_MONOTONIC
+		clock_gettime(CLOCK_MONOTONIC, &ts);
+#		else
+		timespec_get(&ts, TIME_UTC);
+#		endif
+		return (float64_t)ts.tv_sec + (float64_t)ts.tv_nsec / 1000.0 / 1000.0 / 1000.0;
+#	else
+	cflare_notimp();
+#	endif
 }
 
 char* cflare_string_concat_n_c(size_t count, size_t* length, ...)

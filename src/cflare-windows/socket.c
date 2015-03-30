@@ -2,10 +2,12 @@
 
 typedef struct cflare_socket
 {
+	char empty; // so it compiles
 } cflare_socket;
 
 typedef struct cflare_listener
 {
+	char empty; // so it compiles
 } cflare_listener;
 
 cflare_listener* cflare_socket_listen(const char* addr, uint16_t port)
