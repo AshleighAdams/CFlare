@@ -3,28 +3,41 @@
 
 #include <time.h>
 
+#define SUB_TIMESPEC(_A_, _B_, _R_) \
+	do \
+	{ \
+		_R_.tv_sec = _A_.tv_sec - _B_.tv_sec; \
+		_R_.tv_nsec = _A_.tv_nsec - _B_.tv_nsec; \
+		if (_R_.tv_nsec < 0) \
+		{ \
+			_R_.tv_sec  -= 1; \
+			_R_.tv_nsec += 1000 * 1000 * 1000; \
+		} \
+	} while (0)
+
+#if defined(CLOCK_MONOTONIC) // try the posix one first, as it has monotonic time
+	#define FILL_TIMESPEC(_SPEC_) clock_gettime(CLOCK_MONOTONIC, _SPEC_)
+#elif defined(TIME_UTC) // then try the ISO C one
+	#define FILL_TIMESPEC(_SPEC_) timespec_get(_SPEC_, TIME_UTC)
+#else // one doesn't exist, make a dummy struct, and ensure it notimp()s
+	struct timespec { long int tv_sec, tv_usec; };
+	#define FILL_TIMESPEC(_SPEC_) cflare_notimp()
+#endif
+
+struct timespec start;
 bool first = true;
-float64_t start_time = -1;
 
 float64_t cflare_time()
 {
-#	ifdef TIME_UTC
-		struct timespec ts;
-#		ifdef CLOCK_MONOTONIC
-			clock_gettime(CLOCK_MONOTONIC, &ts);
-#		else
-			timespec_get(&ts, TIME_UTC);
-#		endif
-		
-		float64_t t = (float64_t)ts.tv_sec + (float64_t)ts.tv_nsec / 1000.0 / 1000.0 / 1000.0;
 		if(first)
 		{
 			first = false;
-			start_time = t;
+			FILL_TIMESPEC(&start);
 		}
-		return t - start_time;
-#	else
-		cflare_notimp();
-		return -1;
-#	endif
+		
+		struct timespec ts;
+		FILL_TIMESPEC(&ts);
+		SUB_TIMESPEC(ts, start, ts);
+		
+		return (float64_t)ts.tv_sec + (float64_t)ts.tv_nsec / 1000.0 / 1000.0 / 1000.0;
 }
