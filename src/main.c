@@ -12,6 +12,7 @@
 #include <cflare/filesystem.h>
 
 #include <cflare/socket.h>
+#include <cflare/request.h>
 
 #include <errno.h>
 
@@ -87,14 +88,24 @@ int main(int argc, char** argv)
 				cflare_socket_delete(sock);
 			}
 			
+			cflare_request* req = cflare_request_new();
+			
 			cflare_listener* listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025);
 			assert(listener);
 			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
+			char response[] = "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: text/plain\nConnection: keep-alive\n\nHello, world!";
 			
-			sock = cflare_listener_accept(listener);
-				assert(sock);
-				cflare_log("client: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
+			while(true)
+			{
+				sock = cflare_listener_accept(listener);
+					assert(sock);
+					cflare_socket_timeout(sock, 5);
+					cflare_log("client: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
+					cflare_request_process_socket(req, sock);
+				cflare_socket_delete(sock);
+			}
 			cflare_listener_delete(listener);
+			cflare_request_delete(req);
 		}
 		
 		/*{
