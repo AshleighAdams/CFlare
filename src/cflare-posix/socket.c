@@ -267,6 +267,10 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	// attempt to do some default socket options
 	set_socket_timeout(fd, -1); // block forever by default
 	
+	int so_keepalive = 1;
+	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &so_keepalive, sizeof(so_keepalive)) < 0)
+		cflare_warn("socket: failed to enable heartbeat for %s: %s", ip, strerror(errno));
+	
 	cflare_socket* sock = malloc(sizeof(cflare_socket));
 	sock->fd = fd;
 	sock->ip = strdup(ip);
@@ -367,9 +371,20 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 		errno = ENOTCONN;
 		return false;
 	}
+	
+	// what should be done if we have a buffer_length of 0?
+	assert(buffer_length > 0);
+	
 	ssize_t read_count = recv(socket->fd, buffer, buffer_length, 0);
 	
-	if(read_count < 0)
+	if(read_count == 0)
+	{
+		errno = ECONNRESET;
+		socket->connected = false;
+		if(read) *read = 0;
+		return false;
+	}
+	else if(read_count < 0)
 	{
 		// these 2 just mean a timeout
 		if(errno != EAGAIN && errno != EWOULDBLOCK)
@@ -379,7 +394,7 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 		return false;
 	}
 	
-	*read = read_count;
+	if(read) *read = read_count;
 	return true;
 }
 
@@ -422,7 +437,13 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 		#endif
 		ssize_t got = recv(socket->fd, ptr, MIN(buffer_length, chunksize), MSG_PEEK | MSG_DONTWAIT);
 		
-		if(got < 0)
+		if(got == 0)
+		{
+			errno = ECONNRESET;
+			socket->connected = false;
+			break;
+		}
+		else if(got < 0)
 		{
 			if(errno == EAGAIN || errno == EWOULDBLOCK)
 			{
