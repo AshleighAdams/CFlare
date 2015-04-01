@@ -408,7 +408,15 @@ bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t bu
 	}
 	
 	// todo track this
-	send(socket->fd, buffer, buffer_length, 0);
+	// use MSG_NOSIGNAL to prevent us from being terminated in the event the remote end hangs up
+	int error = send(socket->fd, buffer, buffer_length, MSG_NOSIGNAL);
+	if(error < 0 && (error != EAGAIN && error != EWOULDBLOCK))
+	{
+		cflare_warn("write: send: %s", strerror(errno));
+		socket->connected = false;
+		return false;
+	}
+	
 	return true;
 }
 
@@ -527,9 +535,22 @@ bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t 
 	#endif
 	
 	char newline = {'\n'};
-	send(socket->fd, buffer, buffer_length, MSG_MORE);
-	send(socket->fd, &newline, sizeof(newline), 0);
-	return true;
+	int error;
+	error = send(socket->fd, buffer, buffer_length, MSG_MORE | MSG_NOSIGNAL);
+	if(error < 0 && (error != EAGAIN && error != EWOULDBLOCK))
+	{
+		cflare_warn("write_line: 1: send: %s", strerror(errno));
+		socket->connected = false;
+	}
+	
+	error = send(socket->fd, &newline, sizeof(newline), MSG_NOSIGNAL);
+	if(error < 0 && (error != EAGAIN && error != EWOULDBLOCK))
+	{
+		cflare_warn("write_line: 2: send: %s", strerror(errno));
+		socket->connected = false;
+	}
+	
+	return socket->connected;
 }
 
 void cflare_socket_flush(cflare_socket* socket)
@@ -546,11 +567,47 @@ void cflare_socket_timeout(cflare_socket* socket, float64_t timeout)
 	 socket->timeout = timeout;
 }
 
+void cflare_socket_disconnect(cflare_socket* socket)
+{
+	if(!socket->connected)
+		return;
+	socket->connected = false;
+	
+	int error = shutdown(socket->fd, /*SHUT_RDWR*/SHUT_WR);
+	if(error == -1)
+	{
+		cflare_warn("disconnect: shutdown: %s", strerror(errno));
+	}
+	
+	char buff[1024];
+	ssize_t read = recv(socket->fd, buff, sizeof(buff), 0);
+	
+	if(read < 0)
+		cflare_warn("disconnect: read: %s", strerror(errno));
+	/*
+	while(true)
+	{
+		read = recv(socket->fd, buff, sizeof(buff), 0);
+		cflare_debug("disconnect: read: %i errno: (%s) %i ", (int)read, strerror(errno), errno);
+		
+		if(read <= 0)
+			break;
+		if(timeout == -1)
+			continue;
+		else if(timeout == 0)
+			break;
+		else if(cflare_time() > to)
+			break;
+	}
+	*/
+}
+
 void cflare_socket_close(cflare_socket* socket)
 {
-	if(socket->connected)
+	if(socket->fd < 0)
 		return;
+	
 	close(socket->fd);
-	socket->connected = false;
 	socket->fd = -1;
+	socket->connected = false;
 }

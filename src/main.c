@@ -16,6 +16,7 @@
 
 #include <errno.h>
 
+/*
 static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
 {
 	cflare_debug("Inside Unload hook! args: %p; rets: %p", (void*)args, (void*)rets);
@@ -23,6 +24,7 @@ static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, vo
 	cflare_hookstack_push_number(rets, 1337);
 	return 0;
 }
+*/
 
 int main(int argc, char** argv)
 {
@@ -41,13 +43,14 @@ int main(int argc, char** argv)
 	}
 	else
 	{
+		/*
 		cflare_hook_add("Unload", "unload test", 0, &unload_test, 0);
 	
 		cflare_handle hd = cflare_handle_new("test", 0, 0, 0);
 		printf("hd = %zu\n", hd);
 		cflare_handle_unreference(hd);
-	
-		{
+		*/
+		/*{
 			cflare_hookstack* args = cflare_hookstack_new();
 			cflare_hookstack* rets = cflare_hookstack_new();
 				cflare_hook_call("Unload", args, rets);
@@ -58,10 +61,11 @@ int main(int argc, char** argv)
 					cflare_debug("Unload: return 0: (nil)");
 			cflare_hookstack_delete(args);
 			cflare_hookstack_delete(rets);
-		}
+		}*/
 		
 		{ // socket test
 			cflare_socket* sock;
+			/*
 			if(!(sock = cflare_socket_connect("kateadams.eu", 80, CFLARE_SOCKET_TIMEOUT_FOREVER)))
 				cflare_log("failed to connect: %s", strerror(errno));
 			else
@@ -87,21 +91,23 @@ int main(int argc, char** argv)
 				
 				cflare_socket_delete(sock);
 			}
+			*/
 			
 			cflare_request* req = cflare_request_new();
 			
 			cflare_listener* listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025);
 			assert(listener);
 			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
-			char response[] = "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: text/plain\nConnection: keep-alive\n\nHello, world!";
 			
 			while(true)
 			{
 				sock = cflare_listener_accept(listener);
 					assert(sock);
-					cflare_socket_timeout(sock, 5);
-					cflare_log("client: %s %hu", cflare_socket_ip(sock), cflare_socket_port(sock));
-					cflare_request_process_socket(req, sock);
+					//cflare_socket_timeout(sock, 5);
+					
+					while(cflare_request_process_socket(req, sock))
+						;
+					
 				cflare_socket_delete(sock);
 			}
 			cflare_listener_delete(listener);
