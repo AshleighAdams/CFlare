@@ -10,10 +10,32 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
 
 typedef float float32_t;
 typedef double float64_t;
 typedef long double float128_t;
+
+#define FMT_BOOL     "i" // will be promoted to an int
+#define FMT_CHAR     "c"
+#define FMT_UCHAR    "hhu"
+#define FMT_INT      "i"
+#define FMT_UINT     "u"
+#define FMT_INT8     PRIi8
+#define FMT_UINT8    PRIu8
+#define FMT_INT16    PRIi16
+#define FMT_UINT16   PRIu16
+#define FMT_INT32    PRIi32
+#define FMT_UINT32   PRIu32
+#define FMT_INT64    PRIi64
+#define FMT_UINT64   PRIu64
+#define FMT_FLOAT32  "f"
+#define FMT_FLOAT64  "lf"
+#define FMT_FLOAT128 "llf"
+#define FMT_STRING   "s"
+#define FMT_SIZE     "zu"
+#define FMT_SSIZE    "zi"
+#define FMT_PTR      "p"
 
 typedef void(cflare_deleter)(void* data, void* context);
 
