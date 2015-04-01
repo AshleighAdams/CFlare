@@ -64,3 +64,15 @@ float64_t cflare_time()
 	}
 	return (float64_t)(count.QuadPart - start.QuadPart) / freq.QuadPart;
 }
+
+char* cflare_format(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	
+	char* ret;
+	vasprintf(&ret, fmt, args);
+	
+	va_end(args);
+	return ret;
+}

@@ -1,6 +1,7 @@
 
 #include <cflare/util.h>
 
+#include <stdarg.h>
 #include <time.h>
 
 #define SUB_TIMESPEC(_A_, _B_, _R_) \
@@ -40,4 +41,17 @@ float64_t cflare_time()
 		SUB_TIMESPEC(ts, start, ts);
 		
 		return (float64_t)ts.tv_sec + (float64_t)ts.tv_nsec / 1000.0 / 1000.0 / 1000.0;
+}
+
+
+char* cflare_format(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	
+	char* ret;
+	vasprintf(&ret, fmt, args);
+	
+	va_end(args);
+	return ret;
 }
