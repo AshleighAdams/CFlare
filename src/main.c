@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 			{
 				sock = cflare_listener_accept(listener);
 					assert(sock);
-					//cflare_socket_timeout(sock, 5);
+					cflare_socket_timeout(sock, 5);
 					
 					while(cflare_request_process_socket(req, sock))
 						;

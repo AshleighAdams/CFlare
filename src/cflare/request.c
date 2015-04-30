@@ -3,6 +3,7 @@
 #include "cflare/headers.h"
 #include "cflare/httpstatus.h"
 #include "cflare/util.h"
+#include "cflare/url.h"
 
 #ifndef CFLARE_REQUEST_MAX_LENGTH
 #define CFLARE_REQUEST_MAX_LENGTH 4096
@@ -19,8 +20,11 @@ typedef struct cflare_request
 	
 	char* buffer_position;
 	char* method;
+	size_t method_len;
 	char* path;
+	size_t path_len;
 	char* query;
+	size_t query_len;
 	
 	float64_t version;
 	float64_t time_start, time_start_parse, time_start_postparse;
@@ -79,6 +83,11 @@ static inline ssize_t first_of(const char* ptr, size_t len, char value)
 	return -1;
 }
 
+static void print_query_param(const char* key, size_t keylen, const char* value, size_t valuelen, void* context)
+{
+	cflare_log("%s = %s", key, value);
+}
+
 bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 {
 	req->socket = socket;
@@ -108,8 +117,9 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 			quick_response_socket(socket, 400, "request line invalid (method)", false);
 			return false;
 		}
-		else
-			req->method[pos] = '\0';
+		
+		req->method[pos] = '\0';
+		req->method_len = pos;
 		
 		pos++;
 		req->buffer_freespace -= pos;
@@ -125,16 +135,26 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 			quick_response_socket(socket, 400, "request line invalid (path)", false);
 			return false;
 		}
-		else
-			req->path[pos] = '\0';
+		
+		req->path[pos] = '\0';
+		req->path_len = pos;
 		
 		ssize_t query_pos = first_of(req->path, read, '?');
 		if(query_pos < 0)
+		{
 			req->query = 0x0;
+			req->query_len = 0;
+		}
 		else
 		{
 			req->path[query_pos] = '\0';
 			req->query = req->path + query_pos + 1;
+			
+			req->path_len = query_pos;
+			req->query_len = pos - query_pos - 1 /*- 1 = ?*/;
+			
+			cflare_debug("p = %s q = %s %"FMT_SIZE" %"FMT_SIZE,
+					req->path, req->query, req->query_len, req->path_len);
 		}
 		
 		pos++;
@@ -248,6 +268,8 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	
 	cflare_debug("request parsed in %lfms", (req->time_start_postparse - req->time_start_parse) * 1000.0);
 	*/
+	
+	cflare_url_parse_query(req->query, req->query_len, &print_query_param, 0x0);
 	
 	bool keep_alive = false;
 	quick_response_socket(socket, 200, "all is good", keep_alive);
