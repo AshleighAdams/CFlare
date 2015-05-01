@@ -19,8 +19,8 @@
 	#endif
 #endif
 
-#ifndef __func__
-#define __func__ __FUNCTION__
+#ifdef _MSC_VER
+	#define __func__ __FUNCTION__
 #endif
 
 CFLARE_API size_t cflare_version_major();
