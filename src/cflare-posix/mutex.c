@@ -21,6 +21,12 @@ typedef struct cflare_rwmutex
 	pthread_rwlock_t* mutex;
 } cflare_rwmutex;
 
+typedef struct cflare_condition
+{
+	pthread_cond_t* condition;
+} cflare_condition;
+
+
 cflare_mutex* cflare_mutex_new(cflare_mutex_type type)
 {
 	cflare_mutex* mutex = malloc(sizeof(cflare_mutex));
@@ -106,4 +112,37 @@ void cflare_rwmutex_write_unlock(cflare_rwmutex* mtx)
 	pthread_rwlock_unlock(mtx->mutex);
 }
 
+// conditional veriables
 
+cflare_condition* cflare_condition_new()
+{
+	cflare_condition* ret = malloc(sizeof(cflare_condition));
+	
+	{ // setup the condition
+		ret->condition = malloc(sizeof(pthread_cond_t));
+		
+		pthread_condattr_t attr;
+		pthread_condattr_init(&attr);
+			assert(pthread_cond_init(ret->condition, &attr) == 0);
+		pthread_condattr_destroy(&attr);
+	}
+	
+	return ret;
+}
+
+void cflare_condition_delete(cflare_condition* cond)
+{
+	pthread_cond_destroy(cond->condition);
+	free(cond->condition);
+	free(cond);
+}
+
+void cflare_condition_wait(cflare_condition* cond, cflare_mutex* mtx)
+{
+	pthread_cond_wait(cond->condition, mtx->mutex);
+}
+
+void cflare_condition_signal(cflare_condition* cond, cflare_mutex* mtx)
+{
+	pthread_cond_signal(cond->condition);
+}
