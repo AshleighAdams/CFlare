@@ -13,8 +13,11 @@
 
 #include <cflare/socket.h>
 #include <cflare/request.h>
+#include <cflare/thread.h>
+#include <cflare/mutex.h>
 
 #include <errno.h>
+#include <signal.h>
 
 /*
 static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, void* context)
@@ -26,8 +29,144 @@ static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, vo
 }
 */
 
+typedef struct thread_data
+{
+	size_t id;
+	bool running;
+	cflare_socket* socket;
+	cflare_thread* thread;
+	
+	cflare_condition* wait_cond;
+	cflare_mutex* wait_mutex;
+} thread_data;
+thread_data* thread_datas;
+
+
+static void* worker_thread(void* context)
+{
+	thread_data* td = context;
+	cflare_request* req = cflare_request_new();
+	
+	while(td->running)
+	{
+		cflare_mutex_lock(td->wait_mutex);
+			while(td->socket == 0x0)
+			{
+				if(td->running)
+					cflare_condition_wait(td->wait_cond, td->wait_mutex);
+				else
+				{
+					cflare_mutex_unlock(td->wait_mutex);
+					goto end_root_while;
+				}
+			}
+		cflare_mutex_unlock(td->wait_mutex);
+		
+		cflare_socket* sock = td->socket;
+		cflare_socket_timeout(sock, 60);
+	
+		while(cflare_socket_connected(sock))
+			cflare_request_process_socket(req, sock);
+	
+		cflare_socket_delete(sock);
+		td->socket = 0x0;
+	} end_root_while:
+	
+	cflare_request_delete(req);
+	
+	return 0x0;
+}
+
+static cflare_listener* listener;
+
+static void main_listen_thread()
+{
+	// setup the threads
+	size_t threads = 100;
+	
+	thread_datas = malloc(sizeof(thread_data) * threads);
+	
+	for(size_t tid = 0; tid < threads; tid++)
+	{
+		thread_data* data = thread_datas + tid;
+		data->running = true;
+		data->id = tid;
+		data->socket = 0x0;
+		data->wait_cond = cflare_condition_new();
+		data->wait_mutex = cflare_mutex_new(CFLARE_MUTEX_PLAIN);
+		data->thread = cflare_thread_new(&worker_thread, data);
+	}
+	
+	listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025);
+	
+	size_t current_thread = 0;
+	
+	while(true)
+	{
+		size_t tries = 0;
+		while((thread_datas + current_thread)->socket != 0)
+		{
+			current_thread = (current_thread + 1) % threads;
+			tries++;
+			
+			if(tries > threads)
+			{
+				tries = 0;
+				cflare_thread_sleep(0.01);
+			}
+		}
+		
+		cflare_socket* sock = cflare_listener_accept(listener);
+		if(!sock)
+			break;
+		
+		thread_data* td = thread_datas + current_thread;
+		cflare_mutex_lock(td->wait_mutex);
+			td->socket = sock;
+			cflare_condition_signal(td->wait_cond, td->wait_mutex);
+		cflare_mutex_unlock(td->wait_mutex);
+	}
+	
+	cflare_listener_delete(listener);
+	
+	for(size_t tid = 0; tid < threads; tid++)
+	{
+		thread_data* data = thread_datas + tid;
+		
+		data->running = false;
+		cflare_thread_join(data->thread);
+		
+		cflare_thread_delete(data->thread);
+		cflare_mutex_delete(data->wait_mutex);
+		cflare_condition_delete(data->wait_cond);
+	}
+	free(thread_datas);
+}
+
+static void on_signal(int sig)
+{
+	if(sig == SIGINT)
+	{
+		if(listener)
+		{
+			cflare_log("received SIGINT, no longer listening...");
+			cflare_listener_close(listener);
+			//listening = false;
+			// FIXME: interupt and exit better than this...
+			exit(0);
+		}
+		else
+		{
+			cflare_fatal("unknown how to handle signal");
+		}
+	}
+}
+
 int main(int argc, char** argv)
 {
+	if(signal(SIGINT, on_signal) == SIG_ERR)
+		cflare_warn("couldn't install SIGINT handler");
+	
 	cflare_load(argc, argv);
 	cflare_hook_call("Load", 0, 0);
 	
@@ -40,6 +179,10 @@ int main(int argc, char** argv)
 	else if(cflare_options_argument(0) && strcmp(cflare_options_argument(0), "unit-test") == 0)
 	{
 		result = unit_test();
+	}
+	else if(cflare_options_argument(0) && strcmp(cflare_options_argument(0), "listen") == 0)
+	{
+		main_listen_thread();
 	}
 	else
 	{
@@ -64,7 +207,6 @@ int main(int argc, char** argv)
 		}*/
 		
 		{ // socket test
-			cflare_socket* sock;
 			/*
 			if(!(sock = cflare_socket_connect("kateadams.eu", 80, CFLARE_SOCKET_TIMEOUT_FOREVER)))
 				cflare_log("failed to connect: %s", strerror(errno));
@@ -93,25 +235,6 @@ int main(int argc, char** argv)
 			}
 			*/
 			
-			cflare_request* req = cflare_request_new();
-			
-			cflare_listener* listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025);
-			assert(listener);
-			cflare_log("listener: %s %hu", cflare_listener_address(listener), cflare_listener_port(listener));
-			
-			while(true)
-			{
-				sock = cflare_listener_accept(listener);
-					assert(sock);
-					cflare_socket_timeout(sock, 5);
-					
-					while(cflare_request_process_socket(req, sock))
-						;
-					
-				cflare_socket_delete(sock);
-			}
-			cflare_listener_delete(listener);
-			cflare_request_delete(req);
 		}
 		
 		/*{
