@@ -1,4 +1,5 @@
 #include "cflare/socket.h"
+#include "cflare/coroutine.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -13,13 +14,16 @@
 #include <math.h>
 #include <errno.h>
 
+
+#include <lthread.h>
+
 typedef struct cflare_socket
 {
 	int fd;
 	bool connected;
 	char* ip;
 	int16_t port;
-	float64_t timeout;
+	uint64_t timeout;
 } cflare_socket;
 
 typedef struct cflare_listener
@@ -28,6 +32,7 @@ typedef struct cflare_listener
 	bool listening;
 	char* addr;
 	int16_t port;
+	uint64_t timeout;
 } cflare_listener;
 
 static void set_blocking(int fd, bool block)
@@ -62,6 +67,7 @@ static void set_socket_timeout(int fd, float64_t timeout)
 	setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to));
 	setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to));
 }
+
 
 static int gaierr_to_errno(int error)
 {
@@ -98,7 +104,7 @@ static int gaierr_to_errno(int error)
 	}
 }
 
-cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
+cflare_listener* cflare_socket_listen(const char* address, uint16_t port, uint64_t opts)
 {
 	struct addrinfo* resv = 0x0;
 	
@@ -133,14 +139,23 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 	
 	for(struct addrinfo* info = resv; info != 0; info = info->ai_next)
 	{
-		if((fd = socket(info->ai_family, info->ai_socktype, 0)) < 0)
+		if((fd = lthread_socket(info->ai_family, info->ai_socktype, 0)) < 0)
 			continue;
 		
-		setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &so_reuseaddr, sizeof(so_reuseaddr));
+		
+		if(opts & CFLARE_SOCKET_OPT_REUSEADDR)
+			setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &so_reuseaddr, sizeof(so_reuseaddr));
+		if(opts & CFLARE_SOCKET_OPT_REUSEPORT)
+		#ifndef SO_REUSEPORT // this is a new feature, might not be in older kernels
+			cflare_warn("socket option: SO_REUSEPORT not supported");
+		#else
+			setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &so_reuseaddr, sizeof(so_reuseaddr));
+		#endif
+		
 		if(bind(fd, info->ai_addr, info->ai_addrlen) != 0)
 		{
 			cflare_warn("listen(): bind: %s", strerror(errno));
-			close(fd);
+			lthread_close(fd);
 			continue;
 		}
 		
@@ -164,7 +179,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 			errno = gaierr_to_errno(error);
 			int _errno = errno;
 			freeaddrinfo(resv);
-			close(fd);
+			lthread_close(fd);
 			errno = _errno;
 			return 0x0;
 		}
@@ -179,7 +194,7 @@ cflare_listener* cflare_socket_listen(const char* address, uint16_t port)
 		{
 			cflare_warn("listen(): listen: %s", strerror(errno));
 			int _errno = errno;
-			close(fd);
+			lthread_close(fd);
 			errno = _errno;
 			return 0x0;
 		}
@@ -209,7 +224,7 @@ cflare_socket* cflare_listener_accept(cflare_listener* listener)
 	
 	int remote_fd, error;
 	
-	if((remote_fd = accept(listener->fd, (struct sockaddr*)&remote_addr, &remote_addrlen)) < 0)
+	if((remote_fd = lthread_accept(listener->fd, (struct sockaddr*)&remote_addr, &remote_addrlen)) < 0)
 	{
 		cflare_warn("accept(): accept: %s", strerror(errno));
 		return 0x0; // error is left in errno
@@ -250,7 +265,7 @@ void cflare_listener_close(cflare_listener* listener)
 {
 	if(!listener->listening)
 		return;
-	close(listener->fd);
+	lthread_close(listener->fd);
 	listener->fd = -1;
 	listener->listening = false;
 }
@@ -265,7 +280,7 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	assert(S_ISSOCK(statbuf.st_mode));
 	
 	// attempt to do some default socket options
-	set_socket_timeout(fd, -1); // block forever by default
+	//set_socket_timeout(fd, -1); // block forever by default
 	
 	int so_keepalive = 1;
 	if(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &so_keepalive, sizeof(so_keepalive)) < 0)
@@ -276,7 +291,7 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	sock->ip = strdup(ip);
 	sock->port = port;
 	sock->connected = true;
-	sock->timeout = -1;
+	sock->timeout = UINT64_MAX;
 	return sock;
 }
 
@@ -314,16 +329,14 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, float64_t 
 	}
 	
 	int fd;
-	if((fd = socket(resv->ai_family, resv->ai_socktype, 0)) < 0)
+	if((fd = lthread_socket(resv->ai_family, resv->ai_socktype, 0)) < 0)
 	{
 		cflare_warn("connect(): socket: %s", strerror(errno));
 		freeaddrinfo(resv);
 		return 0x0;
 	}
 	
-	set_socket_timeout(fd, timeout);
-	
-	if(connect(fd, resv->ai_addr, resv->ai_addrlen) != 0)
+	if(lthread_connect(fd, resv->ai_addr, resv->ai_addrlen, timeout * 1000) != 0)
 	{
 		// connect() should always block, so this error is a timeout...
 		if(errno == EINPROGRESS)
@@ -332,7 +345,7 @@ cflare_socket* cflare_socket_connect(const char* host, uint16_t port, float64_t 
 		int _errno = errno;
 		cflare_warn("connect(): connect: %s", strerror(errno));
 		freeaddrinfo(resv);
-		close(fd);
+		lthread_close(fd);
 		errno = _errno;
 		return 0x0;
 	}
@@ -375,27 +388,56 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 	// what should be done if we have a buffer_length of 0?
 	assert(buffer_length > 0);
 	
-	ssize_t read_count = recv(socket->fd, buffer, buffer_length, 0);
+	ssize_t read_count = lthread_recv(socket->fd, buffer, buffer_length, 0, socket->timeout);
 	
-	if(read_count == 0)
+	if(read_count <= 0)
 	{
-		errno = ECONNRESET;
-		socket->connected = false;
-		if(read) *read = 0;
-		return false;
-	}
-	else if(read_count < 0)
-	{
-		// these 2 just mean a timeout
-		if(errno != EAGAIN && errno != EWOULDBLOCK)
+		switch(read_count)
+		{
+		case 0:
+			errno = ECONNRESET;
 			socket->connected = false;
+			// fall through
+		case -1:
+			errno = EAGAIN;
+			break;
+		case -2:
+			errno = ETIMEDOUT;
+			break;
+		default:
+			socket->connected = false;
+			break;
+		}
+		
 		if(read) *read = 0;
-		// errno from recv is kept
 		return false;
 	}
 	
 	if(read) *read = read_count;
 	return true;
+}
+
+int cflare_socket_wait_write(cflare_socket* socket, float64_t timeout)
+{
+	uint64_t to;
+	if(to < 0)
+		to = 0;
+	else if(to == 0)
+		to = 1;
+	else
+		to = timeout * 1000;
+	return lthread_wait_write(socket->fd, to);
+}
+int cflare_socket_wait_read(cflare_socket* socket, float64_t timeout)
+{
+	uint64_t to;
+	if(to < 0)
+		to = 0;
+	else if(to == 0)
+		to = 1;
+	else
+		to = timeout * 1000;
+	return lthread_wait_write(socket->fd, to);
 }
 
 bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length)
@@ -409,12 +451,42 @@ bool cflare_socket_write(cflare_socket* socket, const uint8_t* buffer, size_t bu
 	
 	// todo track this
 	// use MSG_NOSIGNAL to prevent us from being terminated in the event the remote end hangs up
-	int error = send(socket->fd, buffer, buffer_length, MSG_NOSIGNAL);
-	if(error < 0 && (error != EAGAIN && error != EWOULDBLOCK))
+	int error; // = lthread_send(socket->fd, buffer, buffer_length, MSG_NOSIGNAL);
+	//float64_t to = cflare_time();
+	
+	while(true)
 	{
-		cflare_warn("write: send: %s", strerror(errno));
-		socket->connected = false;
-		return false;
+		error = lthread_send(socket->fd, buffer, buffer_length, 0);
+		
+		if(error == buffer_length) // we wrote it all
+			break;
+		else if(error >= 0)
+		{
+			buffer += error;
+			buffer_length -= error;
+			cflare_coroutine_yield();
+		}
+		else
+		{
+			if(errno != EWOULDBLOCK && errno != EAGAIN)
+			{
+				cflare_warn("write: 1: send: %s (%d)", strerror(errno), errno);
+				cflare_socket_close(socket);
+				socket->connected = false;
+				return false;
+			}
+			else
+			{
+				int wait = lthread_wait_write(socket->fd, socket->timeout);
+				if(wait < 0)
+				{
+					cflare_warn("write: 2: send: %s (%d)", strerror(errno), wait);
+					cflare_socket_close(socket);
+					socket->connected = false;
+					return false;
+				}
+			}
+		}
 	}
 	
 	return true;
@@ -430,79 +502,43 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 		return false;
 	}
 	
-	static const int chunksize = 128; // read in 128byte chunks
-	char* ptr = buffer;
-	size_t len = 0;
-	errno = 0;
 	bool gotnewline = false;
-	float64_t to = cflare_time() + socket->timeout;
-	float64_t timeout = socket->timeout;
+	size_t len = 0;
 	
-	while(!gotnewline)
+	while(len < buffer_length - 1)
 	{
-		#ifndef MIN
-		#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-		#endif
-		ssize_t got = recv(socket->fd, ptr, MIN(buffer_length, chunksize), MSG_PEEK | MSG_DONTWAIT);
+		ssize_t r = lthread_recv(socket->fd, buffer + len, 1, 0, socket->timeout);
 		
-		if(got == 0)
+		if(r <= 0)
 		{
-			errno = ECONNRESET;
-			socket->connected = false;
-			break;
-		}
-		else if(got < 0)
-		{
-			if(errno == EAGAIN || errno == EWOULDBLOCK)
+			switch(r)
 			{
-				if(timeout < 0) // wait for ever
-					continue;
-				else if(timeout == 0) // simulate non-blocking behavoir
-				{
-					errno = EWOULDBLOCK;
-					break;
-				}
-				else if(cflare_time() > to)
-				{
-					errno = ETIMEDOUT;
-					break;
-				}
-				else // we've not timed out
-					continue;
-			}
-			else // another kind of error, lets mark this connection as dead
-			{
+			case 0:
+				errno = ECONNRESET;
+				socket->connected = false;
+				// fall through
+			case -1:
+				errno = EAGAIN;
+				break;
+			case -2:
+				errno = ETIMEDOUT;
+				break;
+			default:
 				socket->connected = false;
 				break;
 			}
-		}
-		else if(socket->timeout < 0) // we have some acivity on the socket, update the inactivity to
-			to = cflare_time() + socket->timeout;
-		
-		ssize_t i;
-		for(i = 0; i < got; i++)
-		{
-			if(ptr[i] == '\n')
-			{
-				gotnewline = true;
-				break;
-			}
+			
+			break;
 		}
 		
-		recv(socket->fd, ptr, i, 0); // dequeue the data valid data;
-		len           += i;
-		ptr           += i;
-		buffer_length -= i;
-		
-		if(buffer_length <= 1 && !gotnewline) // allow at least 1 char for the null byte
+		len++;
+		if(buffer[len - 1] == '\n')
 		{
-			errno = ENOBUFS;
+			gotnewline = true;
+			len--;
 			break;
 		}
 	}
-	
-	if(gotnewline) // so future calls dont read this char
-		recv(socket->fd, ptr, 1, 0);
 	
 	// now fix the buffer to remove all \r s
 	size_t src, dst;
@@ -513,7 +549,6 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 		buffer[dst] = buffer[src];
 		dst++;
 	}
-	
 	buffer[dst] = '\0';
 	if(read) *read = dst;
 	return gotnewline;
@@ -527,28 +562,11 @@ bool cflare_socket_write_line(cflare_socket* socket, const char* buffer, size_t 
 		errno = ENOTCONN;
 		return false;
 	}
-	// should we error if a \n is in the buffer?
-	
-	#ifndef MSG_MORE
-	// Cygwin's doesn't have this flag, it's not vital either...
-	#define MSG_MORE 0
-	#endif
 	
 	char newline = {'\n'};
-	int error;
-	error = send(socket->fd, buffer, buffer_length, MSG_MORE | MSG_NOSIGNAL);
-	if(error < 0 && (error != EAGAIN && error != EWOULDBLOCK))
-	{
-		cflare_warn("write_line: 1: send: %s", strerror(errno));
-		socket->connected = false;
-	}
 	
-	error = send(socket->fd, &newline, sizeof(newline), MSG_NOSIGNAL);
-	if(error < 0 && (error != EAGAIN && error != EWOULDBLOCK))
-	{
-		cflare_warn("write_line: 2: send: %s", strerror(errno));
-		socket->connected = false;
-	}
+	if(!cflare_socket_write(socket, (uint8_t*)buffer, buffer_length) || !cflare_socket_write(socket, (uint8_t*)&newline, sizeof(newline)))
+		return false;
 	
 	return socket->connected;
 }
@@ -563,8 +581,12 @@ void cflare_socket_flush(cflare_socket* socket)
 
 void cflare_socket_timeout(cflare_socket* socket, float64_t timeout)
 {
-	 set_socket_timeout(socket->fd, timeout);
-	 socket->timeout = timeout;
+	if(timeout == -1)
+		socket->timeout = UINT64_MAX;
+	else if(timeout == 0)
+		socket->timeout = 0;
+	else
+		socket->timeout = timeout * 1000;
 }
 
 void cflare_socket_disconnect(cflare_socket* socket)
@@ -580,7 +602,7 @@ void cflare_socket_disconnect(cflare_socket* socket)
 	}
 	
 	char buff[1024];
-	ssize_t read = recv(socket->fd, buff, sizeof(buff), 0);
+	ssize_t read = lthread_recv(socket->fd, buff, sizeof(buff), 0, socket->timeout);
 	
 	if(read < 0)
 		cflare_warn("disconnect: read: %s", strerror(errno));
@@ -607,7 +629,7 @@ void cflare_socket_close(cflare_socket* socket)
 	if(socket->fd < 0)
 		return;
 	
-	close(socket->fd);
+	lthread_close(socket->fd);
 	socket->fd = -1;
 	socket->connected = false;
 }

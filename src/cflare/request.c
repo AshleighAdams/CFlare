@@ -25,14 +25,16 @@ typedef struct cflare_request
 	size_t path_len;
 	char* query;
 	size_t query_len;
+	char* version;
+	size_t version_len;
 	
-	float64_t version;
 	float64_t time_start, time_start_parse, time_start_postparse;
 	
 	struct
 	{
 		cflare_header header;
 		char* value;
+		size_t value_len;
 	} headers[CFLARE_REQUEST_MAX_HEADERS];
 	size_t headers_count;
 	
@@ -95,12 +97,201 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	req->buffer_freespace = sizeof(req->buffer);
 	req->time_start = cflare_time();
 	
+	size_t nbytes;
+	if(!cflare_socket_read(socket, req->buffer, req->buffer_freespace, &nbytes) || nbytes == req->buffer_freespace)
+	{
+		quick_response_socket(socket, 413, "request too long", false);
+		return false;
+	}
+	req->buffer_freespace -= nbytes;
+	
+	{ // parse method
+		req->method = req->buffer_position;
+		ssize_t pos = first_of(req->buffer_position, nbytes, ' ');
+		
+		if(pos < 0 || pos == nbytes)
+		{
+			quick_response_socket(socket, 400, "invalid request", false);
+			return false;
+		}
+		
+		req->method[pos] = '\0';
+		req->method_len = pos;
+		
+		nbytes -= pos + 1;
+		req->buffer_position += pos + 1;
+	}
+	
+	{ // parse path
+		req->path = req->buffer_position;
+		ssize_t pos = first_of(req->buffer_position, nbytes, ' ');
+		
+		if(pos < 0 || pos == nbytes)
+		{
+			quick_response_socket(socket, 414, "request URI too long", false);
+			return false;
+		}
+		
+		req->path[pos] = '\0';
+		req->path_len = pos;
+		
+		ssize_t query_pos = first_of(req->path, req->path_len, '?');
+		if(query_pos < 0)
+		{
+			req->query = 0x0;
+			req->query_len = 0;
+		}
+		else
+		{
+			req->path[query_pos] = '\0';
+			req->query = req->path + query_pos + 1;
+			
+			req->path_len = query_pos;
+			req->query_len = pos - query_pos - 1;
+		}
+		
+		
+		nbytes -= pos + 1;
+		req->buffer_position += pos + 1;
+	}
+	
+	{ // parse version
+		req->version = req->buffer_position;
+		ssize_t pos = first_of(req->buffer_position, nbytes, '\n');
+		
+		if(pos < 0 || pos == nbytes)
+		{
+			quick_response_socket(socket, 400, "invalid version", false);
+			return false;
+		}
+		
+		if(req->version[pos - 1] == '\r') // look for \r\n
+		{
+			req->version[pos - 1] = '\0';
+			req->version_len = pos - 1;
+		}
+		else
+		{
+			req->version[pos] = '\0';
+			req->version_len = pos;
+		}
+		
+		nbytes -= pos + 1;
+		req->buffer_position += pos + 1;
+	}
+	
+	// some headers we might be interested in
+	const char* content_length = 0x0;
+	const char* content_type = 0x0;
+	
+	{ // read the headers
+		req->headers_count = 0;
+		bool ignored_header = false;
+		char* prev_header = 0x0;
+		size_t prev_header_len = 0;
+		
+		while(true)
+		{
+			char* line = req->buffer_position;
+			size_t line_len;
+			ssize_t pos = first_of(line, nbytes, '\n');
+			
+			if(pos < 0 || pos == nbytes)
+			{
+				quick_response_socket(socket, 400, "invalid header", false);
+				return false;
+			}
+			
+			nbytes -= pos;
+			req->buffer_position += pos;
+			
+			if(line[pos - 1] == '\r')
+			{
+				line[pos - 1] = '\0';
+				line_len = pos - 1;
+			}
+			else
+			{
+				line[pos] = '\0';
+				line_len = pos;
+			}
+			
+			if(line_len == 0) // the blank line
+				break;
+			
+			else if(line[0] == ' ' || line[0] == '\t')
+			{
+				if(!prev_header)
+				{
+					quick_response_socket(socket, 400, "request header invalid: nothing to continue", false);
+					return false;
+				}
+				if(ignored_header) // we didn't want this header anyway, so we can skip
+					continue;
+				
+				prev_header[prev_header_len] = ' '; // this was a null ptr, but now we need to memmove it
+				
+				memmove(prev_header + prev_header_len, line + 1, line_len - 1);
+				prev_header_len += line_len - 1;
+				req->headers[req->headers_count].value_len = prev_header_len; // update the length here
+			}
+			else
+			{
+				ssize_t pos_col = first_of(line, nbytes, ':');
+				
+				if(pos_col < 0)
+				{
+					quick_response_socket(socket, 400, "invalid header", false);
+					return false;
+				}
+				
+				line[pos_col] = '\0';
+				char* key = line;
+				//size_t key_len = pos_col;
+				
+				line += pos_col + 1 + 1; // point the line at the value, one for ':' and one for ' '
+				line_len -= pos_col + 1 + 1;
+				
+				char* value = line;
+				size_t value_len = line_len;
+				value[value_len] = '\0';
+				
+				cflare_header hdr = cflare_headers_get(key);
+				if(!cflare_headers_valid(hdr))
+				{
+					ignored_header = true;
+					continue;
+				}
+				else
+				{
+					if(req->headers_count >= CFLARE_REQUEST_MAX_HEADERS)
+					{
+						quick_response_socket(socket, 413, "reached max number of headers", false);
+						return false;
+					}
+					
+					//cflare_debug("%s = '%s'", key, value);
+					req->headers[req->headers_count].header = hdr;
+					req->headers[req->headers_count].value = value;
+					req->headers[req->headers_count].value_len = value_len;
+					req->headers_count++;
+				}
+			}
+		}
+	}
+	
+	
+	//cflare_debug("%s %s %s", req->method, req->path, req->version);
+	quick_response_socket(socket, 200, "all is good", true);
+	
+	return true;
+	/*
 	size_t read;
 	size_t total_read = 0;
 	
 	if(!cflare_socket_read_line(req->socket, req->buffer_position, req->buffer_freespace, &read))
 	{
-		if(read == req->buffer_freespace)
+		if(pos < 0 || read == nbytes)
 			quick_response_socket(socket, 414, "request URI too long", false);
 		return false;
 	}
@@ -151,7 +342,7 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 			req->query = req->path + query_pos + 1;
 			
 			req->path_len = query_pos;
-			req->query_len = pos - query_pos - 1 /*- 1 = ?*/;
+			req->query_len = pos - query_pos - 1;
 			
 			cflare_debug("p = %s q = %s %"FMT_SIZE" %"FMT_SIZE,
 					req->path, req->query, req->query_len, req->path_len);
@@ -172,6 +363,9 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 		}
 		req->version = (float64_t)version_major + (float64_t)version_minor / 10.0;
 	}
+	
+	size_t content_length = 0;
+	char* content_type = "";
 	
 	{ // read the headers
 		req->headers_count = 0;
@@ -208,7 +402,7 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 				//           ^
 				// "previous continue0"
 				req->buffer_position[0] = ' ';
-				memmove(req->buffer_position - 1, req->buffer_position, read + 1 /*null*/);
+				memmove(req->buffer_position - 1, req->buffer_position, read + 1);
 				
 				req->buffer_position += read;
 				req->buffer_freespace -= read;
@@ -270,6 +464,8 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	*/
 	
 	cflare_url_parse_query(req->query, req->query_len, &print_query_param, 0x0);
+	
+	//cflare_debug("request parsed in %lfms", (req->time_start_postparse - req->time_start_parse) * 1000.0);
 	
 	bool keep_alive = false;
 	quick_response_socket(socket, 200, "all is good", keep_alive);

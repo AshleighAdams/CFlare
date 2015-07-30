@@ -13,6 +13,8 @@
 
 #include <cflare/socket.h>
 #include <cflare/request.h>
+
+#include <cflare/coroutine.h>
 #include <cflare/thread.h>
 #include <cflare/mutex.h>
 
@@ -29,123 +31,88 @@ static bool unload_test(const cflare_hookstack* args, cflare_hookstack* rets, vo
 }
 */
 
-typedef struct thread_data
-{
-	size_t id;
-	bool running;
+typedef struct workers_msg {
 	cflare_socket* socket;
-	cflare_thread* thread;
-	
-	cflare_condition* wait_cond;
-	cflare_mutex* wait_mutex;
-} thread_data;
-thread_data* thread_datas;
+	cflare_coroutinecondition* read_cond;
+	cflare_coroutinecondition* write_cond;
+} workers_msg;
 
-
+static int64_t workers = 0;
 static void* worker_thread(void* context)
 {
-	thread_data* td = context;
+	cflare_coroutine_autoname();
+	cflare_coroutine_detach();
+	
+	workers_msg* msg = context;
 	cflare_request* req = cflare_request_new();
 	
-	while(td->running)
+	workers++;
+	cflare_debug("total workers: %"FMT_INT64, workers);
+	
+	while(true)
 	{
-		cflare_mutex_lock(td->wait_mutex);
-			while(td->socket == 0x0)
-			{
-				if(td->running)
-					cflare_condition_wait(td->wait_cond, td->wait_mutex);
-				else
-				{
-					cflare_mutex_unlock(td->wait_mutex);
-					goto end_root_while;
-				}
-			}
-		cflare_mutex_unlock(td->wait_mutex);
+		int why = cflare_coroutinecondition_wait(msg->read_cond, 10);
+		if(why != 0) // timeout
+			break;
+		cflare_socket* sock = msg->socket;
+		cflare_coroutinecondition_signal(msg->write_cond); // signal we've got the socket
 		
-		cflare_socket* sock = td->socket;
-		cflare_socket_timeout(sock, 60);
-	
-		while(cflare_socket_connected(sock))
-			cflare_request_process_socket(req, sock);
-	
+		if(!sock) // our thread is terminated
+			break;
+		
+		cflare_socket_timeout(sock, 600);
+		if(cflare_socket_wait_write(sock, 0) == -1) // sockets are broken, abandon this thread
+			break;
+
+		while(cflare_request_process_socket(req, sock))
+			;
+		
+		cflare_socket_close(sock);
 		cflare_socket_delete(sock);
-		td->socket = 0x0;
-	} end_root_while:
-	
+	}
 	cflare_request_delete(req);
+	
+	workers--;
+	cflare_debug("total workers: %"FMT_INT64, workers);
 	
 	return 0x0;
 }
 
 static cflare_listener* listener;
 
-static void main_listen_thread()
+static void* main_listen_thread(void* _)
 {
-	// setup the threads
-	size_t threads = 10;
+	cflare_coroutine_autoname();
+	listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025, CFLARE_SOCKET_OPT_DEFAULT);
 	
-	thread_datas = malloc(sizeof(thread_data) * threads);
-	
-	for(size_t tid = 0; tid < threads; tid++)
-	{
-		thread_data* data = thread_datas + tid;
-		data->running = true;
-		data->id = tid;
-		data->socket = 0x0;
-		data->wait_cond = cflare_condition_new();
-		data->wait_mutex = cflare_mutex_new(CFLARE_MUTEX_PLAIN);
-		data->thread = cflare_thread_new(&worker_thread, data);
-	}
-	
-	listener = cflare_socket_listen(CFLARE_SOCKET_HOST_ANY, 1025);
-	
-	size_t current_thread = 0;
+	workers_msg msg; // the msg that's passed to coroutines
+	msg.socket = 0x0;
+	msg.read_cond = cflare_coroutinecondition_new();
+	msg.write_cond = cflare_coroutinecondition_new();
 	
 	while(true)
 	{
-		size_t tries = 0;
-		while((thread_datas + current_thread)->socket != 0)
-		{
-			current_thread = (current_thread + 1) % threads;
-			tries++;
-			
-			if(tries > threads)
-			{
-				tries = 0;
-				cflare_thread_sleep(0.01);
-			}
-		}
-		
-		cflare_socket* sock = cflare_listener_accept(listener);
-		if(!sock)
+		msg.socket = cflare_listener_accept(listener);
+		if(!msg.socket)
 			break;
 		
-		thread_data* td = thread_datas + current_thread;
-		cflare_mutex_lock(td->wait_mutex);
-			td->socket = sock;
-			cflare_condition_signal(td->wait_cond, td->wait_mutex);
-		cflare_mutex_unlock(td->wait_mutex);
+		
+		cflare_coroutinecondition_signal(msg.read_cond);
+		if(cflare_coroutinecondition_wait(msg.write_cond, 0.001) == -2)
+		{
+			cflare_debug("no thread to accept, creating new");
+			cflare_coroutine_new(&worker_thread, &msg);
+			
+			while(cflare_coroutinecondition_wait(msg.write_cond, 0) == -2)
+				cflare_coroutinecondition_signal(msg.read_cond);
+			// timed out
+		}
+		else
+			msg.socket = 0x0; // prevent further threads accidentally taking it
 	}
 	
 	cflare_listener_delete(listener);
-	
-	for(size_t tid = 0; tid < threads; tid++)
-	{
-		thread_data* data = thread_datas + tid;
-		
-		data->running = false;
-		
-		cflare_mutex_lock(data->wait_mutex);
-			cflare_condition_signal(data->wait_cond, data->wait_mutex);
-		cflare_mutex_unlock(data->wait_mutex);
-		
-		cflare_thread_join(data->thread);
-		
-		cflare_thread_delete(data->thread);
-		cflare_mutex_delete(data->wait_mutex);
-		cflare_condition_delete(data->wait_cond);
-	}
-	free(thread_datas);
+	return 0x0;
 }
 
 static void on_signal(int sig)
@@ -156,6 +123,7 @@ static void on_signal(int sig)
 		{
 			cflare_log("received SIGINT, shutting down...");
 			cflare_listener_close(listener);
+			exit(1);
 		}
 		else
 		{
@@ -184,7 +152,10 @@ int main(int argc, char** argv)
 	}
 	else if(cflare_options_argument(0) && strcmp(cflare_options_argument(0), "listen") == 0)
 	{
-		main_listen_thread();
+		cflare_coroutine* co = cflare_coroutine_new(&main_listen_thread, 0x0);
+		cflare_coroutine_detach2(co);
+		
+		cflare_coroutine_scheduler_run();
 	}
 	else
 	{

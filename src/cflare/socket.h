@@ -16,8 +16,15 @@ enum
 #define CFLARE_SOCKET_HOST_ANY "*"
 #define CFLARE_SOCKET_PORT_ANY 0
 
+enum
+{
+	CFLARE_SOCKET_OPT_REUSEADDR = 1 << 0,
+	CFLARE_SOCKET_OPT_REUSEPORT = 1 << 1,
+	
+	CFLARE_SOCKET_OPT_DEFAULT = CFLARE_SOCKET_OPT_REUSEADDR
+};
 
-CFLARE_API cflare_listener* cflare_socket_listen(const char* addr, uint16_t port);
+CFLARE_API cflare_listener* cflare_socket_listen(const char* addr, uint16_t port, uint64_t ops);
 CFLARE_API void cflare_listener_delete(cflare_listener* listener);
 
 CFLARE_API cflare_socket* cflare_listener_accept(cflare_listener* listener);
@@ -32,6 +39,10 @@ CFLARE_API void cflare_socket_delete(cflare_socket* socket);
 CFLARE_API const char* cflare_socket_ip(cflare_socket* socket);
 CFLARE_API uint16_t cflare_socket_port(cflare_socket* socket);
 CFLARE_API bool cflare_socket_connected(cflare_socket* socket);
+
+// for coroutines
+CFLARE_API int cflare_socket_wait_write(cflare_socket* socket, float64_t timeout);
+CFLARE_API int cflare_socket_wait_read(cflare_socket* socket, float64_t timeout);
 
 // these will return false on either connection error, or timeout; if it's a timeout and a read, the partial data will should still be readable.
 CFLARE_API bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_length, size_t* read_length);
