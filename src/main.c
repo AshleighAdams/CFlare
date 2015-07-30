@@ -82,7 +82,7 @@ static cflare_listener* listener;
 static void main_listen_thread()
 {
 	// setup the threads
-	size_t threads = 100;
+	size_t threads = 10;
 	
 	thread_datas = malloc(sizeof(thread_data) * threads);
 	
@@ -134,6 +134,11 @@ static void main_listen_thread()
 		thread_data* data = thread_datas + tid;
 		
 		data->running = false;
+		
+		cflare_mutex_lock(data->wait_mutex);
+			cflare_condition_signal(data->wait_cond, data->wait_mutex);
+		cflare_mutex_unlock(data->wait_mutex);
+		
 		cflare_thread_join(data->thread);
 		
 		cflare_thread_delete(data->thread);
@@ -149,11 +154,8 @@ static void on_signal(int sig)
 	{
 		if(listener)
 		{
-			cflare_log("received SIGINT, no longer listening...");
+			cflare_log("received SIGINT, shutting down...");
 			cflare_listener_close(listener);
-			//listening = false;
-			// FIXME: interupt and exit better than this...
-			exit(0);
 		}
 		else
 		{
