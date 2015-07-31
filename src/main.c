@@ -61,6 +61,9 @@ static void* worker_thread(void* context)
 			break;
 		
 		cflare_socket_timeout(sock, 600);
+		
+		// sometimes sockets break (any accept()ed connection isn't writable).
+		// havn't figgured out why this happens yet, but killing any threads it happens on fixes it
 		if(cflare_socket_wait_write(sock, 0) == -1) // sockets are broken, abandon this thread
 			break;
 
@@ -111,6 +114,16 @@ static void* main_listen_thread(void* _)
 			msg.socket = 0x0; // prevent further threads accidentally taking it
 	}
 	
+	msg.socket = 0x0;
+	cflare_coroutinecondition_broadcast(msg.read_cond); // wake them all up so they may exit
+	
+	while(workers > 0)
+		cflare_coroutine_sleep(0.01); // wait for the threads to exit
+	
+	// free the conditions
+	free(msg.read_cond);
+	free(msg.write_cond);
+	
 	cflare_listener_delete(listener);
 	return 0x0;
 }
@@ -123,7 +136,10 @@ static void on_signal(int sig)
 		{
 			cflare_log("received SIGINT, shutting down...");
 			cflare_listener_close(listener);
-			exit(1);
+			
+			// give it chance to complete current transactions...
+			cflare_thread_sleep(1);
+			exit(0);
 		}
 		else
 		{

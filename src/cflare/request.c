@@ -27,15 +27,12 @@ typedef struct cflare_request
 	size_t query_len;
 	char* version;
 	size_t version_len;
+	char* host;
+	size_t host_len;
 	
 	float64_t time_start, time_start_parse, time_start_postparse;
 	
-	struct
-	{
-		cflare_header header;
-		char* value;
-		size_t value_len;
-	} headers[CFLARE_REQUEST_MAX_HEADERS];
+	cflare_request_header headers[CFLARE_REQUEST_MAX_HEADERS];
 	size_t headers_count;
 	
 	cflare_socket* socket;
@@ -53,11 +50,11 @@ static void quick_response_socket(cflare_socket* sock, uint32_t status, const ch
 		"Content-Type: text/plain\n"
 		"Server: cflare\n"
 		"Connection: %"FMT_STRING"\n",
-		status, status_string, msglen, keep_alive ? "keep-alive" : "close"
+		status, status_string, msglen + 1, keep_alive ? "keep-alive" : "close"
 	);
 	
 	cflare_socket_write_line(sock, response_headers, strlen(response_headers));
-	cflare_socket_write(sock, (uint8_t*)message, msglen);
+	cflare_socket_write_line(sock, message, msglen);
 	
 	if(!keep_alive)
 		cflare_socket_close(sock);
@@ -90,6 +87,13 @@ static void print_query_param(const char* key, size_t keylen, const char* value,
 	cflare_log("%s = %s", key, value);
 }
 
+bool hdr_cache_loaded = false;
+struct
+{
+	cflare_header
+		host, connection, content_type, content_length; // cached host
+} hdr_cache;
+
 bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 {
 	req->socket = socket;
@@ -97,12 +101,47 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	req->buffer_freespace = sizeof(req->buffer);
 	req->time_start = cflare_time();
 	
-	size_t nbytes;
-	if(!cflare_socket_read(socket, req->buffer, req->buffer_freespace, &nbytes) || nbytes == req->buffer_freespace)
+	// keep reading until we get \r?\n\r?\n
+	size_t nbytes = 0;
+	int newlines = 0;
+	while(true)
 	{
-		quick_response_socket(socket, 413, "request too long", false);
-		return false;
-	}
+		size_t frag_size;
+		char* frag_ptr = req->buffer + nbytes;
+		
+		if(!cflare_socket_read(socket, (uint8_t*)req->buffer + nbytes, req->buffer_freespace - nbytes, &frag_size))
+		{
+			quick_response_socket(socket, 400, "recv error", false);
+			return false;
+		}
+		
+		nbytes += frag_size;
+		
+		if(nbytes == req->buffer_freespace)
+		{
+			quick_response_socket(socket, 413, "request too long", false);
+			return false;
+		}
+		
+		// look for the \r\n
+		for(size_t i = 0; i < frag_size; i++)
+		{
+			switch( frag_ptr[i] )
+			{
+			case '\r':
+				break;
+			case '\n':
+				newlines++;
+				if(newlines == 2)
+					goto got_part;
+				break;
+			default:
+				newlines = 0; // reset it
+				break;
+			}
+		}
+	} got_part:
+	
 	req->buffer_freespace -= nbytes;
 	
 	{ // parse method
@@ -181,8 +220,28 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	}
 	
 	// some headers we might be interested in
-	const char* content_length = 0x0;
+	int64_t content_length = 0x0;
+	
+	const char* host = 0x0;
+	size_t host_len = 0;
+	
 	const char* content_type = 0x0;
+	size_t content_type_len = 0;
+
+	const char* connection = 0x0;
+	size_t connection_len = 0;
+	
+	{
+		// ensure we have cached the headers we require
+		if(!hdr_cache_loaded)
+		{
+			hdr_cache_loaded = true;
+			hdr_cache.host = cflare_headers_ensure("Host");
+			hdr_cache.content_type = cflare_headers_ensure("Content-Type");
+			hdr_cache.content_length = cflare_headers_ensure("Content-Length");
+			hdr_cache.connection = cflare_headers_ensure("Connection");
+		}
+	}
 	
 	{ // read the headers
 		req->headers_count = 0;
@@ -196,9 +255,9 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 			size_t line_len;
 			ssize_t pos = first_of(line, nbytes, '\n');
 			
-			if(pos < 0 || pos == nbytes)
+			if(pos < 0)
 			{
-				quick_response_socket(socket, 400, "invalid header", false);
+				quick_response_socket(socket, 400, "invalid header 1", false);
 				return false;
 			}
 			
@@ -237,11 +296,11 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 			}
 			else
 			{
-				ssize_t pos_col = first_of(line, nbytes, ':');
+				ssize_t pos_col = first_of(line, line_len, ':');
 				
 				if(pos_col < 0)
 				{
-					quick_response_socket(socket, 400, "invalid header", false);
+					quick_response_socket(socket, 400, "invalid header 2", false);
 					return false;
 				}
 				
@@ -275,200 +334,88 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 					req->headers[req->headers_count].value = value;
 					req->headers[req->headers_count].value_len = value_len;
 					req->headers_count++;
+					
+					// update our important ones
+					
+					if(cflare_headers_equals(hdr, hdr_cache.host))
+					{
+						host = value;
+						host_len = value_len;
+					}
+					else if(cflare_headers_equals(hdr, hdr_cache.content_type))
+					{
+						content_type = value;
+						content_type_len = value_len;
+					}
+					else if(cflare_headers_equals(hdr, hdr_cache.content_length))
+					{
+						if(!cflare_tointeger(value, &content_length))
+						{
+							quick_response_socket(socket, 400, "bad content-length", false);
+							return false;
+						}
+					}
 				}
 			}
 		}
 	}
 	
+	char major = req->version[5], minor = req->version[7]; // HTTP/5.7
 	
-	//cflare_debug("%s %s %s", req->method, req->path, req->version);
-	quick_response_socket(socket, 200, "all is good", true);
-	
-	return true;
-	/*
-	size_t read;
-	size_t total_read = 0;
-	
-	if(!cflare_socket_read_line(req->socket, req->buffer_position, req->buffer_freespace, &read))
+	if(major != '1')
 	{
-		if(pos < 0 || read == nbytes)
-			quick_response_socket(socket, 414, "request URI too long", false);
+		quick_response_socket(socket, 400, "HTTP version not supported", false);
 		return false;
 	}
 	
-	req->time_start_parse = cflare_time();
-	total_read += read;
-	
-	{ // parse method
-		req->method = req->buffer_position;
-		ssize_t pos = first_of(req->buffer_position, read, ' ');
-		
-		if(pos < 0)
-		{
-			quick_response_socket(socket, 400, "request line invalid (method)", false);
-			return false;
-		}
-		
-		req->method[pos] = '\0';
-		req->method_len = pos;
-		
-		pos++;
-		req->buffer_freespace -= pos;
-		req->buffer_position  += pos;
-		read                  -= pos;
-	}
-	
-	{ // parse path
-		req->path = req->buffer_position;
-		ssize_t pos = first_of(req->buffer_position, read, ' ');
-		if(pos < 0)
-		{
-			quick_response_socket(socket, 400, "request line invalid (path)", false);
-			return false;
-		}
-		
-		req->path[pos] = '\0';
-		req->path_len = pos;
-		
-		ssize_t query_pos = first_of(req->path, read, '?');
-		if(query_pos < 0)
-		{
-			req->query = 0x0;
-			req->query_len = 0;
-		}
-		else
-		{
-			req->path[query_pos] = '\0';
-			req->query = req->path + query_pos + 1;
-			
-			req->path_len = query_pos;
-			req->query_len = pos - query_pos - 1;
-			
-			cflare_debug("p = %s q = %s %"FMT_SIZE" %"FMT_SIZE,
-					req->path, req->query, req->query_len, req->path_len);
-		}
-		
-		pos++;
-		req->buffer_freespace -= pos;
-		req->buffer_position  += pos;
-		read                  -= pos;
-	}
-	
-	{ // parse "HTTP/major.minor"
-		int version_major, version_minor;
-		if(sscanf(req->buffer_position, "HTTP/%d.%d", &version_major, &version_minor) != 2)
-		{
-			quick_response_socket(socket, 400, "request line invalid (version)", false);
-			return false;
-		}
-		req->version = (float64_t)version_major + (float64_t)version_minor / 10.0;
-	}
-	
-	size_t content_length = 0;
-	char* content_type = "";
-	
-	{ // read the headers
-		req->headers_count = 0;
-		bool firstheader = true;
-		bool ignored_header = false;
-		while(true)
-		{
-			if(!cflare_socket_read_line(req->socket, req->buffer_position, req->buffer_freespace, &read))
-			{
-				quick_response_socket(socket, 400, "request headers never finished", false);
-				return false;
-			}
-			total_read += read;
-			
-			if(total_read >= CFLARE_REQUEST_MAX_LENGTH)
-			{
-				quick_response_socket(socket, 413, "request too long", false);
-				return false;
-			}
-			
-			if(read == 0) // the blank line
-				break;
-			else if(req->buffer_position[0] == ' ' || req->buffer_position[0] == '\t')
-			{
-				if(firstheader)
-				{
-					quick_response_socket(socket, 400, "request header invalid: nothing to continue", false);
-					return false;
-				}
-				if(ignored_header) // we didn't want this, so we can skip
-					continue;
-				// a continuation...
-				// "previous0 continue0"
-				//           ^
-				// "previous continue0"
-				req->buffer_position[0] = ' ';
-				memmove(req->buffer_position - 1, req->buffer_position, read + 1);
-				
-				req->buffer_position += read;
-				req->buffer_freespace -= read;
-			}
-			else
-			{
-				ssize_t pos = first_of(req->buffer_position, read, ':');
-				if(pos < 0)
-				{
-					quick_response_socket(socket, 400, "invalid header", false);
-					return false;
-				}
-				
-				firstheader = false;
-				req->buffer_position[pos] = '\0';
-				
-				cflare_header hdr = cflare_headers_get(req->buffer_position);
-				if(!cflare_headers_valid(hdr))
-				{
-					 ignored_header = true;
-					 continue;
-				}
-				else
-				{
-					if(req->headers_count >= CFLARE_REQUEST_MAX_HEADERS)
-					{
-						quick_response_socket(socket, 413, "reached max number of headers", false);
-						return false;
-					}
-					
-					req->headers[req->headers_count].header = hdr;
-					req->headers[req->headers_count].value = req->buffer_position + pos + 1; // +1 for the space between header and the value
-					
-					read++; // for the null byte
-					req->buffer_position += read;
-					req->buffer_freespace -= read;
-					req->headers_count++;
-				}
-			}
-		}
-	}
-	
-	// METHODnullPATHnull
-	req->time_start_postparse = cflare_time();
-	
-	/*
-	cflare_debug("method: %s; path: %s; query: %s; %lf", req->method, req->path, req->query, req->version);
-	
-	for(size_t i = 0; i < req->headers_count; i++)
+	switch(minor)
 	{
-		cflare_debug("header: %s = %s", req->headers[i].header.name, req->headers[i].value);
+	default:
+	case '0':
+		break;
+	case '1':
+		// host is required
+		if(!host)
+		{
+			quick_response_socket(socket, 400, "HTTP version requires host", false);
+			return false;
+		}
+		break;
+	case '2':
+		// host may be present in the URL authority
+		{
+			char* authority = 0x0;
+			char* path = req->path;
+			
+			// http://localhost/path
+			char* protocol = strstr(path, "://");
+			if(protocol)
+			{
+				char* host_part = protocol + 3;
+				char* path_part = strstr(host_part, "/");
+				size_t host_part_len = path_part - host_part;
+				
+				// we need to make some space for the host's null byte
+				memmove(host_part - 1, host_part, host_len);
+				host_part -= 1;
+				host_part[host_len] = '\0';
+				
+				host = host_part;
+				host_len = host_part_len;
+				
+				req->path_len = (req->path + req->path_len) - path_part;
+				req->path = path_part;
+			}
+		}
 	}
 	
-	cflare_debug("there are %lu free bytes in the request buffer; used %lu",
-		req->buffer_freespace,
-		CFLARE_REQUEST_MAX_LENGTH - req->buffer_freespace);
+	req->host = host;
+	req->host_len = host;
 	
-	cflare_debug("request parsed in %lfms", (req->time_start_postparse - req->time_start_parse) * 1000.0);
-	*/
-	
+	//cflare_debug("%s %s %s", req->method, req->path, req->version);
 	cflare_url_parse_query(req->query, req->query_len, &print_query_param, 0x0);
 	
-	//cflare_debug("request parsed in %lfms", (req->time_start_postparse - req->time_start_parse) * 1000.0);
-	
-	bool keep_alive = false;
+	bool keep_alive = true;
 	quick_response_socket(socket, 200, "all is good", keep_alive);
-	
 	return true;
 }

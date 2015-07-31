@@ -420,9 +420,9 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 int cflare_socket_wait_write(cflare_socket* socket, float64_t timeout)
 {
 	uint64_t to;
-	if(to < 0)
+	if(timeout < 0)
 		to = 0;
-	else if(to == 0)
+	else if(timeout == 0)
 		to = 1;
 	else
 		to = timeout * 1000;
@@ -431,9 +431,9 @@ int cflare_socket_wait_write(cflare_socket* socket, float64_t timeout)
 int cflare_socket_wait_read(cflare_socket* socket, float64_t timeout)
 {
 	uint64_t to;
-	if(to < 0)
+	if(timeout < 0)
 		to = 0;
-	else if(to == 0)
+	else if(timeout == 0)
 		to = 1;
 	else
 		to = timeout * 1000;
