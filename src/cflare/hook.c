@@ -19,7 +19,11 @@ typedef struct cflare_hookstack_elm
 		int64_t integer;
 		float64_t number;
 		char* string;
-		void* pointer;
+		struct
+		{
+			void* ptr;
+			const char* type;
+		} pointer;
 		size_t handle;
 	} data;
 	cflare_deleter* deleter;
@@ -174,7 +178,7 @@ static void free_element(void* data, void* context)
 	cflare_hookstack_elm* elm = (cflare_hookstack_elm*)data;
 	
 	if(elm->deleter)
-		elm->deleter(elm->data.pointer, elm->deleter_context);
+		elm->deleter(elm->data.pointer.ptr, elm->deleter_context);
 }
 
 static void free_string(void* data, void* context)
@@ -323,5 +327,32 @@ bool cflare_hookstack_get_string(const cflare_hookstack* stack, int32_t index,
 		return false;
 	
 	*out = elm->data.string;
+	return true;
+}
+
+void cflare_hookstack_push_pointer(cflare_hookstack* stack, const char* type, void* ptr, cflare_deleter* deleter, void* context)
+{
+	if(!stack)
+		return;
+	
+	cflare_hookstack_elm* elm;
+	cflare_linkedlist_insert_last(stack->elements, (void**)&elm);
+	
+	elm->type = CFLARE_HOOKSTACK_POINTER;
+	elm->data.pointer.ptr = ptr;
+	elm->data.pointer.type = type;
+	elm->deleter = deleter;
+	elm->deleter_context = context;
+}
+bool cflare_hookstack_get_pointer(const cflare_hookstack* stack, int32_t index, const char* type, void** out)
+{
+	cflare_hookstack_elm* elm = get_elm(stack, index, CFLARE_HOOKSTACK_POINTER);
+	if(!elm)
+		return false;
+	
+	if(strcmp(type, elm->data.pointer.type) != 0)
+		return false;
+	
+	*out = elm->data.pointer.ptr;
 	return true;
 }
