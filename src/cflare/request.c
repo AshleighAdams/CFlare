@@ -4,6 +4,7 @@
 #include "cflare/httpstatus.h"
 #include "cflare/util.h"
 #include "cflare/url.h"
+#include "cflare/hook.h"
 
 #ifndef CFLARE_REQUEST_MAX_LENGTH
 #define CFLARE_REQUEST_MAX_LENGTH 4096
@@ -27,8 +28,10 @@ typedef struct cflare_request
 	size_t query_len;
 	char* version;
 	size_t version_len;
-	char* host;
+	const char* host;
 	size_t host_len;
+	const char* ip;
+	uint16_t port;
 	
 	float64_t time_start, time_start_parse, time_start_postparse;
 	
@@ -347,6 +350,11 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 						content_type = value;
 						content_type_len = value_len;
 					}
+					else if(cflare_headers_equals(hdr, hdr_cache.connection))
+					{
+						connection = value;
+						connection_len = value_len;
+					}
 					else if(cflare_headers_equals(hdr, hdr_cache.content_length))
 					{
 						if(!cflare_tointeger(value, &content_length))
@@ -384,7 +392,6 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	case '2':
 		// host may be present in the URL authority
 		{
-			char* authority = 0x0;
 			char* path = req->path;
 			
 			// http://localhost/path
@@ -410,12 +417,84 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	}
 	
 	req->host = host;
-	req->host_len = host;
+	req->host_len = host_len;
+	req->ip = cflare_socket_ip(socket);
+	req->port = cflare_socket_port(socket);
 	
 	//cflare_debug("%s %s %s", req->method, req->path, req->version);
 	cflare_url_parse_query(req->query, req->query_len, &print_query_param, 0x0);
 	
-	bool keep_alive = true;
-	quick_response_socket(socket, 200, "all is good", keep_alive);
-	return true;
+	//bool keep_alive = true;
+	//quick_response_socket(socket, 200, "all is good", keep_alive);
+	
+	
+	cflare_hookstack* args = cflare_hookstack_new();
+	cflare_hookstack* rets = cflare_hookstack_new();
+	cflare_hookstack_push_pointer(args, "cflare_request", req, 0x0/*del*/, 0x0/*del ctx*/);
+	cflare_hookstack_push_pointer(args, "cflare_response", 0x0/*res*/, 0x0/*del*/, 0x0/*del ctx*/);
+	
+		cflare_hook_call("Request", args, rets);
+		
+		int64_t result;
+		bool got = cflare_hookstack_get_integer(rets, 0, &result);
+	
+	cflare_hookstack_delete(rets);
+	cflare_hookstack_delete(args);
+	
+	if(!got)
+	{
+		quick_response_socket(socket, 500, "no request handler could handle this request!", false);
+		return false;
+	}
+	
+	return result == 0;
 }
+
+
+// properties
+
+cflare_socket* cflare_request_socket(cflare_request* req)
+{
+	return req->socket;
+}
+
+const char* cflare_request_method(cflare_request* req)
+{
+	return req->method;
+}
+
+const char* cflare_request_path(cflare_request* req)
+{
+	return req->path;
+}
+
+const char* cflare_request_query(cflare_request* req)
+{
+	return req->query;
+}
+
+const char* cflare_request_version(cflare_request* req)
+{
+	return req->version;
+}
+
+const char* cflare_request_ip(cflare_request* req)
+{
+	return req->ip;
+}
+
+uint16_t cflare_request_port(cflare_request* req)
+{
+	return req->port;
+}
+
+const char* cflare_request_host(cflare_request* req)
+{
+	return req->host;
+}
+
+cflare_request_header* cflare_request_headers(cflare_request* req)
+{
+	return req->headers;
+}
+

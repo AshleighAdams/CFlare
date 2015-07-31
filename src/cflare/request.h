@@ -20,6 +20,8 @@ CFLARE_API void cflare_request_delete(cflare_request* req);
 
 CFLARE_API bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket);
 
+//
+
 CFLARE_API cflare_socket* cflare_request_socket(cflare_request* req);
 CFLARE_API const char* cflare_request_method(cflare_request* req);
 CFLARE_API const char* cflare_request_path(cflare_request* req);
@@ -31,9 +33,7 @@ CFLARE_API uint16_t cflare_request_port(cflare_request* req);
 
 CFLARE_API const char* cflare_request_host(cflare_request* req);
 
-CFLARE_API const char** cflare_request_cookies(cflare_request* req);
-
-CFLARE_API cflare_request_header* cflare_request_headers();
+CFLARE_API cflare_request_header* cflare_request_headers(cflare_request* req);
 
 #endif /* CFLARE_REQUEST_H */
 
