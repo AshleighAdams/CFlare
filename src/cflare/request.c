@@ -1,5 +1,7 @@
 
 #include "cflare/request.h"
+#include "cflare/response.h"
+
 #include "cflare/headers.h"
 #include "cflare/httpstatus.h"
 #include "cflare/util.h"
@@ -13,6 +15,31 @@
 #ifndef CFLARE_REQUEST_MAX_HEADERS
 #define CFLARE_REQUEST_MAX_HEADERS 32
 #endif
+
+#ifndef CFLARE_RESPONSE_MAX_HEADERS
+#define CFLARE_RESPONSE_MAX_HEADERS 32
+#endif
+
+#ifndef CFLARE_RESPONSE_MAX_LENGTH
+#define CFLARE_RESPONSE_MAX_LENGTH 4096
+#endif
+
+
+typedef struct kv_pair
+{
+	const char* key;
+	const char* value;
+} kv_pair;
+
+typedef struct cflare_response
+{
+	cflare_socket* socket;
+	uint32_t status_code;
+	bool sent;
+	
+	size_t buffer_pos;
+	char buffer[CFLARE_RESPONSE_MAX_LENGTH];
+} cflare_response;
 
 typedef struct cflare_request
 {
@@ -39,6 +66,7 @@ typedef struct cflare_request
 	size_t headers_count;
 	
 	cflare_socket* socket;
+	cflare_response response;
 } cflare_request;
 
 static void quick_response_socket(cflare_socket* sock, uint32_t status, const char* message, bool keep_alive)
@@ -103,6 +131,8 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	req->buffer_position = req->buffer;
 	req->buffer_freespace = sizeof(req->buffer);
 	req->time_start = cflare_time();
+	
+	cflare_response_init(&req->response, socket);
 	
 	// keep reading until we get \r?\n\r?\n
 	size_t nbytes = 0;
@@ -419,7 +449,7 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	cflare_hookstack* args = cflare_hookstack_new();
 	cflare_hookstack* rets = cflare_hookstack_new();
 	cflare_hookstack_push_pointer(args, "cflare_request", req, 0x0/*del*/, 0x0/*del ctx*/);
-	cflare_hookstack_push_pointer(args, "cflare_response", 0x0/*res*/, 0x0/*del*/, 0x0/*del ctx*/);
+	cflare_hookstack_push_pointer(args, "cflare_response", &req->response, 0x0/*del*/, 0x0/*del ctx*/);
 	
 		cflare_hook_call("Request", args, rets);
 		
@@ -486,3 +516,103 @@ cflare_request_header* cflare_request_headers(cflare_request* req)
 	return req->headers;
 }
 
+// response part
+
+
+cflare_response* cflare_response_new()
+{
+	cflare_response* ret = malloc(sizeof(cflare_response));
+	ret->socket = 0x0;
+	ret->status_code = 0x0;
+	ret->buffer_pos = 0;
+	
+	return ret;
+}
+
+void cflare_response_init(cflare_response* r, cflare_socket* sock)
+{
+	r->socket = sock;
+	r->status_code = 0;
+	r->buffer_pos = 0;
+	r->sent = false;
+}
+
+// headers—including cookies—must last until the finializer
+void cflare_response_status(cflare_response* res, uint32_t status)
+{
+	res->status_code = status;
+}
+
+void cflare_response_cookie(cflare_response* res, const char* domain, const char* key, const char* value, float64_t valid_for, bool https_only)
+{
+	cflare_notimp();
+}
+
+void cflare_response_header(cflare_response* res, cflare_header hdr, const char* value)
+{
+	const char* key = hdr.name;
+	
+	// todo: canonicalize headers?
+	size_t key_len = strlen(key);
+	size_t val_len = strlen(value);
+	
+	size_t req = key_len + val_len + 3/*: \n*/;
+	
+	if(req > CFLARE_RESPONSE_MAX_LENGTH - res->buffer_pos - 1) // we need one for the newline too
+	{
+		cflare_warn("header: response buffer too small");
+		return;
+	}
+	
+	char* ptr = res->buffer + res->buffer_pos;
+	
+	memcpy(ptr, key, key_len);
+	ptr += key_len;
+	
+	ptr[0] = ':';
+	ptr[1] = ' ';
+	ptr += 2;
+	
+	memcpy(ptr, value, val_len);
+	ptr += val_len;
+	ptr[val_len] = '\n';
+}
+
+static inline bool send_headers(cflare_response* res)
+{
+	const char* status_string = cflare_httpstatus_tostring(res->status_code);
+	if(!status_string)
+	{
+		cflare_warn("status code %"FMT_UINT32" is unknown", res->status_code);
+		status_string = "Unknown";
+	}
+	
+	char status[128];
+	ssize_t status_len = snprintf(status, sizeof(status), "HTTP/1.1 %"FMT_UINT32" %s\n", res->status_code, status_string);
+	assert(status_len >= 0);
+	
+	if(!cflare_socket_write(res->socket, (uint8_t*)status, status_len))
+		return false;
+	
+	res->buffer[res->buffer_pos] = '\n';
+	res->buffer_pos += 1;
+	
+	return cflare_socket_write(res->socket, (uint8_t*)res->buffer, res->buffer_pos);
+}
+
+bool cflare_response_data(cflare_response* res, const uint8_t* buffer, size_t buffer_len)
+{
+	char len[32]; len[0] = '\0';
+	
+	snprintf(len, sizeof(len), "%"FMT_SIZE, buffer_len);
+	cflare_response_header(res, cflare_headers->content_length, len);
+	
+	if(!send_headers(res))
+		return false;
+	return cflare_socket_write(res->socket, buffer, buffer_len);
+}
+
+bool cflare_response_file(cflare_response* res, const char* path)
+{
+	return false;
+}
