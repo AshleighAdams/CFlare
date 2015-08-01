@@ -11,7 +11,8 @@ typedef struct cflare_header
 } cflare_header;
 
 // some common headers
-struct cflare_headers {
+struct cflare_headers
+{
 	cflare_header host, content_type, content_length, connection, upgrade;
 }* cflare_headers;
 
