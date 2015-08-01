@@ -234,18 +234,6 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	const char* connection = 0x0;
 	size_t connection_len = 0;
 	
-	{
-		// ensure we have cached the headers we require
-		if(!hdr_cache_loaded)
-		{
-			hdr_cache_loaded = true;
-			hdr_cache.host = cflare_headers_ensure("Host");
-			hdr_cache.content_type = cflare_headers_ensure("Content-Type");
-			hdr_cache.content_length = cflare_headers_ensure("Content-Length");
-			hdr_cache.connection = cflare_headers_ensure("Connection");
-		}
-	}
-	
 	{ // read the headers
 		req->headers_count = 0;
 		bool ignored_header = false;
@@ -340,22 +328,22 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 					
 					// update our important ones
 					
-					if(cflare_headers_equals(hdr, hdr_cache.host))
+					if(cflare_headers_equals(hdr, cflare_headers->host))
 					{
 						host = value;
 						host_len = value_len;
 					}
-					else if(cflare_headers_equals(hdr, hdr_cache.content_type))
-					{
-						content_type = value;
-						content_type_len = value_len;
-					}
-					else if(cflare_headers_equals(hdr, hdr_cache.connection))
+					else if(cflare_headers_equals(hdr, cflare_headers->connection))
 					{
 						connection = value;
 						connection_len = value_len;
 					}
-					else if(cflare_headers_equals(hdr, hdr_cache.content_length))
+					else if(cflare_headers_equals(hdr, cflare_headers->content_type))
+					{
+						content_type = value;
+						content_type_len = value_len;
+					}
+					else if(cflare_headers_equals(hdr, cflare_headers->content_length))
 					{
 						if(!cflare_tointeger(value, &content_length))
 						{

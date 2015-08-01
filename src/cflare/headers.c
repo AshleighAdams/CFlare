@@ -152,10 +152,19 @@ void cflare_headers_load()
 	
 	cflare_linkedlist_delete(files);
 	free(path);
+	
+	cflare_headers = malloc(sizeof(cflare_headers));
+	cflare_headers->host = cflare_headers_get("Host");
+	cflare_headers->content_type = cflare_headers_get("Content-Type");
+	cflare_headers->content_length = cflare_headers_get("Content-Length");
+	cflare_headers->connection = cflare_headers_get("Connection");
+	cflare_headers->upgrade = cflare_headers_get("Upgrade");
 }
 
 void cflare_headers_unload()
 {
+	free(cflare_headers);
+	
 	cflare_hashtable_delete(canonical_headers);
 	cflare_mutex_delete(gid_mutex);
 }

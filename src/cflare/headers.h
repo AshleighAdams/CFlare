@@ -10,6 +10,11 @@ typedef struct cflare_header
 	const char* name;
 } cflare_header;
 
+// some common headers
+struct cflare_headers {
+	cflare_header host, content_type, content_length, connection, upgrade;
+}* cflare_headers;
+
 CFLARE_API void cflare_headers_load();
 CFLARE_API void cflare_headers_unload();
 
