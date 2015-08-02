@@ -45,8 +45,9 @@ typedef struct cflare_request
 {
 	char buffer[CFLARE_REQUEST_MAX_LENGTH];
 	size_t buffer_freespace;
-	
 	char* buffer_position;
+	size_t buffer_unread; // amount of data on the buffer that's unread
+	
 	char* method;
 	size_t method_len;
 	char* path;
@@ -55,8 +56,6 @@ typedef struct cflare_request
 	size_t query_len;
 	char* version;
 	size_t version_len;
-	const char* host;
-	size_t host_len;
 	const char* ip;
 	uint16_t port;
 	
@@ -64,6 +63,12 @@ typedef struct cflare_request
 	
 	cflare_request_header headers[CFLARE_REQUEST_MAX_HEADERS];
 	size_t headers_count;
+	
+	const char* host;
+	size_t host_len;
+	size_t content_length_unread;
+	size_t content_length;
+	const char* content_type;
 	
 	cflare_socket* socket;
 	cflare_response response;
@@ -113,10 +118,12 @@ static inline ssize_t first_of(const char* ptr, size_t len, char value)
 	return -1;
 }
 
+/*
 static void print_query_param(const char* key, size_t keylen, const char* value, size_t valuelen, void* context)
 {
 	cflare_log("%s = %s", key, value);
 }
+*/
 
 bool hdr_cache_loaded = false;
 struct
@@ -438,9 +445,11 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	req->host_len = host_len;
 	req->ip = cflare_socket_ip(socket);
 	req->port = cflare_socket_port(socket);
+	req->buffer_unread = nbytes; // the number of bytes still in the buffer
+	req->content_length = req->content_length_unread = content_length; // the number of bytes of content left to deliver
 	
 	//cflare_debug("%s %s %s", req->method, req->path, req->version);
-	cflare_url_parse_query(req->query, req->query_len, &print_query_param, 0x0);
+	//cflare_url_parse_query(req->query, req->query_len, &print_query_param, 0x0);
 	
 	//bool keep_alive = true;
 	//quick_response_socket(socket, 200, "all is good", keep_alive);
@@ -516,6 +525,52 @@ cflare_request_header* cflare_request_headers(cflare_request* req)
 	return req->headers;
 }
 
+// for reading the content part
+
+bool cflare_request_content_has(cflare_request* req)
+{
+	return req->content_length != 0;
+}
+
+const char* cflare_request_content_type(cflare_request* req)
+{
+	return req->content_type;
+}
+
+size_t cflare_request_content_length(cflare_request* req)
+{
+	return req->content_length;
+}
+
+bool cflare_request_content_chunk(cflare_request* req, char* buffer, size_t buffer_len, size_t* read)
+{
+	*read = 0;
+	
+	// see if data is in the buffers we've already read
+	if(req->buffer_unread > 0)
+	{
+		size_t readable = buffer_len > req->buffer_unread ? buffer_len : req->buffer_unread; // find the smallest
+		
+		memcpy(buffer, req->buffer_position, readable);
+		req->buffer_position += readable;
+		req->buffer_unread -= readable;
+		
+		*read = readable;
+		
+		buffer += readable;
+		buffer_len -= readable;
+		
+		if(buffer_len == 0) // ran out of buffer room
+			return true;
+	}
+	
+	size_t readsock;
+	bool ret = cflare_socket_read(req->socket, (uint8_t*)buffer, buffer_len, &readsock);
+	*read += readsock;
+	
+	return ret;
+}
+
 // response part
 
 
@@ -535,6 +590,11 @@ void cflare_response_init(cflare_response* r, cflare_socket* sock)
 	r->status_code = 0;
 	r->buffer_pos = 0;
 	r->sent = false;
+}
+
+cflare_socket* cflare_response_socket(cflare_response* req)
+{
+	return req->socket;
 }
 
 // headers—including cookies—must last until the finializer
@@ -580,6 +640,13 @@ void cflare_response_header(cflare_response* res, cflare_header hdr, const char*
 
 static inline bool send_headers(cflare_response* res)
 {
+	if(res->sent)
+	{
+		cflare_warn("attempted to send more than one response");
+		return false;
+	}
+	res->sent = true;
+	
 	const char* status_string = cflare_httpstatus_tostring(res->status_code);
 	if(!status_string)
 	{

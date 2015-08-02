@@ -30,10 +30,15 @@ CFLARE_API const char* cflare_request_version(cflare_request* req);
 
 CFLARE_API const char* cflare_request_ip(cflare_request* req);
 CFLARE_API uint16_t cflare_request_port(cflare_request* req);
+CFLARE_API cflare_request_header* cflare_request_headers(cflare_request* req);
 
 CFLARE_API const char* cflare_request_host(cflare_request* req);
 
-CFLARE_API cflare_request_header* cflare_request_headers(cflare_request* req);
+// does the request have any content that needs to be read? + related funcs to read it
+CFLARE_API bool cflare_request_content_has(cflare_request* req);
+CFLARE_API const char* cflare_request_content_type(cflare_request* req);
+CFLARE_API size_t cflare_request_content_length(cflare_request* req);
+CFLARE_API bool cflare_request_content_chunk(cflare_request* req, char* buffer, size_t buffer_len, size_t* read); // returns true if read succesfully
 
 #endif /* CFLARE_REQUEST_H */
 
