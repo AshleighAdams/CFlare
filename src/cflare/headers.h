@@ -14,7 +14,9 @@ typedef struct cflare_header
 struct cflare_headers
 {
 	cflare_header host, content_type, content_length, connection, upgrade;
-}* cflare_headers;
+};
+
+extern struct cflare_headers* cflare_headers;
 
 CFLARE_API void cflare_headers_load();
 CFLARE_API void cflare_headers_unload();

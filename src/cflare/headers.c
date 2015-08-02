@@ -13,6 +13,8 @@
 #include <ctype.h>
 #include <assert.h>
 
+struct cflare_headers* cflare_headers;
+
 #define max_line_length 1024
 #define max_header_length 64
 static cflare_hashtable* canonical_headers = 0;
@@ -153,7 +155,7 @@ void cflare_headers_load()
 	cflare_linkedlist_delete(files);
 	free(path);
 	
-	cflare_headers = malloc(sizeof(cflare_headers));
+	cflare_headers = malloc(sizeof(struct cflare_headers));
 	cflare_headers->host = cflare_headers_get("Host");
 	cflare_headers->content_type = cflare_headers_get("Content-Type");
 	cflare_headers->content_length = cflare_headers_get("Content-Length");
