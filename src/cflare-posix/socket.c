@@ -24,6 +24,10 @@ typedef struct cflare_socket
 	char* ip;
 	int16_t port;
 	uint64_t timeout;
+	
+	uint8_t* requeue_buffer;
+	uint8_t* requeue;
+	size_t requeue_length;
 } cflare_socket;
 
 typedef struct cflare_listener
@@ -292,6 +296,8 @@ cflare_socket* cflare_socket_new(int fd, const char* ip, uint16_t port)
 	sock->port = port;
 	sock->connected = true;
 	sock->timeout = UINT64_MAX;
+	sock->requeue = sock->requeue_buffer = 0x0;
+	sock->requeue_length = 0;
 	return sock;
 }
 
@@ -359,6 +365,7 @@ void cflare_socket_delete(cflare_socket* socket)
 {
 	cflare_socket_close(socket);
 	free(socket->ip);
+	free(socket->requeue_buffer);
 	free(socket);
 }
 
@@ -376,6 +383,27 @@ bool cflare_socket_connected(cflare_socket* socket)
 	return socket->connected;
 }
 
+
+static inline ssize_t requeue_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_length)
+{
+	if(!socket->requeue)
+		return 0;
+	
+	size_t can_read = buffer_length < socket->requeue_length ? buffer_length : socket->requeue_length;
+	memcpy(buffer, socket->requeue, can_read);
+	socket->requeue_length -= can_read;
+	socket->requeue += can_read;
+	
+	if(socket->requeue_length == 0)
+	{
+		free(socket->requeue_buffer);
+		socket->requeue = socket->requeue_buffer = 0x0;
+	}
+	
+	return can_read;
+}
+
+
 bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_length, size_t* read)
 {
 	if(!socket->connected)
@@ -388,7 +416,23 @@ bool cflare_socket_read(cflare_socket* socket, uint8_t* buffer, size_t buffer_le
 	// what should be done if we have a buffer_length of 0?
 	assert(buffer_length > 0);
 	
-	ssize_t read_count = lthread_recv(socket->fd, buffer, buffer_length, 0, socket->timeout);
+	ssize_t read_count;
+	
+	if(socket->requeue_length > 0)
+	{
+		// read from the requeue and then fix the buffer values
+		read_count = requeue_read(socket, (uint8_t*)buffer, buffer_length);
+		buffer += read_count;
+		buffer_length -= read_count;
+		
+		ssize_t r = lthread_recv(socket->fd, buffer, buffer_length, 0, socket->timeout);
+		if(r > 0) // ignore the error for now, it will fail in a subsequent read call
+			read_count += r;
+	}
+	else
+	{
+		read_count = lthread_recv(socket->fd, buffer, buffer_length, 0, socket->timeout);
+	}
 	
 	if(read_count <= 0)
 	{
@@ -507,7 +551,12 @@ bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_
 	
 	while(len < buffer_length - 1)
 	{
-		ssize_t r = lthread_recv(socket->fd, buffer + len, 1, 0, socket->timeout);
+		ssize_t r;
+		
+		if(socket->requeue_length > 0)
+			r = requeue_read(socket, (uint8_t*)buffer + len, 1);
+		else
+			r = lthread_recv(socket->fd, buffer + len, 1, 0, socket->timeout);
 		
 		if(r <= 0)
 		{
@@ -632,4 +681,17 @@ void cflare_socket_close(cflare_socket* socket)
 	lthread_close(socket->fd);
 	socket->fd = -1;
 	socket->connected = false;
+}
+
+void cflare_socket_requeue(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length)
+{
+	uint8_t* new_ptr = malloc(socket->requeue_length + buffer_length);
+	memcpy(new_ptr, buffer, buffer_length);
+	memcpy(new_ptr + buffer_length, socket->requeue, socket->requeue_length);
+	
+	free(socket->requeue_buffer);
+	socket->requeue_buffer = new_ptr;
+	socket->requeue = new_ptr;
+	socket->requeue_length = buffer_length + socket->requeue_length;
+	cflare_debug("requeueing data"); // to see if it's actually done
 }

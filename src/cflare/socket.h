@@ -53,6 +53,7 @@ CFLARE_API bool cflare_socket_write_line(cflare_socket* socket, const char* buff
 // getting to the end of a buffer is considered partial data, and should return false. should ignore '\r's, \n is the char to look for.
 // does not stop at a null byte.
 CFLARE_API bool cflare_socket_read_line(cflare_socket* socket, char* buffer, size_t buffer_length, size_t* read_length);
+CFLARE_API void cflare_socket_requeue(cflare_socket* socket, const uint8_t* buffer, size_t buffer_length);
 
 CFLARE_API void cflare_socket_flush(cflare_socket* socket);
 CFLARE_API void cflare_socket_timeout(cflare_socket* socket, float64_t timeout);
