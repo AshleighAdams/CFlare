@@ -161,6 +161,8 @@ void cflare_headers_load()
 	cflare_headers->content_length = cflare_headers_get("Content-Length");
 	cflare_headers->connection = cflare_headers_get("Connection");
 	cflare_headers->upgrade = cflare_headers_get("Upgrade");
+	cflare_headers->server = cflare_headers_get("Server");
+	cflare_headers->date = cflare_headers_get("Date");
 }
 
 void cflare_headers_unload()

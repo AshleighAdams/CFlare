@@ -13,7 +13,7 @@ typedef struct cflare_header
 // some common headers
 struct cflare_headers
 {
-	cflare_header host, content_type, content_length, connection, upgrade;
+	cflare_header host, content_type, content_length, connection, upgrade, server, date;
 };
 
 extern struct cflare_headers* cflare_headers;
