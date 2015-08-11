@@ -131,5 +131,7 @@ CFLARE_API char* cflare_string_concat_n_c(size_t count, size_t* length, ...);
 
 CFLARE_API char* cflare_format(const char* str, ...);
 
+CFLARE_API int cflare_exec(const char* program, const char** args);
+
 #endif /* CFLARE_UTIL_H */
 

@@ -176,3 +176,6 @@ char* cflare_string_concat_n_c(size_t count, size_t* length, ...)
 	return ret;
 }
 
+int cflare_exec(const char* program, const char* args[])
+{
+}
