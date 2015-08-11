@@ -34,8 +34,10 @@ typedef struct kv_pair
 typedef struct cflare_response
 {
 	cflare_socket* socket;
+	cflare_request* request;
 	uint32_t status_code;
 	bool sent;
+	bool keepalive;
 	
 	size_t buffer_pos;
 	char buffer[CFLARE_RESPONSE_MAX_LENGTH];
@@ -69,6 +71,7 @@ typedef struct cflare_request
 	size_t content_length_unread;
 	size_t content_length;
 	const char* content_type;
+	bool keepalive;
 	
 	cflare_socket* socket;
 	cflare_response response;
@@ -138,6 +141,9 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	req->buffer_position = req->buffer;
 	req->buffer_freespace = sizeof(req->buffer);
 	req->time_start = cflare_time();
+	req->response.request = req;
+	req->keepalive = true;
+	req->response.keepalive = true;
 	
 	cflare_response_init(&req->response, socket);
 	
@@ -289,8 +295,8 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 				return false;
 			}
 			
-			nbytes -= pos;
-			req->buffer_position += pos;
+			nbytes -= pos + 1;
+			req->buffer_position += pos + 1;
 			
 			if(line[pos - 1] == '\r')
 			{
@@ -364,7 +370,6 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 					req->headers_count++;
 					
 					// update our important ones
-					
 					if(cflare_headers_equals(hdr, cflare_headers->host))
 					{
 						host = value;
@@ -374,6 +379,11 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 					{
 						connection = value;
 						connection_len = value_len;
+						
+						if(strstr(connection, "keep-alive"))
+							req->keepalive = true;
+						else
+							req->keepalive = false;
 					}
 					else if(cflare_headers_equals(hdr, cflare_headers->content_type))
 					{
@@ -405,6 +415,7 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	{
 	default:
 	case '0':
+		req->keepalive = false;
 		break;
 	case '1':
 		// host is required
@@ -454,7 +465,6 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	//bool keep_alive = true;
 	//quick_response_socket(socket, 200, "all is good", keep_alive);
 	
-	
 	cflare_hookstack* args = cflare_hookstack_new();
 	cflare_hookstack* rets = cflare_hookstack_new();
 	cflare_hookstack_push_pointer(args, "cflare_request", req, 0x0/*del*/, 0x0/*del ctx*/);
@@ -468,13 +478,22 @@ bool cflare_request_process_socket(cflare_request* req, cflare_socket* socket)
 	cflare_hookstack_delete(rets);
 	cflare_hookstack_delete(args);
 	
-	if(!got)
+	bool keepalive = req->keepalive && req->content_length_unread == 0 && (!got || result == 0);
+	
+	if(keepalive && req->buffer_unread > 0)
 	{
-		quick_response_socket(socket, 500, "no request handler could handle this request!", false);
-		return false;
+		cflare_debug("keep-alive: requeueing %"FMT_SIZE" bytes", req->buffer_unread);
+		cflare_socket_requeue(socket, (uint8_t*)req->buffer_position, req->buffer_unread);
 	}
 	
-	return result == 0;
+	if(!got)
+	{
+		const char response_buffer[] = "no request handler\n";
+		cflare_response_status(&req->response, 500);
+		cflare_response_data(&req->response, (const uint8_t*)response_buffer, sizeof(response_buffer) - 1);
+	}
+	
+	return req->response.keepalive;
 }
 
 
@@ -542,9 +561,17 @@ size_t cflare_request_content_length(cflare_request* req)
 	return req->content_length;
 }
 
+size_t cflare_request_content_unread(cflare_request* req)
+{
+	return req->content_length_unread;
+}
+
 bool cflare_request_content_chunk(cflare_request* req, char* buffer, size_t buffer_len, size_t* read)
 {
 	*read = 0;
+	
+	if(req->content_length_unread < buffer_len)
+		buffer_len = req->content_length_unread;
 	
 	// see if data is in the buffers we've already read
 	if(req->buffer_unread > 0)
@@ -556,6 +583,7 @@ bool cflare_request_content_chunk(cflare_request* req, char* buffer, size_t buff
 		req->buffer_unread -= readable;
 		
 		*read = readable;
+		req->content_length_unread -= readable;
 		
 		buffer += readable;
 		buffer_len -= readable;
@@ -567,6 +595,7 @@ bool cflare_request_content_chunk(cflare_request* req, char* buffer, size_t buff
 	size_t readsock;
 	bool ret = cflare_socket_read(req->socket, (uint8_t*)buffer, buffer_len, &readsock);
 	*read += readsock;
+	req->content_length_unread -= readsock;
 	
 	return ret;
 }
@@ -580,7 +609,6 @@ cflare_response* cflare_response_new()
 	ret->socket = 0x0;
 	ret->status_code = 0x0;
 	ret->buffer_pos = 0;
-	
 	return ret;
 }
 
@@ -606,6 +634,11 @@ void cflare_response_status(cflare_response* res, uint32_t status)
 void cflare_response_cookie(cflare_response* res, const char* domain, const char* key, const char* value, float64_t valid_for, bool https_only)
 {
 	cflare_notimp();
+}
+
+void cflare_response_keepalive(cflare_response* res, bool keepalive)
+{
+	res->keepalive = keepalive;
 }
 
 void cflare_response_header(cflare_response* res, cflare_header hdr, const char* value)
@@ -635,8 +668,12 @@ void cflare_response_header(cflare_response* res, cflare_header hdr, const char*
 	
 	memcpy(ptr, value, val_len);
 	ptr += val_len;
-	ptr[val_len] = '\n';
+	ptr[0] = '\n';
+	
+	res->buffer_pos += req;
 }
+
+#include <time.h>
 
 static inline bool send_headers(cflare_response* res)
 {
@@ -644,6 +681,20 @@ static inline bool send_headers(cflare_response* res)
 	{
 		cflare_warn("attempted to send more than one response");
 		return false;
+	}
+	
+	{ // some headers required
+		cflare_request* req = res->request;
+		char date[] = "Day, 00 Mon 0000 00:00:00 TMZ" "Day, 00 Mon 0000 00:00:00 TMZ"; // allow for double enough space in the buffer
+		time_t now = time(0);
+		struct tm tm = *gmtime(&now);
+		strftime(date, sizeof(date), "%a, %d %b %Y %H:%M:%S %Z", &tm);
+		
+		res->keepalive = req->keepalive && res->keepalive && req->content_length_unread == 0;
+		
+		cflare_response_header(res, cflare_headers->server, "cflare");
+		cflare_response_header(res, cflare_headers->date, date);
+		cflare_response_header(res, cflare_headers->connection, res->keepalive ? "keep-alive" : "close");
 	}
 	res->sent = true;
 	

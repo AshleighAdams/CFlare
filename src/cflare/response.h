@@ -15,6 +15,7 @@ CFLARE_API cflare_socket* cflare_response_socket(cflare_response* req);
 CFLARE_API void cflare_response_status(cflare_response* res, uint32_t status);
 CFLARE_API void cflare_response_cookie(cflare_response* res, const char* domain, const char* key, const char* value, float64_t valid_for, bool https_only);
 CFLARE_API void cflare_response_header(cflare_response* res, cflare_header hdr, const char* value);
+CFLARE_API void cflare_response_keepalive(cflare_response* res, bool keepalive);
 
 // finalizers
 // these cause the reply to be sent

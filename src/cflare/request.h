@@ -38,6 +38,7 @@ CFLARE_API const char* cflare_request_host(cflare_request* req);
 CFLARE_API bool cflare_request_content_has(cflare_request* req);
 CFLARE_API const char* cflare_request_content_type(cflare_request* req);
 CFLARE_API size_t cflare_request_content_length(cflare_request* req);
+CFLARE_API size_t cflare_request_content_unread(cflare_request* req);
 CFLARE_API bool cflare_request_content_chunk(cflare_request* req, char* buffer, size_t buffer_len, size_t* read); // returns true if read succesfully
 
 #endif /* CFLARE_REQUEST_H */
