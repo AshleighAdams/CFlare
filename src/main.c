@@ -13,7 +13,7 @@
 
 #include <cflare/socket.h>
 #include <cflare/request.h>
-#include <cflare/site.h>
+#include <cflare/hosts.h>
 
 #include <cflare/coroutine.h>
 #include <cflare/thread.h>
@@ -149,9 +149,9 @@ static void on_signal(int sig)
 	}
 }
 
-static bool test_site_hook(cflare_request* req, cflare_response* res, const char* str, float64_t real)
+static bool test_site_hook(cflare_request* req, cflare_response* res, void* context, uint64_t argc, char** argv)
 {
-	cflare_debug("test: %s %"FMT_FLOAT64, str, real);
+	cflare_debug("test: %s %s", argv[1], argv[2]);
 	return true;
 }
 
@@ -182,9 +182,9 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		cflare_site* site = cflare_site_new("localhost");
-		cflare_site_add_pattern(site, "/topic/%s/page/%f", &test_site_hook);
-		cflare_site_delete(site);
+		cflare_host* lh = cflare_host_new("localhost");
+		cflare_host_mapf(lh, "/topic/%s/page/%f", &test_site_hook, 0x0);
+		cflare_host_delete(lh);
 		
 		/*
 		cflare_hook_add("Unload", "unload test", 0, &unload_test, 0);

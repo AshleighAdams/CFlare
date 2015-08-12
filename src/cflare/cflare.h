@@ -2,6 +2,7 @@
 #define CFLARE_H
 
 #include <stddef.h>
+#include <sys/types.h>
 
 #ifndef CFLARE_API
 	#ifdef _MSC_VER

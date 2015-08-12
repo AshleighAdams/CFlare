@@ -4,6 +4,8 @@
 
 #include <cflare/cflare.h>
 #include <cflare/util.h>
+#include <cflare/socket.h>
+#include <cflare/headers.h>
 
 typedef struct cflare_response cflare_response;
 
